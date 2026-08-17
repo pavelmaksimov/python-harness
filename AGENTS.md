@@ -53,7 +53,7 @@ Rules:
 This catalog is one language stack, split into layered IDs:
 
 - **core** — tooling, structure, exceptions, settings, logging, DI, FSM, retry,
-  tests (language-wide)
+  tests, frozen clock (language-wide)
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
   repo uses them)
 - **enforcement** — matching linter skills; not every ID is required with the
@@ -98,6 +98,8 @@ harnesses/agents/<id>/  → .cursor/agents/<id>/
 - Env config (`pydantic-settings`, `Settings().PARAM`) is its own core ID
   (`python-settings`). `python-di` owns Container and LazyService. Do not fold
   Settings into DI.
+- Clock in tests (`freezegun` `freeze_time`) is its own core ID
+  (`python-freezegun`). Do not fold it into `python-tests`.
 - Optional enforcement (`di-linter`) stays out of default pairing lines in
   installable rule bodies. When that ID is added to a target repo, patch those
   companion rules so they mention it.

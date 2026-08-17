@@ -58,6 +58,7 @@ uv run pytest tests/test_e2e/ -n0
 ```
 
 Do not use `unittest.mock.patch` — if a patch is required, invert the dependency and inject a stub.
+Freeze "now" with `python-freezegun` (`freeze_time`), not `patch(datetime)`.
 Autouse: `Container.reset()` before and after each test.
 Settings overrides: `Settings.local` / `Settings.override` (`python-settings`).
 

@@ -1,0 +1,62 @@
+---
+description: freezegun freeze_time in tests — stopped UTC clock, move_to/tick, no datetime patch
+globs:
+  - tests/**
+alwaysApply: false
+---
+
+# Frozen time
+
+Package: PyPI **`freezegun`** (`uv add --dev freezegun`). When a test depends on "now", freeze
+the clock. Do not `patch` `datetime`, `date`, or `time`. Production code still calls
+`datetime.now(timezone.utc)`; the test holds the clock.
+
+Pair with `python-tests`. Freeze only tests that assert on a date, expiry, cutoff, or schedule.
+
+## Stopped UTC instant
+
+Put the instant in the test, not in a shared fixture. Default is a **stopped** clock
+(`tick=False`). Advance with `move_to` / `tick`, not `asyncio.sleep` and not `tick=True`.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from freezegun import freeze_time
+
+NOW = datetime(2024, 6, 1, 12, 0, tzinfo=timezone.utc)
+
+
+def test_still_valid():
+    with freeze_time(NOW):
+        assert not is_expired(issued_at=NOW, ttl=timedelta(hours=24))
+
+
+def test_expired_after_ttl():
+    with freeze_time(NOW) as frozen:
+        token = issue_token(ttl=timedelta(hours=24))
+        frozen.move_to(NOW + timedelta(hours=24, seconds=1))
+        assert token.expired
+```
+
+`@freeze_time(NOW)` is fine when the clock never moves. Prefer the context manager whenever
+the test jumps or ticks. Use a timezone-aware UTC `datetime` (not a naive string) so it
+matches `datetime.now(timezone.utc)`.
+
+## Async
+
+`async def` tests use the context manager with `real_asyncio=True` so `asyncio.sleep` and
+the event loop keep real monotonic time. The frozen clock still answers `datetime.now`.
+
+```python
+async def test_cutoff():
+    with freeze_time(NOW, real_asyncio=True):
+        ...
+```
+
+## Stay out of the way
+
+Compute "now" inside the function under test. Freeze does not rewrite default arguments
+(`def f(now=datetime.now(...))` stays at import time).
+
+Freeze only the test that needs a fixed clock. Production code under `project/` keeps calling
+`datetime.now(timezone.utc)`. Depend on PyPI `freezegun`, not `pytest-freezegun`.
