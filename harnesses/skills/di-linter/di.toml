@@ -1,0 +1,49 @@
+# python-structure + python-di. Package root is `project/` — substitute if the repo differs.
+# Copy to the repository root. Keep use cases and domain services strict.
+
+project-root = "project"
+
+exclude-objects = [
+    "Settings",
+    "Constants",
+    "Container",
+    "logger",
+    "*Factory",
+    "*Schema",
+    "*Request",
+    "*Response",
+    "*DTO",
+    "*Dto",
+    "*T",  # NewType constructors (UserIdT, …)
+    "*Error",
+    "*Model",
+    "*Enum",
+    "setup_logging",
+    "redis_atransaction",
+    "redis_transaction",
+    "isolated_redis_atransaction",
+    "isolated_redis_transaction",
+]
+
+exclude-modules = [
+    "project.container",
+    "project.settings",
+    "project.infrastructure.apps",
+    "project.infrastructure.apps.*",
+    "project.infrastructure.adapters",
+    "project.infrastructure.adapters.*",
+    "project.infrastructure.utils",
+    "project.infrastructure.utils.*",
+    "project.components.*.endpoints",
+    "project.components.*.endpoints.*",
+    "project.components.*.handlers",
+    "project.components.*.handlers.*",
+    "project.components.*.cli",
+    "project.components.*.cli.*",
+    "project.components.*.models",
+    "project.components.*.models.*",
+    "project.components.*.repositories",
+    "project.components.*.repositories.*",
+]
+
+tests-path = ["tests"]

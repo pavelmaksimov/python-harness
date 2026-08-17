@@ -1,0 +1,126 @@
+---
+description: Component layout — apps, adapters, components, base generics, libs, layers
+alwaysApply: true
+---
+
+# Repository structure
+
+Group modules by component (one domain per directory). Put new code in the matching layer;
+do not mix adapters with services or use cases.
+SQLAlchemy stays in `adapters`, `orm` (`models.py`), and `repo` (`repositories.py`).
+Redis stays in `adapters` (`acache.py`) and `repo` (`*CacheRepository` in `repositories.py`).
+
+```text
+project/
+  datatypes.py                        NewType domain ids and names
+  infrastructure/apps/api.py          FastAPI app, router registration
+  infrastructure/apps/bot.py          Telegram bot, handler registration
+  infrastructure/apps/main.py         production entry
+  infrastructure/adapters/            external systems (HTTP, DB, cache, queues)
+  infrastructure/utils/               framework helpers, not domain (`base_client` → adapters in layers.toml)
+  components/base/                    shared generics used by every domain component
+    models.py                         SQLAlchemy Base / MetaData (`public_schema`), TimeMixin
+    schemas.py                        Pydantic envelopes (`ApiResponseSchema[T]`)
+    repositories.py                   generic repository base (async; when the repo needs one)
+    handlers.py                       shared Telegram handlers (when the repo has a bot)
+  components/{name}/
+    endpoints.py                      HTTP handlers
+    handlers.py                       bot I/O (presentation in layers.toml)
+    use_cases.py                      orchestration
+    service.py                        stateless domain behavior
+    repositories.py                   all data access
+    models.py                         ORM
+    schemas.py                        Pydantic
+    enums.py                          closed value sets
+    exceptions.py                     component errors
+    interfaces.py                     Protocol stubs for adapters
+    validation.py                     input-check helpers used by use cases
+    cli.py                            CLI
+    ai/{agent}/                       agent, prompts, tools, schemas, exceptions
+  libs/                               reusable, no domain, no infrastructure
+  exceptions.py                       AppError
+  logger.py  settings.py  container.py
+tests/
+  conftest.py  factories.py
+  test_modules/                       modular tests (mocks)
+  test_e2e/                           end-to-end tests (live deps)
+```
+
+`settings.py` is the pydantic-settings env contract (`python-settings`).
+`logger.py` is `setup_logging()` / dictConfig (`python-logging`).
+`container.py` stays at package root (libs must not import infrastructure).
+Domain workflows with explicit states use `python-fsm` (`project/libs/fsm.py`).
+Transient I/O retries use `python-retry` (`project/libs/retry.py`).
+`endpoints.py` and `apps/api.py` belong with the FastAPI adapter;
+`handlers.py` and `apps/bot.py` belong with the Telegram adapter (`python-telegram`);
+`models.py` belongs with the SQLAlchemy adapter;
+`repositories.py` holds SQLAlchemy and Redis cache repositories (`python-sqlalchemy`, `python-redis`).
+
+## Shared generics (`components/base`)
+
+Put cross-component generics in `project/components/base/`. Domain components subclass or reuse
+them; do not copy `Base`, CRUD helpers, or the HTTP envelope into each `components/{name}/`.
+Keep feature-specific code in the domain component.
+
+`libs/` stays domain-free and infrastructure-free (`fsm`, `retry`, `structures`). ORM `Base` and
+generic repositories live in `components/base`, not in `libs/`. `layers.toml` globs
+`project.components.*` already cover `base`.
+
+| File | When | Copy if missing |
+|---|---|---|
+| `models.py` | SQLAlchemy | sibling `BASE_MODELS.md` → `project/components/base/models.py` (`python-sqlalchemy`, `python-alembic`) |
+| `schemas.py` | FastAPI envelope | sibling `BASE_SCHEMAS.md` → `project/components/base/schemas.py` (`python-fastapi`) |
+| `repositories.py` | generic ORM/cache repo | write async `asession` / `atransaction` (`python-sqlalchemy`); Redis `CacheRepository` follows `python-redis` |
+| `handlers.py` | Telegram bot | shared handlers only (`python-telegram`); register from `apps/bot.py` |
+
+If the repo needs a generic ORM repository, inherit domain repos from it. Session helpers are
+async (`asession` / `atransaction` / `current_atransaction`), not sync `Session`:
+
+```python
+class ORMRepository[T: Base]:
+    _model: ClassVar[type[T]]
+
+    @classmethod
+    async def get_or_none(cls, pk: object) -> T | None:
+        async with asession() as session:
+            return await session.get(cls._model, pk)
+```
+
+## Layers
+
+Lower layers do not import higher ones. Domain modules do not import adapters or frameworks;
+annotate expected collaborators with `Protocol` in `interfaces.py`.
+
+- **Service** — stateless; hides a business process. Put work that other components will reuse here.
+- **Use case** — I/O entry (HTTP, CLI, bot). Coordinates services; no SQL, no `AsyncSession`,
+  no Redis client. Other components do not call use cases. Keep it short; names are business verbs.
+  Input checks live here; shared check functions go in `validation.py`.
+- **Repository** — the only data-access type; stateless. Inherit from `components.base` when a
+  generic base exists. One extra repository when one transaction spans models that do not belong together.
+- **Adapter** — facade over an external system; errors and API quirks stay here so tests can stub it.
+- **Container** — `LazyInit(Services)`; take dependencies with `Container().…` inside methods.
+
+Domain annotations use types from `project/datatypes.py`, not bare `str` / `int`:
+
+```python
+UserIdT = t.NewType("UserIdT", t.Annotated[int, "User ID"])
+```
+
+Per-agent state under `ai/{agent}/` is a Pydantic model (TypedDict at minimum), one type per agent.
+
+## Adapters
+
+New external system → new module under `infrastructure/adapters/`. Raise `AppError` subclasses
+(`python-exceptions`). Outbound HTTP APIs subclass or compose `AsyncApi` / `SyncApi` from
+`python-base-client` (`project/infrastructure/utils/base_client.py`; copy that rule's `CLIENT.md`
+if missing). Prefer **httpx** (stack default). `layers.toml`: `base_client` is adapters, not
+presentation. Tests stub the adapter through `Container.local(...)` (`python-tests`).
+
+If `layers.toml` is missing, copy the `layers-linter` skill template to the
+repository root (substitute the package name if it is not `project`). Keep it in
+sync when adding modules. Pair with `layers-linter` and `domain-types-linter`.
+Architecture imports:
+
+```bash
+uv run la-linter project
+```

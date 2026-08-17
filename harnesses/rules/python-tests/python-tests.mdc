@@ -1,0 +1,89 @@
+---
+description: Pytest — fixtures vs factories, HTTP mocks, no patch, behavior through use cases
+globs:
+  - tests/**
+alwaysApply: false
+---
+
+# Tests
+
+Read `tests/conftest.py` and `tests/factories.py` before adding helpers.
+If `conftest.py` is missing the HTTP/DB fixtures, copy sibling `CONFTEST.md` into `tests/conftest.py`
+(merge; do not overwrite without asking).
+
+## What belongs where
+
+| Place | Holds |
+|---|---|
+| Test body | Scenario data, asserts, one behavior |
+| `tests/factories.py` | `make_<entity>(**overrides)` — defaults merged with overrides, returns a schema/model |
+| `tests/conftest.py` | Session setup, HTTP mock routers, DB container, `TestClient`, `Container.reset()` |
+
+Keep data out of fixtures: fixtures that only supply payloads make tests harder to read and change.
+Duplicate literals in tests are fine. Prefer a factory call in the test over a shared data fixture.
+
+Avoid test-only abstractions. Everything needed to understand a test should be in that test.
+One test checks one behavior; a pile of asserts usually means several cases.
+Assert observable outcomes (status, payload, persisted row), not object internals.
+A new ORM model also gets a `make_*` factory in `tests/factories.py`.
+
+## Layout
+
+Tests are **modular** or **e2e**. Put them in **separate directories** — never in the same folder
+or the same file. Mirror `project/components/` and `project/infrastructure/` under each tree.
+
+```text
+tests/
+  conftest.py                         shared fixtures
+  factories.py
+  test_modules/                       modular: mocks, no live third-party APIs
+    test_components/{name}/
+    test_infrastructure/
+    test_libs/
+  test_e2e/                           end-to-end: real GitLab, LLM, local infra
+    test_components/{name}/
+    test_infrastructure/
+```
+
+- **Modular** (`tests/test_modules/`): observable behavior through a use case or endpoint
+  (`api_client`). Stub adapters with `Container.local(...)` and HTTP fixtures. No real network,
+  credentials, or live SaaS. Testcontainers Postgres via `asession` and Redis via `python-redis`
+  are allowed here.
+- **E2E** (`tests/test_e2e/`): full cycle against real collaborators. Default CI runs
+  `tests/test_modules/` only; e2e is an explicit command and needs the live stack.
+
+```bash
+uv run pytest tests/test_modules/
+uv run pytest tests/test_e2e/ -n0
+```
+
+Do not use `unittest.mock.patch` — if a patch is required, invert the dependency and inject a stub.
+Autouse: `Container.reset()` before and after each test.
+Settings overrides: `Settings.local` / `Settings.override` (`python-settings`).
+
+## HTTP mocks
+
+Fixtures `httpx_responses` (respx), `aiohttp_responses` (aioresponses), `requests_mock`
+(requests-mock), `api_client`, and `openai_chat_completion_response` live in `CONFTEST.md`.
+If the API is token-gated, `api_client` sends `Api-Token` from `Settings()`.
+
+```python
+def test_external_api(httpx_responses):
+    httpx_responses.get("https://api.example.com/data").mock(
+        side_effect=[httpx.Response(200, json={"result": "ok"})],
+    )
+```
+
+LLM/OpenAI-style calls: mock the chat-completions URL from `Settings()` with `httpx_responses`.
+JSON content is a **string** in `choices[0].message.content` — use `openai_chat_completion_response`.
+
+## Database tests
+
+Session-scoped Testcontainers Postgres; per-test `asession` with a nested transaction and rollback
+(see `CONFTEST.md`). Put row data in the test (or a factory), not in the DB fixture. After a DSN
+change, call `cache_clear()` on the engine and sessionmaker factories.
+
+## Cache tests
+
+Session-scoped Testcontainers Redis; `flushdb` per test (fixtures in `python-redis` / `CACHE.md`).
+After a host override, `redis_client.cache_clear()`.

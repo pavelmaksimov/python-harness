@@ -1,0 +1,40 @@
+---
+description: Python toolchain — uv, ruff, black, isort, pre-commit, hygiene
+alwaysApply: true
+---
+
+# Python tooling
+
+Default package root is `project/` (substitute if the repo uses another name).
+Tool versions and Ruff selects live in `pyproject.toml` — follow that file, do not invent a parallel config.
+
+Package manager: **uv**. Run tools with `uv run`. Line length **120** (Ruff, Black, isort).
+Ban parent-relative imports (`from ..x`). Format with Black; lint with Ruff; sort imports with isort.
+Install `pre-commit` hooks; they run Black, Ruff, and `uv export` for lock-style requirements.
+Async processes install and run with **uvloop** (`uv add uvloop`).
+
+```bash
+uv sync --all-groups
+uv run ruff check --fix project tests
+uv run black project tests
+uv run isort project tests
+```
+
+## Logging
+
+Use `logger.exception` when an exception is swallowed, converted, or followed by a fallback.
+Skip a log when the exception is re-raised unchanged and the outer boundary already logs it.
+Expected control-flow branches do not need exception logs. Do not pass `extra=` on log calls.
+Process-wide `dictConfig` / `setup_logging()` is `python-logging`.
+
+## Hygiene
+
+Closed variant sets → `Enum`. Domain literals stay next to the domain code.
+Operational constants shared across components live in `Constants` (`python-settings`).
+Import from the concrete module; do not barrel-reexport in `__init__.py`.
+Do not wrap package imports in try/except. Do not add `__future__` imports.
+In async code use `asyncio.Lock()`, not `threading.Lock()`.
+Async context managers: `@asynccontextmanager` from `contextlib`, not a class with `__aenter__` / `__aexit__`.
+Shape tabular data with SQL or annotated lists/dicts (`TypedDict`, dataclass). Do not add Pandas or Polars.
+Serialize with JSON (`orjson` where the stack already uses it), not pickle.
+Persist durable state in the database or Redis, not in module globals or ad-hoc files.

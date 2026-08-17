@@ -1,0 +1,34 @@
+---
+description: retry_on_exception / retry_unless_exception — transient I/O, sync and async
+globs: "**/libs/retry.py"
+alwaysApply: false
+---
+
+# Retries
+
+Use `retry_on_exception` / `retry_unless_exception` from `project/libs/retry.py` for transient
+I/O (HTTP, DB, Redis). Copy sibling `RETRY.md` if that module is missing. Both wrappers
+cover sync and async via `iscoroutinefunction`. Do not add tenacity, backoff, or other
+retry packages when this helper exists.
+
+`timeout_with_retry` (`python-telegram`) is bot UX (tell the user, retry on timeout). Do not
+use it for adapter I/O.
+
+```python
+@retry_on_exception((ExternalHTTPConnectionError, ServerError), max_attempts=3, backoff=2)
+async def fetch_item(self, item_id: str) -> dict:
+    ...
+
+@retry_unless_exception((NotFoundError, AuthError, ClientError), max_attempts=3, backoff=2)
+async def cache_get(self, key: str) -> bytes:
+    ...
+```
+
+Prefer `retry_unless_exception` when the call should retry everything except listed
+control-flow errors. Do not retry `AppError` types that are not transient
+(`NotFoundError`, `AuthError`, 4xx `ClientError`) unless the caller lists them.
+A subclass may also inherit the library exception so the decorator can still match it
+(`python-exceptions`).
+
+The helper logs a warning per retry and an error on final failure (`python-tooling`;
+no `extra=`). Callers do not log the same failure again.

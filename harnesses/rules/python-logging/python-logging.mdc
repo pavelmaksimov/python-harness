@@ -1,0 +1,39 @@
+---
+description: dictConfig logging — setup_logging() at process start, levels from Settings
+globs: "**/logger.py"
+alwaysApply: false
+---
+
+# Logging setup
+
+Configure logging once with `logging.config.dictConfig` in `setup_logging()` (`project/logger.py`).
+If that module is missing, copy sibling `LOGGER.md` into `project/logger.py`.
+Call it once at process start: API `apps/api.py` / `main.py`, bot `apps/bot.py`.
+Call-site hygiene (`logger.exception`, no `extra=`) is `python-tooling`.
+
+Levels come from `Settings()` (`python-settings`). Always `LOG_LEVEL` for root and the console handler.
+`disable_existing_loggers: True`. Console is `StreamHandler` to stdout.
+Formatter: `Constants.LOG_FORMAT` when present, else `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
+
+## Library loggers
+
+Add a named logger only when that library is in the repo, and only then add the Settings field:
+
+| Settings field | Loggers |
+|---|---|
+| `FASTAPI_LOG_LEVEL` | `uvicorn`, `fastapi` |
+| `TELEGRAM_LOG_LEVEL` | `telegram`, `telegram.ext`, `apscheduler` |
+| `HTTP_REQUESTS_LOG_LEVEL` | `httpx`, `httpcore` |
+| `SQLALCHEMY_LOG_LEVEL` | `sqlalchemy`, `sqlalchemy.engine` |
+| `REDIS_LOG_LEVEL` | `redis` |
+
+Do not add flask, werkzeug, openai, aiohttp, or requests loggers unless the repo already uses them.
+Each named logger: `propagate: False`, same handlers as root.
+
+## File handler
+
+When `WRITE_LOGS_TO_FILE` is true: `TimedRotatingFileHandler` at repo-root `logs/app.log`
+(`when="midnight"`, `backupCount=14`, `encoding="utf8"`). Create `logs/` if needed.
+Append the file handler to every configured named logger and to root. Keep `logs/` out of git.
+
+Helpers such as `timer` / `get_log_id` may live in `project/libs/log.py`; they are not this harness.

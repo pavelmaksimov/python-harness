@@ -1,0 +1,54 @@
+---
+description: AppError hierarchy — where to put exceptions and how to subclass them
+alwaysApply: true
+---
+
+# Exceptions
+
+Application errors subclass `AppError` from `project/exceptions.py`. If that type is missing, add it:
+
+```python
+class AppError(Exception):
+    pass
+```
+
+Do not introduce a domain or adapter error that subclasses only `Exception` or only a third-party type.
+
+## Where
+
+| Kind | Place |
+|---|---|
+| `AppError` and errors shared by several components | `project/exceptions.py` |
+| Errors of one component | `project/components/{name}/exceptions.py` |
+| Errors of one agent | `project/components/{name}/ai/{agent}/exceptions.py` |
+
+A subclass may live next to the module that raises it when nothing else imports it.
+
+Shared kinds — add when first needed:
+
+| Kind | Use |
+|---|---|
+| `NotFoundError` | Missing entity |
+| `AuthError` | Failed authentication / authorization |
+| `ExternalApiError` | Failed call to an external HTTP API |
+| `ServerError` / `ClientError` | 5xx / 4xx from that API (`ExternalApiError` subclasses) |
+| `ExternalHTTPConnectionError` | Transport / timeout talking to that API |
+
+Carry identity on the instance (`object_name`, `id`, `url`). `__str__` is the human message; `__repr__` is for logs.
+
+```python
+class NotFoundError(AppError):
+    def __init__(self, object_name: str, id: object) -> None:
+        self.object_name = object_name
+        self.id = id
+
+    def __str__(self) -> str:
+        return f"{self.object_name}={self.id} not found"
+```
+
+## Adapters and HTTP
+
+Adapters catch library/API errors and raise an `AppError` subclass so domain code does not import third-party exception types. The subclass may also inherit the library type when a retry decorator must still match it (`python-retry`); do not retry `NotFoundError`, `AuthError`, or 4xx `ClientError` unless listed. Outbound HTTP adapters (`python-base-client`) map 4xx → `ClientError`, 5xx → `ServerError`, other HTTP failures → `ExternalApiError`, transport/timeout → `ExternalHTTPConnectionError`.
+
+Domain and adapters raise `AppError`. `fastapi.HTTPException` stays in `endpoints.py`.
+Map these types to HTTP status codes on the app (`python-fastapi`).

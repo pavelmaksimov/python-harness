@@ -1,0 +1,74 @@
+---
+description: Telegram bot adapter — python-telegram-bot handlers, polling, error decorators
+globs:
+  - "**/handlers.py"
+  - "**/apps/bot.py"
+  - "**/utils/telegram.py"
+alwaysApply: false
+---
+
+# Telegram bot adapter
+
+Runtime: [python-telegram-bot](https://docs.python-telegram-bot.org/) (`ApplicationBuilder`, polling,
+`HTTPXRequest`, `AIORateLimiter`, `concurrent_updates`). Extra: `python-telegram-bot[job-queue,rate-limiter]`.
+Not aiogram.
+
+Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers live in
+`project.components.base.handlers` (`python-structure`). Register them from
+`project.infrastructure.apps.bot`. Decorator helpers live in `project.infrastructure.utils.telegram`.
+If `telegram.py` or `bot.py` is missing, copy sibling `TELEGRAM.md` into
+`project/infrastructure/utils/telegram.py` and `BOT.md` into `project/infrastructure/apps/bot.py`.
+
+Token: `Settings().TELEGRAM_BOT_TOKEN` (`python-settings`, `SecretStr`). Unwrap with `.get_secret_value()` on
+`ApplicationBuilder().token(...)`. Add the field to `SettingsValidator` if it is missing.
+
+Handlers are presentation (bot I/O), like FastAPI endpoints: take collaborators via `Container()`, call use
+cases. Do not import SQLAlchemy, `AsyncSession`, or Redis in handlers.
+
+## Bot process
+
+Use uvloop as the event loop for the bot process:
+
+```python
+with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+    runner.run(run_bot_app())
+```
+
+Build with `ApplicationBuilder().token(...).request(HTTPXRequest()).rate_limiter(AIORateLimiter(max_retries=3)).concurrent_updates(True)`.
+Poll with `application.updater.start_polling()`. When `python-monitoring` is installed, pass
+`TelegramHTTPXTransportWithMonitoring` on `HTTPXRequest` (`httpx_kwargs={"transport": ...}`) and
+decorate handlers with `action_tracking_decorator("…_handler")` **inside** `processing_errors`. Do
+not add that transport or decorator unless that harness is present.
+
+## Decorators
+
+Centralize failures in `processing_errors`. Handlers must not swallow exceptions.
+
+Python applies decorators **bottom-to-top**. Use this source order (the working wrap — not a reversed spec
+snippet):
+
+```python
+@timeout_with_retry
+@processing_errors
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    container = Container()
+    await container.example_use_case.run(update.effective_user.id)
+    await update.effective_message.reply_text("Hello")
+
+
+def register_example_handlers(application) -> None:
+    application.add_handler(CommandHandler("start", start_handler))
+```
+
+Call stack (outer → inner): `timeout_with_retry` → `processing_errors` → handler.
+
+| Decorator | Role |
+|---|---|
+| `timeout_with_retry` | Outermost. `asyncio.wait_for` around the inner stack; on timeout, tell the user and retry; re-raise after the last attempt so `processing_errors` does not treat `TimeoutError` as a generic failure. |
+| `processing_errors` | Catch `AuthError` / `Exception`, log, reply. The only place handlers report failures to the user. |
+| `action_tracking_decorator("…_handler")` | When `python-monitoring` is installed. Inside `processing_errors`, outside the handler (and `check_auth` if present). |
+| `check_auth` | Innermost, **only** when the repo already has an auth collaborator. Raises `AuthError`. Do not add Keycloak, `auth_client`, or other SaaS auth for this harness. |
+
+If `check_auth` exists, place it **below** `processing_errors` (closest to the handler). When
+`python-monitoring` is installed, place `action_tracking_decorator("…_handler")` inside
+`processing_errors` and outside the handler (and `check_auth` if present).

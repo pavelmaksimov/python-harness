@@ -1,0 +1,30 @@
+---
+description: StateMachine / AsyncStateMachine — validated transitions, persist via get/set
+globs: "**/libs/fsm.py"
+alwaysApply: false
+---
+
+# State machines
+
+Use `StateMachine` + `transition` for sync workflows with an explicit `Enum` of states;
+`AsyncStateMachine` + `atransition` when get/set or the transition body is async.
+Illegal calls raise `TransitionError`. Keep the helper in `project/libs/fsm.py`
+(copy sibling `FSM.md` if missing). Domain subclasses live in the component that owns
+the workflow, not in `libs/`.
+
+Persist through `get_state` / `set_state` (or `aget_state` / `aset_state`) — memory, DB, or Redis.
+Those methods are the persistence seam. Do not put adapters, sessions, or Redis clients
+on the FSM class.
+
+```python
+@transition(from_states=OrderState.CREATED, to_state=OrderState.PAID)
+def pay(self, amount: float) -> None:
+    ...
+
+@atransition(from_states=TaskState.PENDING, to_state=TaskState.RUNNING)
+async def start(self) -> None:
+    ...
+```
+
+`from_states` may be one enum member or a list. The decorator reads state, runs the method,
+then writes `to_state`. Catch `TransitionError` at the use-case boundary.

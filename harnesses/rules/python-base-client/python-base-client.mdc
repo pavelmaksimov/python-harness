@@ -1,0 +1,67 @@
+---
+description: Outbound HTTP adapters — httpx AsyncApi/SyncApi, AppError mapping, Session reuse
+globs:
+  - "**/utils/base_client.py"
+  - "**/adapters/*.py"
+alwaysApply: false
+---
+
+# Outbound HTTP adapters
+
+Runtime: **httpx**, orjson. Prefer httpx (stack default). Mention aiohttp only if the target repo
+already uses it — do not introduce aiohttp, and do not rewrite a working aiohttp adapter unasked.
+
+New external HTTP API → a module under `project/infrastructure/adapters/`. Subclass or compose
+`AsyncApi` (async) or `SyncApi` (sync) from `project/infrastructure/utils/base_client.py`. If that
+helper is missing, copy sibling `CLIENT.md` into that path. `layers.toml`: `base_client` is
+**adapters**, not presentation.
+
+`name_for_monitoring` is required (API clients suffix `_api`). When the path is dynamic, pass
+`resource_for_monitoring` as a template with no IDs (`invoices/{invoice_id}`, not `invoices/123`).
+
+## Errors
+
+Map in `error_handling` so domain code never sees httpx (or aiohttp) exceptions (`python-exceptions`):
+
+| Failure | Raise |
+|---|---|
+| 4xx | `ClientError` |
+| 5xx | `ServerError` |
+| Other HTTP status | `ExternalApiError` |
+| Transport / timeout | `ExternalHTTPConnectionError` |
+
+Per-adapter subclasses of those types are optional. Override `error_handling` / `process_response` /
+`response_to_native` when the API needs extra mapping. HTTP status is `response.status_code`.
+
+## Session and JSON
+
+Reuse connections with `async with client.api.Session():` (or `with` for `SyncApi`). Encode JSON with
+orjson. Do not call `raise_for_status` — status mapping lives in `error_handling`.
+
+```python
+class InvoicesClient:
+    def __init__(self, token: str) -> None:
+        self.api = AsyncApi(
+            "https://api.example.com",
+            name_for_monitoring="invoices_api",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    async def get_invoice(self, invoice_id: str) -> dict:
+        return await self.api.call_endpoint(
+            f"invoices/{invoice_id}",
+            resource_for_monitoring="invoices/{invoice_id}",
+        )
+```
+
+## Monitoring
+
+When `python-monitoring` is installed, `AsyncApi` / `SyncApi` record HTTP metrics (`is_build_metrics` /
+`http_tracking`). Do not also set `ClientSession` to `HttpxClientWithMonitoring` on the same client
+(double-count). Use `HttpxClientWithMonitoring` only when you need a tracked httpx client **without**
+this AppError mapping. Guard metric imports — do not require `llm_common` when monitoring is absent.
+
+## Tests
+
+Mock outbound calls with `httpx_responses` (`python-tests`). Do not `patch` httpx or the adapter.
+Stub the adapter in use-case tests via `Container.local(...)`.

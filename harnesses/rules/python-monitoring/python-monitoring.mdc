@@ -1,0 +1,85 @@
+---
+description: Prometheus metrics via llm_common — init, FastAPI scrape, actions, httpx
+alwaysApply: true
+---
+
+# Python monitoring adapter
+
+Package: PyPI **`llm_common`** (`uv add llm_common prometheus_client`). Do not install PyPI
+`pycommons` (unrelated). Metric names use **the package prefix** (today `genapp_`); do not invent
+another. Do not paste private Grafana dashboard URLs. Names and labels: sibling `METRICS.md`.
+
+## Init
+
+Call once at process start (API / bot entry). Skip tests and local. `env` is only `dev` | `preprod` |
+`prod` — never pass `test` or `local` into `build_prometheus_metrics`.
+
+```python
+from llm_common.prometheus import build_prometheus_metrics
+
+# Skip test/local. Do not use `if env != "test" or env != "local"` (that is always true).
+if env not in ("test", "local"):
+    build_prometheus_metrics(project_name="project", env=prometheus_env)
+```
+
+With `python-settings`, skip when `is_autotest()` or `is_local()`. Map the remaining process env onto
+`dev` | `preprod` | `prod`.
+
+## FastAPI
+
+```python
+from llm_common.prometheus import fastapi_tracking_middleware, fastapi_endpoint_for_prometheus
+
+app.middleware("http")(fastapi_tracking_middleware)
+app.get("/prometheus")(fastapi_endpoint_for_prometheus)
+```
+
+Inbound `resource` labels must be route templates, not concrete IDs. Flask: only if the repo already
+uses Flask, `flask_endpoint_for_prometheus` on `GET /prometheus`.
+
+## Actions
+
+`action_tracking` / `action_tracking_decorator`. Do not swallow exceptions inside the tracked block
+(the helpers need the exception to record failure).
+
+| Kind | Suffix |
+|---|---|
+| Telegram handlers / callbacks | `_handler` |
+| Scheduled / regular jobs | `_task` |
+| LLM calls | `_llm_call` |
+| Agent runs | `_agent` |
+
+Separator is `_` (`menu_handler`, `sync_task`, `summarize_llm_call`).
+
+## Telegram (when `python-telegram` is installed)
+
+Put `TelegramHTTPXTransportWithMonitoring` on `HTTPXRequest`. Decorate handlers with
+`action_tracking_decorator("…_handler")` **inside** `processing_errors` (see that rule's decorator
+order).
+
+```python
+from llm_common.clients.telegram_client import TelegramHTTPXTransportWithMonitoring
+from telegram.request import HTTPXRequest
+
+request = HTTPXRequest(httpx_kwargs={"transport": TelegramHTTPXTransportWithMonitoring()})
+```
+
+## Outbound HTTP
+
+Named adapters that must map HTTP failures to `AppError` (`ClientError` / `ServerError` /
+`ExternalApiError`) use `python-base-client` (`AsyncApi` / `SyncApi`). That helper records HTTP
+metrics when this harness is installed (`is_build_metrics` / `http_tracking`); do not also wrap
+its session in `HttpxClientWithMonitoring` (double-count). Pass `resource_for_monitoring` as a
+path template with no IDs.
+
+Use `HttpxClientWithMonitoring` when you only need a tracked httpx client without that mapping.
+`name_for_monitoring` is required; API clients suffix `_api`. Override `clear_resource_path` so
+`resource` has no high-cardinality IDs (`/users/123` → `/users/{user_id}`). Use
+`ClientSessionWithMonitoring` only if the repo already uses aiohttp.
+
+## Optional
+
+- **SQLAlchemy** (`python-sqlalchemy`): after metrics init,
+  `register_sqlalchemy_engine_monitoring(engine, database="…")` (async engines are fine).
+- **LLM** (`record_llm_request`, `record_llm_usage`, …): only if the repo already calls LLMs. Do not
+  add langchain, `AuthHttpClient`, or Keycloak for this harness.

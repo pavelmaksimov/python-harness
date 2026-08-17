@@ -1,0 +1,128 @@
+# python-structure layout. Package root is `project/` — substitute if the repo differs.
+# Copy to the repository root. Each module must match exactly one layer.
+
+exclude_modules = ["*.__init__"]
+
+[layers]
+
+[layers.libs]
+description = "Shared types, exceptions, schemas, settings, logger, reusable libs"
+contains_modules = [
+    "project.datatypes",
+    "project.logger",
+    "project.settings",
+    "project.libs",
+    "project.libs.*",
+    "*.exceptions",
+    "*.interfaces",
+    "*.schemas",
+    "*.enums",
+]
+depends_on = ["libs"]
+
+[layers.adapters]
+description = "Facades over external systems (HTTP, DB, cache, queues) and the HTTP client helper"
+contains_modules = [
+    "project.infrastructure.adapters",
+    "project.infrastructure.adapters.*",
+    "project.infrastructure.utils.base_client",
+    "project.infrastructure.utils.base_client.*",
+]
+depends_on = ["libs", "adapters"]
+
+[layers.repositories]
+description = "Data access and ORM — only these modules talk to SQLAlchemy or Redis"
+contains_modules = [
+    "project.components.*.models",
+    "project.components.*.models.*",
+    "project.components.*.repositories",
+    "project.components.*.repositories.*",
+]
+depends_on = ["adapters", "libs", "repositories"]
+
+[layers.services]
+description = "Stateless domain behavior; collaborators via Container() and Protocols"
+contains_modules = [
+    "project.components.*.service",
+    "project.components.*.service.*",
+    "project.components.*.ai",
+    "project.components.*.ai.*",
+]
+exclude_modules = ["*.exceptions", "*.interfaces", "*.schemas", "*.enums"]
+depends_on = ["dicontainer", "libs", "services"]
+
+[layers.usecases]
+description = "I/O orchestration; no SQLAlchemy, AsyncSession, or Redis client"
+contains_modules = [
+    "project.components.*.use_cases",
+    "project.components.*.use_cases.*",
+    "project.components.*.validation",
+    "project.components.*.validation.*",
+]
+depends_on = ["dicontainer", "services", "libs", "usecases"]
+
+[layers.dicontainer]
+description = "LazyInit composition root (LazyService paths are strings, not imports)"
+contains_modules = ["project.container"]
+depends_on = ["libs"]
+
+[layers.presentation]
+description = "HTTP, CLI, and bot I/O: endpoints, handlers, app factory, framework helpers"
+contains_modules = [
+    "project.infrastructure.apps",
+    "project.infrastructure.apps.*",
+    "project.infrastructure.utils",
+    "project.infrastructure.utils.*",
+    "project.components.*.endpoints",
+    "project.components.*.endpoints.*",
+    "project.components.*.handlers",
+    "project.components.*.handlers.*",
+    "project.components.*.cli",
+    "project.components.*.cli.*",
+]
+exclude_modules = [
+    "project.infrastructure.utils.base_client",
+    "project.infrastructure.utils.base_client.*",
+]
+depends_on = ["dicontainer", "usecases", "services", "libs", "presentation"]
+
+[libs]
+
+[libs.sqlalchemy]
+allowed_in = ["adapters", "repositories"]
+
+[libs.fastapi]
+allowed_in = ["presentation"]
+
+[libs.telegram]
+allowed_in = ["presentation"]
+
+[libs.starlette]
+allowed_in = ["presentation"]
+
+[libs.sse_starlette]
+allowed_in = ["presentation"]
+
+[libs.redis]
+allowed_in = ["adapters", "repositories"]
+
+[libs.httpx]
+allowed_in = ["adapters"]
+
+[libs.requests]
+allowed_in = []  # use httpx
+
+[libs.pandas]
+allowed_in = []
+
+[libs.polars]
+allowed_in = []
+
+[libs.alembic]
+allowed_in = []  # migrations live outside project/
+
+[libs.pytest]
+allowed_in = []  # tests live outside project/
+
+[libs.unittest]
+allowed_in = []

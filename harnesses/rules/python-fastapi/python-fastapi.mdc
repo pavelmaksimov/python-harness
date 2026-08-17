@@ -1,0 +1,79 @@
+---
+description: FastAPI HTTP adapter — routers, ORJSON, URL versioning, SSE disconnects
+globs:
+  - "**/endpoints.py"
+  - "**/apps/api.py"
+alwaysApply: false
+---
+
+# FastAPI HTTP adapter
+
+Runtime: FastAPI, Starlette, `sse-starlette`, uvicorn, uvloop, httpx, orjson, Pydantic v2.
+Prefer **httpx** over `requests` in application code.
+
+Install uvloop (`uv add uvloop`) and run uvicorn with `--loop uvloop`. Do not run FastAPI on
+the default asyncio loop in production or entry scripts.
+
+Endpoints live in `project.components.{name}.endpoints`. Register routers on the app in
+`project.infrastructure.apps.api`. Take services from `Container()`, not from FastAPI `Depends`
+for domain objects.
+
+```bash
+uv run uvicorn project.infrastructure.apps.api:app --host 0.0.0.0 --loop uvloop
+```
+
+Call `setup_logging()` once in the app lifespan or `main.py` (`python-logging`).
+
+## Responses
+
+Use a shared envelope (`ApiResponse` / `ApiResponseSchema[T]` from `project.components.base.schemas`,
+`python-structure`) as `response_model` when the OpenAPI shape matters.
+Prefer `ORJSONResponse` (`response_class`) for JSON. `response_model` validation is extra cost
+on large payloads.
+
+Version **each path**, not the whole router: `/user/v1/list`. Breaking changes get a new path;
+keep the old one with `deprecated=True`.
+
+Raise `fastapi.HTTPException` only in `endpoints.py`. Domain code raises `AppError` (or a subclass).
+
+Token-gated APIs: one `Depends` on the app (or router) that reads `Header(alias="Api-Token")` and
+compares it to `Settings().API_TOKEN`.
+
+## Exception handlers
+
+Register handlers on the app. Log there. Endpoints do not catch-and-return error dicts.
+
+| Raised | HTTP |
+|---|---|
+| `NotFoundError` | 404 |
+| `AuthError` | 401 |
+| `ExternalApiError` | 500 |
+| `RequestValidationError` | 422 |
+| `HTTPException` | as raised |
+| other `Exception` | 500, generic body (no internals) |
+
+## Client disconnect
+
+On LLM or streaming work, cancel when the client goes away so GPU/DB work does not continue.
+ASGI sends `http.disconnect`; poll `await request.receive()`. Do not use `request.is_disconnected()`
+together with `BaseHTTPMiddleware` — it is unreliable. Helpers live in
+`project/infrastructure/utils/disconnect.py` when that module is present.
+
+| Case | Approach |
+|---|---|
+| Ordinary async endpoints | `DisconnectMiddleware` (races handler against disconnect), or `@with_cancellation` |
+| SSE / `StreamingResponse` | Let the framework cancel; `sse-starlette`. Cleanup in `finally` with `anyio.CancelScope(shield=True)` (not `asyncio.shield`) |
+| Granular cancel around DB / GPU | `detect_disconnect` + `cancel_on_disconnect` |
+| Nested async generators | `contextlib.aclosing` or `safe_async_generator_cleanup` |
+
+Re-raise `asyncio.CancelledError` after logging/metrics. Do not add a second manual disconnect
+check inside a generator that `EventSourceResponse` already cancels.
+
+Fire-and-forget side I/O (metrics, audit) from an endpoint: `asyncio.create_task(...)` without
+await when the response does not depend on it; log failures, do not fail the request.
+Wait when the write is part of the result (DB commit, payment).
+
+## Prometheus
+
+When `python-monitoring` is installed, register `fastapi_tracking_middleware` and `GET /prometheus`
+via `fastapi_endpoint_for_prometheus`. Follow that harness; do not hand-roll a scrape endpoint.

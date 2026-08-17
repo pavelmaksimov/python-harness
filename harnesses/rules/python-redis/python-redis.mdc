@@ -1,0 +1,51 @@
+---
+description: Redis async cache — CacheRepository, redis_atransaction, orjson
+globs:
+  - "**/adapters/acache.py"
+  - "**/adapters/cache.py"
+  - "**/repositories.py"
+alwaysApply: false
+---
+
+# Redis cache adapter
+
+Runtime: `redis.asyncio`, orjson.
+
+One adapter module owns the client. If it is missing, copy sibling `CACHE.md`
+into `project/infrastructure/adapters/acache.py` (and the Settings contract into
+`SettingsValidator` in `settings.py` — see `python-settings`).
+
+| Need | Call |
+|---|---|
+| Read | `await cls.client().get(key)` |
+| Write / delete | `async with redis_atransaction() as tr` |
+| Isolated write (do not join the open pipeline) | `isolated_redis_atransaction()` |
+| After host / Settings override | `redis_client.cache_clear()` |
+
+`redis_atransaction()` reuses the `ContextVar` pipeline or opens one and `execute()`s on exit.
+Do not call `pipe.execute()` by hand inside these helpers.
+
+Connect with `Settings().REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`.
+If the product can run without Redis, skip cache when `redis_is_configured()` is false;
+do not fail at import.
+
+Services and use cases never import `redis` — only cache repositories do.
+
+## CacheRepository
+
+Subclasses live in `project/components/{name}/repositories.py`. Name ends in `CacheRepository`.
+If a base class already exists (`components/base/repositories.py`), subclass that; otherwise
+use `CacheRepository` from the adapter module.
+
+| Attribute | Type | Rule |
+|---|---|---|
+| `key_template` | `ClassVar[str]` | Must contain `{}` for the id (`"item:{}"`) |
+| `ttl` | `ClassVar[timedelta]` | Entry lifetime |
+| `client` | factory | Already `redis_client`; call `cls.client()` |
+
+Keys use domain types from `project/datatypes.py`. Values are Pydantic schemas.
+Serialize with `orjson.dumps(data.model_dump(exclude_unset=True))`; load with
+`orjson.loads` then the schema. `save` / `delete` go through `redis_atransaction()`;
+`get` returns the schema or `None`.
+
+Tests: Testcontainers Redis, `flushdb` per test (fixtures in `CACHE.md`).

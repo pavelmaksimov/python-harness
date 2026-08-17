@@ -1,0 +1,66 @@
+---
+description: No process globals — LazyInit, LazyService, Container
+alwaysApply: true
+---
+
+# LazyInit, Container
+
+Do not keep service instances in module globals. Create them lazily at first use.
+
+`Container = LazyInit(Services)` lives in `project/container.py`.
+Implementation: `project/libs/structures.py`.
+If those types are missing, copy sibling `STRUCTURES.md` into `project/libs/structures.py`
+before introducing new singletons.
+
+Env config is `Settings = LazyInit(SettingsValidator)` in `project/settings.py` — see `python-settings`.
+
+## Call through the proxy
+
+```python
+Container().job_store     # yes
+container = Container()   # no — do not bind the proxy
+```
+
+Do not store `Container` on `self` in `__init__`.
+Do not construct infrastructure clients inside a service; take them from `Container()` at the
+**point of use**. Request schemas and other value objects may be created locally.
+
+```python
+class AskUseCase:
+    async def ask(self, user_id: int, question: str) -> str:
+        user = await Container().repo.get(user_id)
+        return await Container().chat.create_answer(user, question)
+```
+
+```python
+class Services:
+    def __init__(self, **overrides):
+        self.__dict__.update(overrides)
+
+    repo = LazyService("project.components.repo:Repository")
+    chat = LazyService("project.components.chat:ChatService")
+
+Container = LazyInit(Services)
+```
+
+`LazyService` accepts `module.path:ClassName` (import on first access, no cycles) or a factory
+`lambda services: …`. One `Services` instance per process; each service is created once.
+
+A client that is **not** in the container may use `@functools.cache` on a factory function.
+Components still prefer `Container`.
+
+```python
+from functools import cache
+
+@cache
+def weather_client() -> WeatherClient:
+    return WeatherClient(api_key=Settings().WEATHER_API_KEY.get_secret_value())
+```
+
+## Tests
+
+- `Container.local(**kwargs)` — `ContextVar`, current async context.
+- `Container.override(**kwargs)` — process singleton (needed when work runs in another thread,
+  e.g. `asyncio.to_thread`).
+- `Container.reset()` between tests (autouse fixture).
+- `with Container.local(repo=FakeRepo()):` — no `unittest.mock.patch`.

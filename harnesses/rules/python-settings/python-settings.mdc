@@ -1,0 +1,72 @@
+---
+description: pydantic-settings env contract — Settings().PARAM, .env, Constants
+alwaysApply: true
+---
+
+# Settings
+
+Application config is `SettingsValidator` (pydantic-settings `BaseSettings`, Pydantic v2) wrapped as
+`Settings = LazyInit(SettingsValidator)` in `project/settings.py`.
+If that module is missing, copy sibling `SETTINGS.md` into `project/settings.py`.
+`LazyInit` comes from `python-di` (`STRUCTURES.md` → `project/libs/structures.py`).
+
+## Env contract
+
+Field names **are** the environment variable names (`UPPER_SNAKE`).
+pydantic-settings reads process env, then `env_file` (repo-root `.env`).
+Keep `env.example` in sync with required fields (no secret values). Do not commit `.env`.
+
+```python
+from pathlib import Path
+
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from project.libs.structures import LazyInit
+
+
+class SettingsValidator(BaseSettings):
+    LOG_LEVEL: str = "INFO"
+    API_KEY: SecretStr  # required — no default
+
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).parent.parent / ".env",
+        extra="allow",
+    )
+
+
+Settings = LazyInit(SettingsValidator)
+```
+
+- Secrets: `SecretStr`; unwrap with `.get_secret_value()` at the call site.
+- Closed env names: `Enum` (`Envs`).
+- Derived values: `@model_validator` on `SettingsValidator`. Adapter-specific fields (DSN, …)
+  stay in that adapter's contract.
+- Logging (`python-logging`): always `LOG_LEVEL`; optional `WRITE_LOGS_TO_FILE`; `Constants.LOG_FORMAT`
+  when the formatter is shared. Per-library fields only when that library is in the repo:
+  `FASTAPI_LOG_LEVEL`, `TELEGRAM_LOG_LEVEL`, `HTTP_REQUESTS_LOG_LEVEL`, `SQLALCHEMY_LOG_LEVEL`,
+  `REDIS_LOG_LEVEL`.
+- Read config through Settings fields, not `os.getenv` / `os.environ`.
+- `extra="allow"` so undeclared host env does not fail startup.
+
+## Call through the proxy
+
+```python
+Settings().PARAM          # yes
+settings = Settings()     # no — do not bind the proxy
+```
+
+Do not pass `Settings()` as a default argument (it freezes values at import).
+Do not store `Settings` on `self` in `__init__`.
+
+## Constants vs Settings
+
+- **Settings fields** — values that change per environment (env / `.env`).
+- **`Constants`** (same module) — operational values shared across components that are not env-backed.
+- Domain literals stay next to the domain code.
+
+## Tests
+
+- `Settings.local(**kwargs)` — `ContextVar`, current async context.
+- `Settings.override(**kwargs)` — process singleton (needed when work runs in another thread,
+  e.g. `asyncio.to_thread`).

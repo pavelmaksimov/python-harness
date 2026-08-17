@@ -1,0 +1,48 @@
+---
+description: Alembic migrations — async env.py, autogenerate from ORM models, versions outside project/
+globs:
+  - "**/alembic.ini"
+  - "**/alembic/env.py"
+  - "**/alembic/versions/*.py"
+  - "**/alembic/script.py.mako"
+alwaysApply: false
+---
+
+# Alembic migrations
+
+Pair with `python-sqlalchemy`. Skip this harness when the repo creates tables from metadata only
+(`create_all` / `create_all_tables`). CLI and autogenerate behaviour come from Alembic
+(https://alembic.sqlalchemy.org/en/latest/tutorial.html); this rule owns layout.
+
+If `alembic/` is missing and the repo should migrate: `uv add alembic`, then
+`uv run alembic init -t async alembic`. Copy sibling `ENV.md` into `alembic/env.py` when that
+file is still the stock template. Leave `sqlalchemy.url` unset in `alembic.ini`. Keep stock
+`script.py.mako`. Default package root is `project/`.
+
+## Commands (`uv run`)
+
+| Need | Command |
+|---|---|
+| Autogenerate | `uv run alembic revision --autogenerate -m "…"` |
+| Empty revision | `uv run alembic revision -m "…"` |
+| Apply | `uv run alembic upgrade head` |
+| Roll back one | `uv run alembic downgrade -1` |
+| Current | `uv run alembic current` |
+| History | `uv run alembic history` |
+
+After every ORM model change, autogenerate, **review** the script, then `upgrade head`.
+Autogenerate cannot see renames (they look like drop + add). Drop accidental `drop_table` /
+`drop_column` / type rewrites before applying.
+
+Downgrade before switching to a branch whose revisions lag.
+
+## Layout
+
+- Revision scripts live in `alembic/versions/`, not under `project/`.
+- Do not import Alembic from application layers (`layers.toml` already bans it).
+- DSN from `Settings().get_database_dsn()` (`SQLALCHEMY_DATABASE_DSN` or assembled `DB_*`),
+  not from `alembic.ini`.
+- Online migrations: `create_async_engine` + `connection.run_sync` (async SQLAlchemy / `asyncpg`).
+- Import `project/components/**/models.py` so autogenerate sees tables. Do not rglob every `.py`.
+- `target_metadata`: shared `MetaData` / `Base` in `project.components.base.models` when that
+  module exists (`public_schema` or `Base.metadata`); otherwise the repo's existing `Base.metadata`.
