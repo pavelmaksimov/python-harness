@@ -51,20 +51,21 @@ Installable artifacts live only under typed dirs in `harnesses/` (`skills/`,
 ## Catalog
 
 Three bands: install **core** for any Python service, add **adapters** the repo
-actually uses, and take `layers-linter` and `domain-types-linter` with the stack
-so the same boundaries are enforced. `di-linter` is optional — add it when the
-repo uses Container/LazyInit and you want DI001/DI002 enforced. If it is added,
-patch companion rules that already pair the other linters so they mention it too.
+actually uses, and take `layers-linter`, `domain-types-linter`, and `patch-linter`
+with the stack so the same boundaries and the no-patch test rule are enforced.
+`di-linter` is optional — add it when the repo uses Container/LazyInit and you
+want DI001/DI002 enforced. If it is added, patch companion rules that already
+pair the other linters so they mention it too.
 
 ```text
 Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-alembic · python-redis · python-telegram · python-monitoring
-Enforcement   layers-linter · domain-types-linter · di-linter (optional)
+Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
-that the repo uses, plus `layers-linter` and `domain-types-linter`. Offer
-`di-linter` separately. Skip `python-fastapi` when the repo has no inbound HTTP API.
+that the repo uses, plus `layers-linter`, `domain-types-linter`, and `patch-linter`.
+Offer `di-linter` separately. Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. Skip `python-alembic` when tables are
 created from metadata only (`create_all`). Skip `python-telegram` when the repo has no
@@ -123,6 +124,7 @@ Hybrid: tool from upstream, skill from this repo.
 |---|---|---|---|---|---|
 | `layers-linter` | layers-linter | installable | Import boundaries between layers and libraries | https://github.com/pavelmaksimov/layers-linter | Tool: `uvx layers-linter`. Skill: `harnesses/skills/layers-linter/` → `.cursor/skills/layers-linter/`. Template: sibling `layers.toml` → repo-root `layers.toml` (copy only if missing; substitute package name if not `project/`) |
 | `domain-types-linter` | domain-types-linter | installable | Domain types in business-logic annotations | https://github.com/pavelmaksimov/domain-types-linter | Tool: `uvx --from domain-types-linter dt-linter`. Skill: `harnesses/skills/domain-types-linter/SKILL.md` → `.cursor/skills/domain-types-linter/SKILL.md` |
+| `patch-linter` | patch-linter | installable | Forbid `unittest.mock.patch` and pytest `monkeypatch` in tests | https://github.com/pavelmaksimov/patch-linter | Tool: `uvx patch-linter`. Skill: `harnesses/skills/patch-linter/SKILL.md` → `.cursor/skills/patch-linter/SKILL.md` |
 | `di-linter` | di-linter | installable | Optional. In-process construction and test patches | https://github.com/pavelmaksimov/di-linter | Tool: `uvx di-linter`. Skill: `harnesses/skills/di-linter/` → `.cursor/skills/di-linter/`. Template: sibling `di.toml` → repo-root `di.toml` (copy only if missing; substitute package name if not `project/`). If added, patch companion rules so they pair it with the other linters |
 
 Templates (copy only if missing): `layers-linter` → `layers.toml` into repo-root

@@ -63,7 +63,7 @@ python-structure pairing:
   → Pair with `layers-linter`, `di-linter`, and `domain-types-linter`.
 python-di Tests bullet (if that rule is present):
   Pair with `di-linter` (DI001 in-process construction, DI002 patch in tests).
-python-tests (if present), after the no-patch sentence:
+python-tests (if present), after the patch-linter pairing line (or the no-patch sentence):
   Pair with `di-linter` (DI002).
 ```
 3. Run the CLI on the package directory.

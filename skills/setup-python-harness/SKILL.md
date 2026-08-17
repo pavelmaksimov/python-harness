@@ -25,8 +25,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    or component `handlers.py` — skip `python-telegram` when there is no Telegram
    bot; `python-base-client` when the repo has outbound HTTP adapters under
    `infrastructure/adapters/` — skip it when there are none), and
-   `layers-linter` plus `domain-types-linter` with the stack. Offer `di-linter`
-   as optional (Container/LazyInit, DI001/DI002). Recommend `python-monitoring`
+   `layers-linter`, `domain-types-linter`, and `patch-linter` with the stack.
+   Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
+   `python-monitoring`
    when the repo scrapes Prometheus, exposes `/prometheus`, or wants `llm_common`
    metrics (`uv add llm_common prometheus_client` — PyPI `llm_common`, not
    `pycommons`); skip it when the repo does not scrape Prometheus. Core includes

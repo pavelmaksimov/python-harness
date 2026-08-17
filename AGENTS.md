@@ -44,9 +44,9 @@ Rules:
   file happens to exist here.
 - Never vendor upstream/reference skills, rules, hooks, or agents into
   `harnesses/`.
-- Hybrid case (e.g. `layers-linter`, `domain-types-linter`, `di-linter`,
-  `python-monitoring`): tool from upstream; skill or rule from this repo under
-  the matching typed dir. State both in the README Notes column.
+- Hybrid case (e.g. `layers-linter`, `domain-types-linter`, `patch-linter`,
+  `di-linter`, `python-monitoring`): tool from upstream; skill or rule from this
+  repo under the matching typed dir. State both in the README Notes column.
 
 ## Language stack bands
 
@@ -56,8 +56,8 @@ This catalog is one language stack, split into layered IDs:
   tests, frozen clock (language-wide)
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
   repo uses them)
-- **enforcement** — matching linter skills; not every ID is required with the
-  stack (`di-linter` is optional)
+- **enforcement** — matching linter skills; take `layers-linter`,
+  `domain-types-linter`, and `patch-linter` with the stack; `di-linter` is optional
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`SETTINGS.md`, `LOGGER.md`,
@@ -127,9 +127,10 @@ When running or editing the setup skill:
    enforcement).
 2. Ask only what cannot be inferred; get approval before copying files.
 3. Install only approved **installable** paths; for hybrid/upstream tools,
-   print install notes. Recommend `di-linter` separately from `layers-linter`
-   and `domain-types-linter`; if approved, patch companion rules in the target
-   so they name it next to the other linters.
+   print install notes. Recommend `layers-linter`, `domain-types-linter`, and
+   `patch-linter` with the stack. Recommend `di-linter` separately; if approved,
+   patch companion rules in the target so they name it next to the other
+   linters.
 4. Never overwrite existing target files without asking.
 5. Do not commit API keys, tokens, or machine-local absolute paths.
 6. After install, remind the user to periodically update installed copies from
