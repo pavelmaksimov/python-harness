@@ -2,7 +2,7 @@
 
 Opinionated agent harness catalog for Python backend services.
 
-**Catalog version:** `1.2.1` (see root `VERSION`).
+**Catalog version:** `1.2.2` (see root `VERSION`).
 
 It is both:
 

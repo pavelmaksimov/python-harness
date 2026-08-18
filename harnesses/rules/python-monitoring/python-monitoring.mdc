@@ -68,9 +68,9 @@ request = HTTPXRequest(httpx_kwargs={"transport": TelegramHTTPXTransportWithMoni
 
 Named adapters that must map HTTP failures to `AppError` (`ClientError` / `ServerError` /
 `ExternalApiError`) use the selected `python-base-client` implementation (`AsyncApi` or `SyncApi`
-with httpx). That helper records HTTP metrics (`is_build_metrics` / `http_tracking`); do not also
-wrap its session in `HttpxClientWithMonitoring` (double-count). Pass `resource_for_monitoring` as a
-path template with no IDs.
+with httpx). That helper records HTTP metrics through `HttpTelemetry` (`is_build_metrics` /
+`http_tracking`); do not also wrap its session in `HttpxClientWithMonitoring` (double-count). Pass
+`resource_for_monitoring` as a path template with no IDs.
 
 Use `HttpxClientWithMonitoring` when you only need a tracked httpx client without that mapping.
 `name_for_monitoring` is required; API clients suffix `_api`. Override `clear_resource_path` so

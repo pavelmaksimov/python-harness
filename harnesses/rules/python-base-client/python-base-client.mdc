@@ -95,10 +95,10 @@ non-retryable application error explicitly.
 
 ## Monitoring
 
-`AsyncApi` / `SyncApi` record HTTP metrics through llm_common (`is_build_metrics` /
-`http_tracking`). Do not also wrap the selected session with another monitored client (double-count).
-Use `HttpxClientWithMonitoring` only when you need a tracked httpx client **without** this AppError
-mapping.
+`AsyncApi` / `SyncApi` submit HTTP logs and Prometheus metrics through `HttpTelemetry`
+(`is_build_metrics` / `http_tracking`). Do not also wrap the selected session with another
+monitored client (double-count). Use `HttpxClientWithMonitoring` only when you need a tracked
+httpx client **without** this AppError mapping.
 
 ## Tests
 
