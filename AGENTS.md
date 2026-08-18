@@ -9,6 +9,8 @@ entries live in [agent-setup](https://github.com/pavelmaksimov/agent-setup).
 ## Sources of truth
 
 - **Catalog:** `README.md` → section **Catalog**. Do not recreate `catalog.yaml`.
+- **Catalog version:** root `VERSION` (semver). Mirror the same string in the
+  README **Catalog version** line. Do not invent a second version format.
 - **Bootstrap skill:** `skills/setup-python-harness/SKILL.md`.
 - **Installable artifacts:** only under typed dirs in `harnesses/`.
 
@@ -18,7 +20,8 @@ copy. Do not invent a second catalog format.
 ## Layout
 
 ```text
-README.md                         human + agent catalog
+VERSION                           catalog semver (source of truth for version)
+README.md                         human + agent catalog (+ mirrored version line)
 AGENTS.md                         rules for working in this repo
 skills/setup-python-harness/      bootstrap / recommend / install skill
 harnesses/
@@ -30,6 +33,19 @@ harnesses/
 
 Empty typed dirs may keep a `.gitkeep`. Do not put installable content at
 `harnesses/<id>/` without a type folder.
+
+## Catalog version
+
+One shared version for the whole installable set (not per ID).
+
+- Bump root `VERSION` and the README **Catalog version** line together when
+  installable harnesses, the setup skill, or catalog install semantics change.
+- Docs-only edits that do not change what gets copied may leave the version
+  unchanged.
+- On install, the setup skill stamps the target with
+  `.cursor/python-harness-version` (or `~/.cursor/...` for personal install)
+  containing the same single-line semver. That stamp is how a local snapshot
+  is compared to this source.
 
 ## Kind
 
@@ -78,6 +94,9 @@ copy to the target repo root.
 4. Keep IDs stable (`kebab-case`), summaries short, no secrets.
 5. Update `skills/setup-python-harness/SKILL.md` only when install layout or
    Kind semantics change.
+6. When the change affects installable content, the setup skill, or install
+   semantics, bump root `VERSION` and the README **Catalog version** line
+   together (semver).
 
 Default Cursor install targets:
 
@@ -88,6 +107,8 @@ harnesses/hooks/<id>/   → .cursor/hooks/<id>/
 harnesses/agents/<id>/  → .cursor/agents/<id>/
 ```
 
+After a successful installable copy, the setup skill also writes
+`.cursor/python-harness-version` from root `VERSION`.
 ## Authoring installable rules
 
 - One catalog ID per directory: `harnesses/rules/<id>/` with one or more `.mdc`
@@ -146,11 +167,12 @@ When running or editing the setup skill:
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.
-4. Never overwrite existing target files without asking.
+4. Never overwrite existing target files without asking (except refreshing
+   `.cursor/python-harness-version` after an approved installable copy).
 5. Do not commit API keys, tokens, or machine-local absolute paths.
-6. After install, remind the user to periodically update installed copies from
-   this catalog repository (re-run the setup skill or re-copy approved paths).
-
+6. Compare target `.cursor/python-harness-version` to source `VERSION` when
+   present; after install, stamp the target with the source version; report
+   both versions and remind the user to re-run when they differ.
 ## Learn from mismatches
 
 If the result is clearly not what the user needed (wrong Kind, wrong layout,

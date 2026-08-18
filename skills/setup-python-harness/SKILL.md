@@ -17,8 +17,13 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    development workflow. If the repo is not Python, stop and point the user to
    `agent-setup` instead of installing from this catalog.
 2. Clone the source repository into a temporary directory and read `README.md`
-   (the **Catalog** section is the source of truth).
-3. Present harnesses by band: **core**, **adapters**, **enforcement**. Recommend
+   (the **Catalog** section is the source of truth) and root `VERSION`
+   (catalog semver; also shown as **Catalog version** in the README).
+3. If the target already has `.cursor/python-harness-version` (or
+   `~/.cursor/python-harness-version` for a personal install), compare it to
+   the cloned `VERSION`. Report **installed** vs **source** versions up front
+   (missing stamp = unknown / pre-version install).
+4. Present harnesses by band: **core**, **adapters**, **enforcement**. Recommend
    core for any Python repo, adapters that match the codebase (FastAPI,
    SQLAlchemy, Redis; Alembic when the repo already has `alembic/` or
    `alembic.ini`; Telegram when the repo uses python-telegram-bot, `apps/bot.py`,
@@ -40,15 +45,15 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    core ID, not folded into `python-tests`. When `python-sqlalchemy` is selected, ORM factories
    persist through `atransaction()` / `asession()`, not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
-4. Filter out entries that clearly do not fit the repo.
-5. Ask the user only about choices that cannot be inferred:
+5. Filter out entries that clearly do not fit the repo.
+6. Ask the user only about choices that cannot be inferred:
    - which bands / adapters matter for this repo;
    - project-only or personal installation;
    - whether to add optional `python-freezegun`, `python-polyfactory`, and `di-linter`.
-6. Recommend the smallest compatible set. For each item, state the benefit,
+7. Recommend the smallest compatible set. For each item, state the benefit,
    install path or upstream link, and conflicts with already-present skills.
-7. Get explicit approval for the final set.
-8. For **installable** rows, copy `Install from` source → target (see below).
+8. Get explicit approval for the final set.
+9. For **installable** rows, copy `Install from` source → target (see below).
    Kind means this repo is the artifact source of truth. After copying
    `python-tests`, patch the installed `python-tests.mdc` and merge conftest /
    factory templates only for harnesses the user approved — follow sibling
@@ -64,20 +69,43 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `di-linter` was not approved.
    For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
    root when missing (substitute `project` if the package name differs).
-9. For hybrid rows, print the upstream URL and tool install notes; still copy
-   the skill/rule from this catalog when Kind is installable.
-10. Preserve existing files. If a target exists, show the conflict and ask
-    whether to merge, replace, or skip it.
-11. Report installed, referenced (manual), skipped, and unresolved items.
-12. Remind the user that installed copies drift: periodically re-run this skill
-    (or re-copy approved installable paths) from
-    `https://github.com/pavelmaksimov/python-harness` so the target stays aligned
-    with the catalog. Prefer replacing only the previously approved IDs unless
-    the user wants a new selection.
+10. For hybrid rows, print the upstream URL and tool install notes; still copy
+    the skill/rule from this catalog when Kind is installable.
+11. Preserve existing files. If a target exists, show the conflict and ask
+    whether to merge, replace, or skip it. The version stamp file may be
+    overwritten without asking when at least one approved installable path
+    was copied or replaced in this run.
+12. After any successful installable copy/replace in this run, write the
+    cloned catalog `VERSION` contents (trimmed) to
+    `.cursor/python-harness-version` (or `~/.cursor/python-harness-version`
+    for personal install). Do not invent a second stamp format.
+13. Report installed, referenced (manual), skipped, and unresolved items.
+    Include **installed catalog version** (stamp just written or unchanged)
+    and **source catalog version** from the clone.
+14. Remind the user that installed copies drift: re-run this skill (or
+    re-copy approved installable paths) from
+    `https://github.com/pavelmaksimov/python-harness` when the local stamp
+    differs from source `VERSION`. Prefer replacing only the previously
+    approved IDs unless the user wants a new selection.
 
 The setup is complete when every approved installable file is installed or
 explicitly skipped, every approved hybrid entry has tool install notes shown,
-and the periodic-update reminder has been given.
+the version stamp is written after a successful installable copy (or already
+matched when nothing was copied), and the periodic-update reminder has been
+given.
+
+## Catalog version
+
+One shared semver for the whole catalog (not per ID):
+
+| Location | Role |
+|---|---|
+| Source root `VERSION` | Latest catalog release |
+| Target `.cursor/python-harness-version` | Version last installed in that project |
+| Target `~/.cursor/python-harness-version` | Same for a personal install |
+
+Keep the stamp as a single line matching `VERSION`. Compare it to the clone
+before recommending updates.
 
 ## How to read the README catalog
 
@@ -116,9 +144,11 @@ the target repository root (or home for personal installs).
 
 - Keep the target repository's conventions authoritative.
 - Install only files under `harnesses/{skills,rules,hooks,agents}/` for
-  selected installable entries.
+  selected installable entries (plus the version stamp path above).
 - Never copy or recreate upstream/reference packs into the catalog repo.
-- Require approval before overwriting, deleting, or changing existing content.
+- Require approval before overwriting, deleting, or changing existing content
+  (except refreshing `python-harness-version` after an approved installable
+  copy in the same run).
 - Do not copy credentials, local absolute paths, generated output, or source
   repository Git metadata.
 - Remove the temporary clone after the result is reported.

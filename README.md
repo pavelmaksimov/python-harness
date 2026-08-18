@@ -2,6 +2,8 @@
 
 Opinionated agent harness catalog for Python backend services.
 
+**Catalog version:** `1.0.0` (see root `VERSION`).
+
 It is both:
 
 - a showcase of practical Python agent rules and enforcement skills;
@@ -32,9 +34,29 @@ The setup skill reads this README catalog, presents the three bands, asks only
 what it cannot infer, and installs **installable** entries after approval.
 **Reference** / hybrid notes (upstream tools) are printed from the Notes column.
 
-Installed copies are snapshots. Periodically update them from this repository
-(re-run the bootstrap skill or re-copy the approved installable paths) so the
-target stays aligned with the catalog.
+Installed copies are snapshots stamped with the catalog `VERSION`. Periodically
+update them from this repository (re-run the bootstrap skill or re-copy the
+approved installable paths) when the local `.cursor/python-harness-version`
+differs from the source `VERSION`.
+
+## Version
+
+The catalog has one shared version for the whole installable set (semver in
+root `VERSION`, mirrored here). It is not a per-ID version.
+
+On install, the setup skill writes that string to
+`.cursor/python-harness-version` in the target (or `~/.cursor/python-harness-version`
+for a personal install). Compare that file to this repo's `VERSION` (or to the
+line above) to see whether the local snapshot is current.
+
+| Where | What it means |
+|---|---|
+| This repo `VERSION` / README line | Latest catalog release in the source |
+| Target `.cursor/python-harness-version` | Catalog version that was last installed there |
+
+Bump `VERSION` (and the README line) when installable harnesses, the setup
+skill, or catalog install semantics change. Docs-only README edits that do not
+change what gets copied may leave the version unchanged.
 
 ## What Kind means
 
