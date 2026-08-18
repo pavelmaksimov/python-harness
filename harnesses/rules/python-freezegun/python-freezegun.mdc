@@ -63,5 +63,4 @@ async def test_cutoff():
 Compute "now" inside the function under test. Freeze does not rewrite default arguments
 (`def f(now=datetime.now(...))` stays at import time).
 
-Freeze only the test that needs a fixed clock. Production code under `project/` keeps calling
-`datetime.now(timezone.utc)`. Depend on PyPI `freezegun`, not `pytest-freezegun`.
+Freeze only the test that needs a fixed clock. Depend on PyPI `freezegun`.
