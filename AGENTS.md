@@ -80,11 +80,11 @@ Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_SCHEMAS.md`, `FSM.md`, `RETRY.md`,
 `DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
-`TELEGRAM.md`, `CLIENT.md`) live in the rule dir they belong to; mention the
-copy path on that band. Disclosed agent reference next to a rule (e.g. Polyfactory
-`FIELDS.md`, `CUSTOM_TYPES.md`) is not an install template unless the README copy
-list names it. Linter configs (`layers.toml`, `di.toml`) live next to their skills and
-copy to the target repo root.
+`TELEGRAM.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live in the rule dir they
+belong to; mention the copy path on that band. Disclosed agent reference next
+to a rule (e.g. Polyfactory `FIELDS.md`, `CUSTOM_TYPES.md`) is not an install
+template unless the README copy list names it. Linter configs (`layers.toml`,
+`di.toml`) live next to their skills and copy to the target repo root.
 
 ## Adding or changing catalog entries
 
@@ -168,7 +168,9 @@ When running or editing the setup skill:
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
    `patch-linter` with the stack. Offer `python-freezegun`, `python-polyfactory`,
    and `di-linter` separately; offer `python-semver` when the target is a
-   publishable library. Install only when approved. After `python-tests`,
+   publishable library. For `python-base-client`, ask the developer to choose
+   `ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md` (httpx sync), then copy only that
+   implementation to `base_client.py`. Install only when approved. After `python-tests`,
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.

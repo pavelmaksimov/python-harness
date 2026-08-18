@@ -111,9 +111,9 @@ Per-agent state under `ai/{agent}/` is a Pydantic model (TypedDict at minimum), 
 ## Adapters
 
 New external system → new module under `infrastructure/adapters/`. Raise `AppError` subclasses
-(`python-exceptions`). Outbound HTTP APIs subclass or compose `AsyncApi` / `SyncApi` from
-`python-base-client` (`project/infrastructure/utils/base_client.py`; copy that rule's `CLIENT.md`
-if missing). Prefer **httpx** (stack default). `layers.toml`: `base_client` is adapters, not
+(`python-exceptions`). Outbound HTTP APIs subclass or compose the selected `AsyncApi` / `SyncApi`
+from `python-base-client` (`project/infrastructure/utils/base_client.py`; copy that rule's
+`ASYNC_CLIENT.md` or `SYNC_CLIENT.md` if missing). `layers.toml`: `base_client` is adapters, not
 presentation. Tests stub the adapter through `Container.local(...)` (`python-tests`).
 
 If `layers.toml` is missing, copy the `layers-linter` skill template to the

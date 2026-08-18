@@ -2,7 +2,7 @@
 
 Opinionated agent harness catalog for Python backend services.
 
-**Catalog version:** `1.1.0` (see root `VERSION`).
+**Catalog version:** `1.2.1` (see root `VERSION`).
 
 It is both:
 
@@ -132,15 +132,16 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `python-fastapi` | FastAPI HTTP | installable | FastAPI, SSE, ORJSON, URL versioning, AppError handlers, httpx, uvloop | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fastapi/` → `.cursor/rules/python-fastapi/` |
-| `python-base-client` | HTTP adapter helper | installable | httpx `AsyncApi` / `SyncApi`, AppError mapping, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-base-client/` → `.cursor/rules/python-base-client/` |
+| `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-base-client/` → `.cursor/rules/python-base-client/` |
 | `python-sqlalchemy` | SQLAlchemy async | installable | `asession` / `atransaction`, ORM models, optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
 | `python-alembic` | Alembic migrations | installable | Async Alembic env, autogenerate from ORM models, versions outside `project/` | https://alembic.sqlalchemy.org/ | `harnesses/rules/python-alembic/` → `.cursor/rules/python-alembic/` |
 | `python-redis` | Redis cache | installable | `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
 
-Templates (copy only if missing): `python-base-client` → `CLIENT.md` into
-`project/infrastructure/utils/base_client.py`; `python-sqlalchemy` → `DATABASE.md` into
+Templates (copy only if missing): `python-base-client` → developer chooses `ASYNC_CLIENT.md` or
+`SYNC_CLIENT.md` to copy into `project/infrastructure/utils/base_client.py` (never combine them);
+`python-sqlalchemy` → `DATABASE.md` into
 `project/infrastructure/adapters/database.py`; `python-alembic` → `ENV.md` into
 `alembic/env.py`; `python-redis` → `CACHE.md` into
 `project/infrastructure/adapters/acache.py`; `python-telegram` → `TELEGRAM.md`

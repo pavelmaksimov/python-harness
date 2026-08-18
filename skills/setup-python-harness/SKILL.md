@@ -52,6 +52,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
 6. Ask the user only about choices that cannot be inferred:
    - which bands / adapters matter for this repo;
    - project-only or personal installation;
+   - when `python-base-client` is approved, whether the target client is async
+     (`ASYNC_CLIENT.md`, httpx.AsyncClient) or sync (`SYNC_CLIENT.md`, httpx.Client);
    - whether to add optional `python-freezegun`, `python-polyfactory`, `python-semver`,
      and `di-linter`.
 7. Recommend the smallest compatible set. For each item, state the benefit,
@@ -67,6 +69,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
    - `python-sqlalchemy` → `CONFTEST_DATABASE.md` into `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
+   For `python-base-client`, copy only the implementation selected by the user
+   (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
+   `project/infrastructure/utils/base_client.py`; never merge both implementations.
    If `di-linter` is approved, after copying it, follow that skill's
    companion-rule patch so installed `python-structure` / `python-di` /
    `python-tests` name it next to the other linters. Skip the patch when
