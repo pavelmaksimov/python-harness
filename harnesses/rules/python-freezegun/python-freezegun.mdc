@@ -31,6 +31,11 @@ def test_still_valid():
         assert not is_expired(issued_at=NOW, ttl=timedelta(hours=24))
 
 
+@freeze_time("2012-01-14")
+def test_still_valid_decorated():
+    assert datetime.datetime.now() == datetime.datetime(2012, 1, 14)
+
+
 def test_expired_after_ttl():
     with freeze_time(NOW) as frozen:
         token = issue_token(ttl=timedelta(hours=24))
@@ -38,9 +43,9 @@ def test_expired_after_ttl():
         assert token.expired
 ```
 
-`@freeze_time(NOW)` is fine when the clock never moves. Prefer the context manager whenever
-the test jumps or ticks. Use a timezone-aware UTC `datetime` (not a naive string) so it
-matches `datetime.now(timezone.utc)`.
+Both forms freeze the same stopped instant. The decorator `@freeze_time(NOW)` is fine when
+the clock never moves; prefer the context manager whenever the test jumps or ticks
+(`frozen.move_to`).
 
 ## Async
 
