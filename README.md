@@ -2,7 +2,7 @@
 
 Opinionated agent harness catalog for Python backend services.
 
-**Catalog version:** `1.0.0` (see root `VERSION`).
+**Catalog version:** `1.1.0` (see root `VERSION`).
 
 It is both:
 
@@ -80,7 +80,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory
+Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
@@ -88,7 +88,9 @@ Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter`, `domain-types-linter`, and `patch-linter`.
 Offer `python-freezegun`, `python-polyfactory`, and `di-linter` separately — only
-when the repo needs them. Skip `python-fastapi` when the repo has no inbound HTTP API.
+when the repo needs them. Offer `python-semver` when the repo is (or will be) a
+publishable Python library with a public API; skip it for internal apps/services.
+Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. Skip `python-alembic` when tables are
 created from metadata only (`create_all`). Skip `python-telegram` when the repo has no
@@ -109,6 +111,7 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 | `python-tests` | Python tests | installable | pytest layout, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
 | `python-freezegun` | Frozen time | installable | freezegun `freeze_time` — stopped UTC clock in tests, not `patch(datetime)` | https://github.com/spulec/freezegun | `harnesses/rules/python-freezegun/` → `.cursor/rules/python-freezegun/`. Package: `uv add --dev freezegun` |
 | `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `atransaction` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
+| `python-semver` | SemVer 2.0 (libraries) | installable | Semantic Versioning 2.0 for publishable libraries — public API, X.Y.Z bumps, pyproject version | https://semver.org/spec/v2.0.0.html | `harnesses/rules/python-semver/` → `.cursor/rules/python-semver/`. Optional; install when the repo is a library |
 
 Templates (copy only if missing): `python-structure` → `BASE_MODELS.md` into
 `project/components/base/models.py` and `BASE_SCHEMAS.md` into

@@ -42,14 +42,18 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    Offer `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
    `python-polyfactory` (Polyfactory in tests, `uv add --dev polyfactory`) separately — only
    when the repo has time-dependent tests or schema/ORM models to factory-build. Each is its own
-   core ID, not folded into `python-tests`. When `python-sqlalchemy` is selected, ORM factories
+   core ID, not folded into `python-tests`. Offer `python-semver` when the repo is (or will be)
+   a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
+   lib); skip it for internal apps/services that are not versioned for external consumers.
+   When `python-sqlalchemy` is selected, ORM factories
    persist through `atransaction()` / `asession()`, not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
 5. Filter out entries that clearly do not fit the repo.
 6. Ask the user only about choices that cannot be inferred:
    - which bands / adapters matter for this repo;
    - project-only or personal installation;
-   - whether to add optional `python-freezegun`, `python-polyfactory`, and `di-linter`.
+   - whether to add optional `python-freezegun`, `python-polyfactory`, `python-semver`,
+     and `di-linter`.
 7. Recommend the smallest compatible set. For each item, state the benefit,
    install path or upstream link, and conflicts with already-present skills.
 8. Get explicit approval for the final set.

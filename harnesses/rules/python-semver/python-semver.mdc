@@ -1,0 +1,86 @@
+---
+description: SemVer 2.0 for Python libraries — public API, X.Y.Z bumps, pyproject version
+alwaysApply: true
+---
+
+# Semantic Versioning (libraries)
+
+Spec: https://semver.org/spec/v2.0.0.html (v2.0.0).
+
+Use this rule when the repository is (or will be) a **publishable Python library**
+with a declared public API. Skip it for internal apps/services that are not
+versioned for external consumers.
+
+## Public API
+
+The package MUST declare a public API before SemVer meanings apply.
+
+- Document what callers may import (README / API docs / `__all__`).
+- Names starting with `_` are private unless documented otherwise.
+- Prefer exporting the stable surface from the package root or named public modules.
+- Version `1.0.0` is the first release where that public API is considered stable.
+- Under `0.y.z` (initial development) anything MAY change; still use SemVer form.
+
+## Version format
+
+Normal version: `MAJOR.MINOR.PATCH` (non-negative integers, no leading zeroes).
+
+| Bump | When (after `1.0.0`) |
+|---|---|
+| **MAJOR** | Any backward-incompatible change to the public API |
+| **MINOR** | Backward-compatible addition, or deprecation of public API |
+| **PATCH** | Backward-compatible bug fix only |
+
+On MINOR bump, reset PATCH to `0`. On MAJOR bump, reset MINOR and PATCH to `0`.
+
+Examples of **breaking** (MAJOR): remove/rename a public symbol; change a required
+parameter; tighten accepted types; change return/exception contract callers rely on.
+
+Examples of **compatible** (MINOR): add optional parameter with a default; add a
+new public function/class; mark a public symbol deprecated (keep it working).
+
+Examples of **patch**: fix incorrect behavior without changing the public contract.
+
+### Pre-release and build
+
+- Pre-release: `1.0.0-alpha.1`, `1.0.0-rc.1` (hyphen + dot-separated identifiers).
+- Build metadata: `1.0.0+20130313144700` (plus suffix; ignored for precedence).
+- Precedence: `1.0.0-alpha` < `1.0.0-alpha.1` < `1.0.0-beta` < `1.0.0-rc.1` < `1.0.0`.
+
+PyPI / installers use **PEP 440**. Core `X.Y.Z` matches SemVer. Pre-release *syntax*
+differs (`1.0.0a1` / `1.0.0rc1` in PEP 440 vs `1.0.0-alpha.1` / `1.0.0-rc.1` in
+SemVer). For published wheels prefer PEP 440 spellings; keep SemVer bump rules.
+
+## Single source of truth (Python)
+
+One version string drives the release:
+
+1. Prefer `[project].version` in `pyproject.toml`, **or** one dynamic source
+   (e.g. `project/__version__.py` / `VERSION` file) wired via the build backend.
+2. Keep package `__version__` (if present) equal to that string.
+3. Do not hardcode a second conflicting version in docs, CI, or importlib hacks.
+4. Git tag MAY be `v1.2.3`; the SemVer string itself is `1.2.3` (no leading `v`).
+
+```toml
+[project]
+name = "example"
+version = "1.2.3"
+```
+
+## Release hygiene
+
+- Once a version is published, do **not** mutate that release; ship a new version.
+- Accidental breaking change shipped as MINOR: fix compatibility in a new MINOR
+  (or ship a MAJOR that documents the break). Never rewrite the bad tag’s artifacts.
+- Deprecate in a MINOR first; remove in a later MAJOR.
+- Link the SemVer spec from the library README so consumers know the contract.
+- Changelog format is separate (e.g. Keep a Changelog via agent-setup); still bump
+  by these SemVer rules.
+
+## Agent checklist before bumping
+
+1. Identify the public API surface touched by the change.
+2. Classify: breaking / additive or deprecation / fix-only / none.
+3. Choose MAJOR / MINOR / PATCH (or leave unchanged if not a release).
+4. Update the single version source; sync `__version__` if it exists.
+5. Mention the bump reason in the release notes / PR.

@@ -69,7 +69,8 @@ Rules:
 This catalog is one language stack, split into layered IDs:
 
 - **core** — tooling, structure, exceptions, settings, logging, DI, FSM, retry,
-  tests, frozen clock, Polyfactory (language-wide)
+  tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
+  repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
   repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter`,
@@ -127,6 +128,9 @@ After a successful installable copy, the setup skill also writes
   (`python-polyfactory`). Do not fold it into `python-tests`. Persist ORM rows
   through `asession` / `atransaction` (`python-sqlalchemy`), not a private
   sessionmaker.
+- Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
+  Install only when the target is a publishable library; do not fold it into
+  `python-tooling` or service stacks.
 - Optional enforcement (`di-linter`) and optional test harnesses
   (`python-freezegun`, `python-polyfactory`, adapter-driven DB/Redis test blocks)
   stay out of default `python-tests` body text. The base rule keeps a short
@@ -163,7 +167,8 @@ When running or editing the setup skill:
 3. Install only approved **installable** paths; for hybrid/upstream tools,
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
    `patch-linter` with the stack. Offer `python-freezegun`, `python-polyfactory`,
-   and `di-linter` separately; install only when approved. After `python-tests`,
+   and `di-linter` separately; offer `python-semver` when the target is a
+   publishable library. Install only when approved. After `python-tests`,
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.
