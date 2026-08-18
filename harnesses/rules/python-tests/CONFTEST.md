@@ -1,11 +1,14 @@
 # Pytest conftest fixtures
 
 Copy into `tests/conftest.py` (merge with existing fixtures; do not overwrite without asking).
-HTTP mock fixtures can be taken as-is. Wire `metadata` / `app` to the package.
+HTTP mock fixtures can be taken as-is. Wire `app` to the package.
 
 Shared fixtures stay here. Modular tests live under `tests/test_modules/`; e2e under
 `tests/test_e2e/` (e2e-only fixtures may go in `tests/test_e2e/conftest.py`).
-Keep payloads out of fixtures — put scenario data in the test or in `tests/factories.py`.
+Keep payloads out of fixtures — put scenario data in the test body.
+
+When `python-sqlalchemy` is installed, merge sibling `CONFTEST_DATABASE.md` into this file.
+When `python-redis` is installed, merge the Redis fixtures from `python-redis` / `CACHE.md`.
 
 ```python
 from collections.abc import Generator
@@ -13,17 +16,12 @@ from typing import Any
 
 import httpx
 import pytest
-import pytest_asyncio
 import respx
 from aioresponses import aioresponses
 from requests_mock import Mocker
-from sqlalchemy import create_engine
 from starlette.testclient import TestClient
-from testcontainers.postgres import PostgresContainer
 
-from project.components.base.models import Base
 from project.container import Container
-from project.infrastructure.adapters import database
 from project.infrastructure.apps.api import app
 from project.settings import Settings
 
@@ -94,46 +92,14 @@ def openai_chat_completion_response(payload: Any, *, model: str = "mock") -> htt
             "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
         },
     )
-
-
-# --- Database (Testcontainers) -----------------------------------------------
-
-
-@pytest.fixture(scope="session")
-def init_database(setup):
-    with PostgresContainer("postgres:17.2") as postgres:
-        async_dsn = postgres.get_connection_url(driver="asyncpg")
-        sync_dsn = async_dsn.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
-        with Settings.local(SQLALCHEMY_DATABASE_DSN=async_dsn, DB_SCHEMA=None):
-            sync_engine = create_engine(sync_dsn)
-            try:
-                Base.metadata.create_all(bind=sync_engine, checkfirst=True)
-            finally:
-                sync_engine.dispose()
-            yield
-            database.aengine_factory.cache_clear()
-            database.async_sessionmaker_factory.cache_clear()
-
-
-@pytest_asyncio.fixture
-async def asession(init_database):
-    database.aengine_factory.cache_clear()
-    database.async_sessionmaker_factory.cache_clear()
-    async with database.asession() as session:
-        async with session.begin() as transaction:
-            async with session.begin_nested():
-                yield session
-            await transaction.rollback()
 ```
 
-Set `asyncio_mode = auto` in `pytest.ini` (or `[tool.pytest.ini_options]`).
+Set `asyncio_mode = auto` in `pytest.ini` (or `[tool.pytest.ini_options]`) when the repo has async tests.
 
 ## Usage
 
 ```python
 import httpx
-
-from tests.factories import UserFactory
 
 def test_httpx(httpx_responses):
     httpx_responses.get("https://api.example.com/data").mock(
@@ -164,11 +130,6 @@ def test_llm(httpx_responses):
 def test_endpoint(api_client):
     response = api_client.get("/health")
     assert response.status_code == 200
-
-async def test_repo(asession):
-    # asession is already in a nested transaction; data rolls back after the test
-    user = await UserFactory.create_async(email="a@example.com")
-    ...
 
 def test_with_stub():
     with Container.local(repo=FakeRepo()):

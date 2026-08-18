@@ -7,27 +7,23 @@ alwaysApply: false
 
 # Tests
 
-Read `tests/conftest.py` and `tests/factories.py` before adding helpers.
-If `conftest.py` is missing the HTTP/DB fixtures, copy sibling `CONFTEST.md` into `tests/conftest.py`
+Read `tests/conftest.py` before adding helpers.
+If `conftest.py` is missing the HTTP fixtures, copy sibling `CONFTEST.md` into `tests/conftest.py`
 (merge; do not overwrite without asking).
-Data factories live in `python-polyfactory` (`tests/factories.py`).
 
 ## What belongs where
 
 | Place | Holds |
 |---|---|
 | Test body | Scenario data, asserts, one behavior |
-| `tests/factories.py` | Polyfactory classes (`python-polyfactory`) — `build(**overrides)` in memory, `create_async` to persist |
-| `tests/conftest.py` | Session setup, HTTP mock routers, DB container, `TestClient`, `Container.reset()` |
+| `tests/conftest.py` | Session setup, HTTP mock routers, `TestClient`, `Container.reset()` |
 
 Keep data out of fixtures: fixtures that only supply payloads make tests harder to read and change.
-Duplicate literals in tests are fine. Prefer a factory class call in the test
-(`UserFactory.build(...)`, `python-polyfactory`) over a shared data fixture.
+Duplicate literals in tests are fine.
 
 Avoid test-only abstractions. Everything needed to understand a test should be in that test.
 One test checks one behavior; a pile of asserts usually means several cases.
 Assert observable outcomes (status, payload, persisted row), not object internals.
-A new ORM model or request schema also gets a factory class in `tests/factories.py`.
 
 ## Layout
 
@@ -37,7 +33,6 @@ or the same file. Mirror `project/components/` and `project/infrastructure/` und
 ```text
 tests/
   conftest.py                         shared fixtures
-  factories.py
   test_modules/                       modular: mocks, no live third-party APIs
     test_components/{name}/
     test_infrastructure/
@@ -49,8 +44,7 @@ tests/
 
 - **Modular** (`tests/test_modules/`): observable behavior through a use case or endpoint
   (`api_client`). Stub adapters with `Container.local(...)` and HTTP fixtures. No real network,
-  credentials, or live SaaS. Testcontainers Postgres via `asession` and Redis via `python-redis`
-  are allowed here.
+  credentials, or live SaaS.
 - **E2E** (`tests/test_e2e/`): full cycle against real collaborators. Default CI runs
   `tests/test_modules/` only; e2e is an explicit command and needs the live stack.
 
@@ -61,8 +55,6 @@ uv run pytest tests/test_e2e/ -n0
 
 Do not use `unittest.mock.patch` — if a patch is required, invert the dependency and inject a stub.
 Pair with `patch-linter` (PATCH001).
-Freeze "now" with `python-freezegun` (`freeze_time`), not `patch(datetime)`.
-Build test data with `python-polyfactory` (`build` / `create_async`), not `make_*` helpers.
 Autouse: `Container.reset()` before and after each test.
 Settings overrides: `Settings.local` / `Settings.override` (`python-settings`).
 
@@ -82,14 +74,18 @@ def test_external_api(httpx_responses):
 LLM/OpenAI-style calls: mock the chat-completions URL from `Settings()` with `httpx_responses`.
 JSON content is a **string** in `choices[0].message.content` — use `openai_chat_completion_response`.
 
-## Database tests
+## Optional harnesses (install when needed)
 
-Session-scoped Testcontainers Postgres; per-test `asession` with a nested transaction and rollback
-(see `CONFTEST.md`). Put row data in the test (or a factory `create_async` while `asession` is
-active — `python-polyfactory`), not in the DB fixture. After a DSN change, call `cache_clear()`
-on the engine and sessionmaker factories.
+This rule stays stack-agnostic. When the repo gains a concern, install the matching catalog ID
+from `python-harness` (re-run the setup skill or copy that rule dir) and apply the companion patch
+below — do not invent local variants.
 
-## Cache tests
+| Need | Catalog ID | Also copy / merge |
+|---|---|---|
+| Test data factories | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py`; companion patch in this file |
+| Frozen clock in tests | `python-freezegun` | — |
+| Postgres / ORM tests | `python-sqlalchemy` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
+| Redis cache tests | `python-redis` | Redis fixtures from `CACHE.md` → `tests/conftest.py`; companion patch in this file |
 
-Session-scoped Testcontainers Redis; `flushdb` per test (fixtures in `python-redis` / `CACHE.md`).
-After a host override, `redis_client.cache_clear()`.
+Companion patches for the installer live in sibling `COMPANION.md` (catalog repo only — not copied
+to the target).

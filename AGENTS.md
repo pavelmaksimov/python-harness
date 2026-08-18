@@ -106,9 +106,13 @@ harnesses/agents/<id>/  → .cursor/agents/<id>/
   (`python-polyfactory`). Do not fold it into `python-tests`. Persist ORM rows
   through `asession` / `atransaction` (`python-sqlalchemy`), not a private
   sessionmaker.
-- Optional enforcement (`di-linter`) stays out of default pairing lines in
-  installable rule bodies. When that ID is added to a target repo, patch those
-  companion rules so they mention it.
+- Optional enforcement (`di-linter`) and optional test harnesses
+  (`python-freezegun`, `python-polyfactory`, adapter-driven DB/Redis test blocks)
+  stay out of default `python-tests` body text. The base rule keeps a short
+  pointer table to catalog IDs; detailed sections and conftest fragments are
+  applied only when the user approves that ID at install time (`COMPANION.md`
+  in the catalog `python-tests` rule dir — installer-only, not copied to target).
+  When `di-linter` is added, patch companion rules so they mention it.
 - No machine-local absolute paths, source-project product names, or secrets.
 - When enriching an installable rule from a source template, map each spec into
   the matching catalog ID. Product metric prefixes belong in
@@ -137,9 +141,11 @@ When running or editing the setup skill:
 2. Ask only what cannot be inferred; get approval before copying files.
 3. Install only approved **installable** paths; for hybrid/upstream tools,
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
-   `patch-linter` with the stack. Recommend `di-linter` separately; if approved,
-   patch companion rules in the target so they name it next to the other
-   linters.
+   `patch-linter` with the stack. Offer `python-freezegun`, `python-polyfactory`,
+   and `di-linter` separately; install only when approved. After `python-tests`,
+   patch the installed rule and merge conftest/factory templates per catalog
+   `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
+   patch companion rules in the target so they name it next to the other linters.
 4. Never overwrite existing target files without asking.
 5. Do not commit API keys, tokens, or machine-local absolute paths.
 6. After install, remind the user to periodically update installed copies from

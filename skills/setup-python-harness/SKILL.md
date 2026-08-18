@@ -34,25 +34,34 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
    part of `python-di`. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own ID; call-site hygiene stays in `python-tooling`.
-   Core includes `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) as its own
-   ID, not as part of `python-tests`. Core includes `python-polyfactory` (Polyfactory in tests,
-   `uv add --dev polyfactory`) as its own ID, not as part of `python-tests`. When
-   `python-sqlalchemy` is selected, ORM factories persist through `atransaction()` / `asession()`,
-   not a private sessionmaker.
+   Offer `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
+   `python-polyfactory` (Polyfactory in tests, `uv add --dev polyfactory`) separately — only
+   when the repo has time-dependent tests or schema/ORM models to factory-build. Each is its own
+   core ID, not folded into `python-tests`. When `python-sqlalchemy` is selected, ORM factories
+   persist through `atransaction()` / `asession()`, not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
 4. Filter out entries that clearly do not fit the repo.
 5. Ask the user only about choices that cannot be inferred:
    - which bands / adapters matter for this repo;
    - project-only or personal installation;
-   - whether to add optional `di-linter`.
+   - whether to add optional `python-freezegun`, `python-polyfactory`, and `di-linter`.
 6. Recommend the smallest compatible set. For each item, state the benefit,
    install path or upstream link, and conflicts with already-present skills.
 7. Get explicit approval for the final set.
 8. For **installable** rows, copy `Install from` source → target (see below).
-   Kind means this repo is the artifact source of truth. If `di-linter` is
-   approved, after copying it, follow that skill's companion-rule patch so
-   installed `python-structure` / `python-di` / `python-tests` name it next to
-   the other linters. Skip the patch when `di-linter` was not approved.
+   Kind means this repo is the artifact source of truth. After copying
+   `python-tests`, patch the installed `python-tests.mdc` and merge conftest /
+   factory templates only for harnesses the user approved — follow sibling
+   `COMPANION.md` in the catalog `python-tests` rule dir (catalog-only; do not
+   copy it to the target). Skip every companion block for a harness that was not
+   approved. Typical merges:
+   - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
+   - `python-sqlalchemy` → `CONFTEST_DATABASE.md` into `tests/conftest.py`;
+   - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
+   If `di-linter` is approved, after copying it, follow that skill's
+   companion-rule patch so installed `python-structure` / `python-di` /
+   `python-tests` name it next to the other linters. Skip the patch when
+   `di-linter` was not approved.
    For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
    root when missing (substitute `project` if the package name differs).
 9. For hybrid rows, print the upstream URL and tool install notes; still copy

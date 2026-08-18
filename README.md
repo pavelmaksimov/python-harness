@@ -65,7 +65,8 @@ Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter 
 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter`, `domain-types-linter`, and `patch-linter`.
-Offer `di-linter` separately. Skip `python-fastapi` when the repo has no inbound HTTP API.
+Offer `python-freezegun`, `python-polyfactory`, and `di-linter` separately — only
+when the repo needs them. Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. Skip `python-alembic` when tables are
 created from metadata only (`create_all`). Skip `python-telegram` when the repo has no
@@ -95,8 +96,11 @@ Templates (copy only if missing): `python-structure` → `BASE_MODELS.md` into
 `python-di` → `STRUCTURES.md` into `project/libs/structures.py`;
 `python-fsm` → `FSM.md` into `project/libs/fsm.py`;
 `python-retry` → `RETRY.md` into `project/libs/retry.py`;
-`python-tests` → `CONFTEST.md` into `tests/conftest.py`;
-`python-polyfactory` → `FACTORIES.md` into `tests/factories.py`.
+`python-tests` → `CONFTEST.md` into `tests/conftest.py` (HTTP core only);
+when `python-sqlalchemy` is also approved → `CONFTEST_DATABASE.md` into `tests/conftest.py`;
+when `python-polyfactory` is approved → `FACTORIES.md` into `tests/factories.py`.
+After install, patch installed `python-tests.mdc` per catalog `COMPANION.md` for each
+approved optional harness (do not copy `COMPANION.md` to the target).
 
 ### Adapters
 
