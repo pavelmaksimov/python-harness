@@ -24,6 +24,7 @@ VERSION                           catalog semver (source of truth for version)
 README.md                         human + agent catalog (+ mirrored version line)
 AGENTS.md                         rules for working in this repo
 skills/setup-python-harness/      bootstrap / recommend / install skill
+.cursor/rules/<id>/               always-on rules for editing this repo (not catalog)
 harnesses/
   skills/<id>/SKILL.md            installable skills
   rules/<id>/                     installable rules
@@ -33,6 +34,11 @@ harnesses/
 
 Empty typed dirs may keep a `.gitkeep`. Do not put installable content at
 `harnesses/<id>/` without a type folder.
+
+Always-on Cursor rules for agents editing this catalog live in `.cursor/rules/`
+(for example `propose-conventional-commit`). Keep them in git so they apply
+here. Do not copy them into `harnesses/` unless the user asks to add that ID
+to the Python catalog.
 
 ## Catalog version
 

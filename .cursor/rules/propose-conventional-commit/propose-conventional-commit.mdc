@@ -1,0 +1,42 @@
+---
+description: After finishing a task with repo changes, propose a Conventional Commits message
+alwaysApply: true
+---
+
+# Propose Conventional Commit after the task
+
+When a task is done and it produced (or will produce) changes in the repository,
+end the reply with a proposed commit message. Do **not** create the commit unless
+the user explicitly asks.
+
+## When to propose
+
+- Code, docs, config, skills, rules, or other tracked files were added, edited, or deleted.
+- Skip if there is nothing to commit (no meaningful diff, pure Q&A, or the user
+  already provided the commit message / asked not to suggest one).
+
+## Message format
+
+Follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
+
+```text
+<type>[optional scope][!]: <description>
+```
+
+- Prefer `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`, `style`.
+- One dominant intent; if the diff mixes intents, propose separate messages or say how to split.
+- Description: short, imperative, why/intent — not a file list.
+- Add a body or `BREAKING CHANGE:` footer only when needed.
+- Prefer lowercase type; keep the subject concise (about 72 characters).
+
+## How to present
+
+At the end of the completion reply, add a short block, for example:
+
+```text
+feat(rules): propose Conventional Commit after each completed task
+```
+
+If the skill `conventional-commits` is available, follow it for drafting and validation.
+
+Do not add `Co-authored-by` trailers (including Cursor / `cursoragent@cursor.com`).
