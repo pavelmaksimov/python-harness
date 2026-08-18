@@ -95,10 +95,12 @@ non-retryable application error explicitly.
 
 ## Monitoring
 
-`AsyncApi` / `SyncApi` submit HTTP logs and Prometheus metrics through `HttpTelemetry`
-(`is_build_metrics` / `http_tracking`). Do not also wrap the selected session with another
-monitored client (double-count). Use `HttpxClientWithMonitoring` only when you need a tracked
-httpx client **without** this AppError mapping.
+`call_endpoint` notifies `Callback` methods: `request_callback`, `response_callback`,
+`error_callback`, `response_data_callback`. Default callbacks are `LoggingCallback` and
+`TelemetryCallback` (`is_build_metrics` / `http_tracking`). Subclass `Callback` for extra
+observation; do not put logs or metrics back into `call_endpoint`. Do not also wrap the selected
+session with another monitored client (double-count). Use `HttpxClientWithMonitoring` only when you
+need a tracked httpx client **without** this AppError mapping.
 
 ## Tests
 

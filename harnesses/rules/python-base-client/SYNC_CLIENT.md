@@ -19,21 +19,56 @@ from project.exceptions import ClientError, ExternalApiError, ExternalHTTPConnec
 logger = logging.getLogger(__name__)
 
 
-class HttpTelemetry:
+class Callback:
+    def request_callback(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: dict | None = None,
+        params: dict | None = None,
+        data: t.Any = None,
+        json: t.Any = None,
+    ) -> None:
+        pass
+
+    def response_callback(
+        self,
+        method: str,
+        url: str,
+        resource: str,
+        response: httpx.Response,
+    ) -> None:
+        pass
+
+    def error_callback(
+        self,
+        method: str,
+        url: str,
+        resource: str,
+        message: str,
+        exc: BaseException,
+        duration: float,
+    ) -> None:
+        pass
+
+    def response_data_callback(self, response_data: t.Any) -> None:
+        pass
+
+
+class LoggingCallback(Callback):
     def __init__(
         self,
         *,
-        name_for_monitoring: str,
         log_level: int | str = logging.INFO,
         logging_extra_data: bool = False,
     ) -> None:
-        self.name_for_monitoring = name_for_monitoring
-        self.logging_extra_data = logging_extra_data
         if isinstance(log_level, str):
             log_level = logging.getLevelNamesMapping()[log_level.upper()]
         self.log_level = log_level
+        self.logging_extra_data = logging_extra_data
 
-    def on_request(
+    def request_callback(
         self,
         method: str,
         url: str,
@@ -55,19 +90,21 @@ class HttpTelemetry:
         if json:
             logger.debug("Json: %s", json)
 
-    def on_response(self, method: str, url: str, resource: str, response: httpx.Response) -> None:
-        duration = response.elapsed.total_seconds()
-        logger.debug("End call endpoint: %s %s, duration %s ", method, url, duration)
-        self._track(
-            resource=resource,
-            method=method,
-            response_size=int(response.headers.get("content-length", 0)),
-            status_code=response.status_code,
-            duration=duration,
-            request_size=int(response.request.headers.get("content-length", 0)),
+    def response_callback(
+        self,
+        method: str,
+        url: str,
+        resource: str,
+        response: httpx.Response,
+    ) -> None:
+        logger.debug(
+            "End call endpoint: %s %s, duration %s ",
+            method,
+            url,
+            response.elapsed.total_seconds(),
         )
 
-    def on_error(
+    def error_callback(
         self,
         method: str,
         url: str,
@@ -77,6 +114,41 @@ class HttpTelemetry:
         duration: float,
     ) -> None:
         logger.error("%s: %s %s - %s", message, method, url, exc)
+
+    def response_data_callback(self, response_data: t.Any) -> None:
+        if self.logging_extra_data:
+            logger.debug("Response data: %s", response_data)
+
+
+class TelemetryCallback(Callback):
+    def __init__(self, *, name_for_monitoring: str) -> None:
+        self.name_for_monitoring = name_for_monitoring
+
+    def response_callback(
+        self,
+        method: str,
+        url: str,
+        resource: str,
+        response: httpx.Response,
+    ) -> None:
+        self._track(
+            resource=resource,
+            method=method,
+            response_size=int(response.headers.get("content-length", 0)),
+            status_code=response.status_code,
+            duration=response.elapsed.total_seconds(),
+            request_size=int(response.request.headers.get("content-length", 0)),
+        )
+
+    def error_callback(
+        self,
+        method: str,
+        url: str,
+        resource: str,
+        message: str,
+        exc: BaseException,
+        duration: float,
+    ) -> None:
         status_code = 0
         if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
             status_code = exc.response.status_code
@@ -88,10 +160,6 @@ class HttpTelemetry:
             duration=duration,
             request_size=0,
         )
-
-    def on_response_data(self, response_data: t.Any) -> None:
-        if self.logging_extra_data:
-            logger.debug("Response data: %s", response_data)
 
     def _track(
         self,
@@ -138,12 +206,27 @@ class SyncApi:
         self.api_root = api_root
         self.request_settings = request_settings or {}
         self.headers = headers or {}
-        self.telemetry = HttpTelemetry(
-            name_for_monitoring=name_for_monitoring,
-            log_level=log_level,
-            logging_extra_data=logging_extra_data,
-        )
+        self.callbacks: list[Callback] = [
+            LoggingCallback(log_level=log_level, logging_extra_data=logging_extra_data),
+            TelemetryCallback(name_for_monitoring=name_for_monitoring),
+        ]
         self.session = None
+
+    def request_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
+        for callback in self.callbacks:
+            callback.request_callback(*args, **kwargs)
+
+    def response_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
+        for callback in self.callbacks:
+            callback.response_callback(*args, **kwargs)
+
+    def error_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
+        for callback in self.callbacks:
+            callback.error_callback(*args, **kwargs)
+
+    def response_data_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
+        for callback in self.callbacks:
+            callback.response_data_callback(*args, **kwargs)
 
     @contextmanager
     def Session(self, **session_settings):  # noqa: N802
@@ -179,7 +262,7 @@ class SyncApi:
         request_settings = self.request_settings | (request_settings or {})
 
         with session or self.session or self.Session() as sess:
-            self.telemetry.on_request(
+            self.request_callback(
                 method, url, headers=headers, params=params, data=data, json=json
             )
             start_time = time.perf_counter()
@@ -194,11 +277,11 @@ class SyncApi:
                     headers=headers,
                     **request_settings,
                 )
-                self.telemetry.on_response(method, url, resource_for_monitoring, response)
+                self.response_callback(method, url, resource_for_monitoring, response)
                 return self.process_response(response)
 
             except httpx.ConnectError as exc:
-                self.telemetry.on_error(
+                self.error_callback(
                     method,
                     url,
                     resource_for_monitoring,
@@ -209,7 +292,7 @@ class SyncApi:
                 raise self.ConnectionError(url=url, method=method, original_error=exc) from exc
 
             except httpx.TimeoutException as exc:
-                self.telemetry.on_error(
+                self.error_callback(
                     method,
                     url,
                     resource_for_monitoring,
@@ -220,7 +303,7 @@ class SyncApi:
                 raise self.ConnectionError(url=url, method=method, original_error=exc) from exc
 
             except httpx.HTTPStatusError as exc:
-                self.telemetry.on_error(
+                self.error_callback(
                     method,
                     url,
                     resource_for_monitoring,
@@ -260,7 +343,7 @@ class SyncApi:
 
     def process_response(self, response: httpx.Response) -> t.Any:
         response_data = self.response_to_native(response)
-        self.telemetry.on_response_data(response_data)
+        self.response_data_callback(response_data)
         self.error_handling(response, response_data)
         return response_data
 
