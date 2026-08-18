@@ -35,7 +35,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    part of `python-di`. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own ID; call-site hygiene stays in `python-tooling`.
    Core includes `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) as its own
-   ID, not as part of `python-tests`.
+   ID, not as part of `python-tests`. Core includes `python-polyfactory` (Polyfactory in tests,
+   `uv add --dev polyfactory`) as its own ID, not as part of `python-tests`. When
+   `python-sqlalchemy` is selected, ORM factories persist through `atransaction()` / `asession()`,
+   not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
 4. Filter out entries that clearly do not fit the repo.
 5. Ask the user only about choices that cannot be inferred:

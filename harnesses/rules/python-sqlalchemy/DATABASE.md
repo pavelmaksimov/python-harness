@@ -37,7 +37,7 @@ def _engine_connect_args() -> dict:
     return connect_args
 
 
-@lru_cache
+@lru_cache  # process-wide pool; cache_clear() after a DSN override
 def aengine_factory() -> AsyncEngine:
     return create_async_engine(
         database_dsn(),
@@ -46,7 +46,7 @@ def aengine_factory() -> AsyncEngine:
     )
 
 
-@lru_cache
+@lru_cache  # stays bound to the cached engine; not a session cache
 def async_sessionmaker_factory():
     return async_sessionmaker(aengine_factory(), autoflush=False, expire_on_commit=False)
 
@@ -170,3 +170,4 @@ async def get(pk):
 
 Copy `init_database` and `asession` from the `python-tests` rule (`CONFTEST.md`) into `tests/conftest.py`.
 After a DSN override, `cache_clear()` the factories. Nested transaction + rollback isolates rows.
+Persist test rows with `create_async` (`python-polyfactory`) while this `asession` fixture is active.

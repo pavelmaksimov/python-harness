@@ -58,7 +58,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun
+Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
@@ -83,8 +83,9 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 | `python-di` | Python DI | installable | LazyInit, Container, LazyService — no process globals | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-di/` → `.cursor/rules/python-di/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fsm/` → `.cursor/rules/python-fsm/` |
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-retry/` → `.cursor/rules/python-retry/` |
-| `python-tests` | Python tests | installable | pytest factories, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
+| `python-tests` | Python tests | installable | pytest layout, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
 | `python-freezegun` | Frozen time | installable | freezegun `freeze_time` — stopped UTC clock in tests, not `patch(datetime)` | https://github.com/spulec/freezegun | `harnesses/rules/python-freezegun/` → `.cursor/rules/python-freezegun/`. Package: `uv add --dev freezegun` |
+| `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `atransaction` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
 
 Templates (copy only if missing): `python-structure` → `BASE_MODELS.md` into
 `project/components/base/models.py` and `BASE_SCHEMAS.md` into
@@ -94,7 +95,8 @@ Templates (copy only if missing): `python-structure` → `BASE_MODELS.md` into
 `python-di` → `STRUCTURES.md` into `project/libs/structures.py`;
 `python-fsm` → `FSM.md` into `project/libs/fsm.py`;
 `python-retry` → `RETRY.md` into `project/libs/retry.py`;
-`python-tests` → `CONFTEST.md` into `tests/conftest.py`.
+`python-tests` → `CONFTEST.md` into `tests/conftest.py`;
+`python-polyfactory` → `FACTORIES.md` into `tests/factories.py`.
 
 ### Adapters
 

@@ -28,6 +28,10 @@ into `project/infrastructure/adapters/database.py` (and the Settings contract in
 `atransaction()` begins, or `begin_nested()` when already in a transaction.
 Do not call `session.commit()` / `session.close()` by hand inside these helpers.
 
+`aengine_factory` is `@lru_cache` because `create_async_engine` owns a connection pool —
+one engine per process. `async_sessionmaker_factory` is cached only so it stays bound to
+that engine. Do not cache `AsyncSession`: `asession()` already reuses via ContextVar.
+
 DSN from `Settings().get_database_dsn()` (`SQLALCHEMY_DATABASE_DSN` or assembled `DB_*`).
 Optional `DB_SCHEMA` → `search_path`. `DATABASE_PRE_PING` on the engine.
 
@@ -52,14 +56,15 @@ Many-to-many: `ARRAY` of ids (`Mapped[list[TagIdT]]`), not an association table.
 Index columns used for filter, sort, or FK lookup.
 Application rules stay in Python — no new triggers or stored procedures.
 
-A new model also gets a `make_*` factory in `tests/factories.py`. Follow existing `__tablename__`
-style in the repo.
+A new model also gets a `SQLAlchemyFactory` in `tests/factories.py` (`python-polyfactory`).
+Follow existing `__tablename__` style in the repo.
 
 Services and use cases never import SQLAlchemy, never create `AsyncSession`, never write SQL —
 only repositories do.
 
 Tests: Testcontainers Postgres, schema via `create_all`, then a nested transaction per test and
-rollback (fixtures in `python-tests` / `CONFTEST.md`). Row data stays in the test or a `make_*` factory.
+rollback (fixtures in `python-tests` / `CONFTEST.md`). Row data stays in the test or a factory
+`build` / `create_async` (`python-polyfactory`).
 
 When `python-monitoring` is installed, after `build_prometheus_metrics` call
 `register_sqlalchemy_engine_monitoring(engine, database="…")` (async engines are fine).

@@ -1,0 +1,63 @@
+---
+description: Polyfactory test factories — build/create_async on the class, ORM via atransaction
+globs:
+  - tests/**
+alwaysApply: false
+---
+
+# Polyfactory
+
+Package: PyPI **`polyfactory`** (`uv add --dev polyfactory`). Pair with `python-tests`.
+If `tests/factories.py` is missing, copy sibling `FACTORIES.md` into `tests/factories.py`
+(merge; do not overwrite without asking). Include the ORM block only when `python-sqlalchemy`
+is installed.
+
+Call factories on the class in the test body. Do not wrap them in `make_*` helpers.
+Do not `@register_fixture` / `register_fixture(...)`.
+
+| Need | Call |
+|---|---|
+| Pydantic / schema | `ItemSchemaFactory.build(**overrides)` |
+| ORM in memory | `UserFactory.build(**overrides)` |
+| ORM row in DB | `await UserFactory.create_async(**overrides)` |
+| Several rows | `UserFactory.batch(n, **overrides)` / `await UserFactory.create_batch_async(n, **overrides)` |
+
+A new ORM model or request schema gets a factory class in `tests/factories.py`.
+Overrides in the test beat factory defaults.
+
+```python
+from tests.factories import ItemSchemaFactory, UserFactory
+
+
+def test_user():
+    user = UserFactory.build(email="b@example.com")
+    payload = ItemSchemaFactory.build(title="x")
+
+
+async def test_user_persisted(asession):
+    user = await UserFactory.create_async(email="a@example.com")
+    assert user.id is not None
+```
+
+## ORM persistence
+
+SQLAlchemy factories persist through `atransaction()` from `python-sqlalchemy`
+(`project/infrastructure/adapters/database.py`). Flush only — never `commit()` inside
+the factory. Do not set `__async_session__` / `__session__` to a private sessionmaker.
+
+Take the `asession` fixture on every test that calls `create_async` / `create_batch_async`,
+even if the body does not use the session object. `build()` / `batch()` do not touch the DB.
+
+Base factory (in `FACTORIES.md`): `__set_primary_key__ = False`,
+`__set_relationships__ = False`, `__set_association_proxy__ = False`. Pass real FK ids.
+Async only — no `create_sync`.
+
+## Pull more detail when needed
+
+Read the sibling file only for that branch — do not load all of them by default.
+
+| When | Read |
+|---|---|
+| Field defaults, `Use` / `Ignore` / `Require`, `PostGenerated`, nested factory fields, FK filled from a prior create | sibling `FIELDS.md` |
+| `NewType` / custom type fails to generate, or many factories need the same type | sibling `CUSTOM_TYPES.md` |
+| Exhaustive `Literal` / union variants with few instances | sibling `COVERAGE.md` |

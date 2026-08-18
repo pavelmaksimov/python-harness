@@ -53,7 +53,7 @@ Rules:
 This catalog is one language stack, split into layered IDs:
 
 - **core** — tooling, structure, exceptions, settings, logging, DI, FSM, retry,
-  tests, frozen clock (language-wide)
+  tests, frozen clock, Polyfactory (language-wide)
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
   repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter`,
@@ -62,9 +62,11 @@ This catalog is one language stack, split into layered IDs:
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_SCHEMAS.md`, `FSM.md`, `RETRY.md`,
-`DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `BOT.md`, `TELEGRAM.md`,
-`CLIENT.md`) live in the rule dir they belong to; mention the copy path on that
-band. Linter configs (`layers.toml`, `di.toml`) live next to their skills and
+`DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
+`TELEGRAM.md`, `CLIENT.md`) live in the rule dir they belong to; mention the
+copy path on that band. Disclosed agent reference next to a rule (e.g. Polyfactory
+`FIELDS.md`, `CUSTOM_TYPES.md`) is not an install template unless the README copy
+list names it. Linter configs (`layers.toml`, `di.toml`) live next to their skills and
 copy to the target repo root.
 
 ## Adding or changing catalog entries
@@ -100,6 +102,10 @@ harnesses/agents/<id>/  → .cursor/agents/<id>/
   Settings into DI.
 - Clock in tests (`freezegun` `freeze_time`) is its own core ID
   (`python-freezegun`). Do not fold it into `python-tests`.
+- Test data factories (Polyfactory `build` / `create_async`) is its own core ID
+  (`python-polyfactory`). Do not fold it into `python-tests`. Persist ORM rows
+  through `asession` / `atransaction` (`python-sqlalchemy`), not a private
+  sessionmaker.
 - Optional enforcement (`di-linter`) stays out of default pairing lines in
   installable rule bodies. When that ID is added to a target repo, patch those
   companion rules so they mention it.
@@ -108,6 +114,9 @@ harnesses/agents/<id>/  → .cursor/agents/<id>/
   the matching catalog ID. Product metric prefixes belong in
   `python-monitoring`. Leave unmatched concerns (named third-party SaaS auth
   adapters) out until they have their own ID.
+- Upstream doc maps for refreshing a rule live in that rule dir as `UPSTREAM.md`
+  (local file → upstream URL). Use them only when updating this catalog.
+  Do not mention `UPSTREAM.md` from `.mdc` bodies or other agent-facing siblings.
 
 ## Authoring installable skills
 

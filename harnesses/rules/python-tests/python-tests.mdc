@@ -10,22 +10,24 @@ alwaysApply: false
 Read `tests/conftest.py` and `tests/factories.py` before adding helpers.
 If `conftest.py` is missing the HTTP/DB fixtures, copy sibling `CONFTEST.md` into `tests/conftest.py`
 (merge; do not overwrite without asking).
+Data factories live in `python-polyfactory` (`tests/factories.py`).
 
 ## What belongs where
 
 | Place | Holds |
 |---|---|
 | Test body | Scenario data, asserts, one behavior |
-| `tests/factories.py` | `make_<entity>(**overrides)` — defaults merged with overrides, returns a schema/model |
+| `tests/factories.py` | Polyfactory classes (`python-polyfactory`) — `build(**overrides)` in memory, `create_async` to persist |
 | `tests/conftest.py` | Session setup, HTTP mock routers, DB container, `TestClient`, `Container.reset()` |
 
 Keep data out of fixtures: fixtures that only supply payloads make tests harder to read and change.
-Duplicate literals in tests are fine. Prefer a factory call in the test over a shared data fixture.
+Duplicate literals in tests are fine. Prefer a factory class call in the test
+(`UserFactory.build(...)`, `python-polyfactory`) over a shared data fixture.
 
 Avoid test-only abstractions. Everything needed to understand a test should be in that test.
 One test checks one behavior; a pile of asserts usually means several cases.
 Assert observable outcomes (status, payload, persisted row), not object internals.
-A new ORM model also gets a `make_*` factory in `tests/factories.py`.
+A new ORM model or request schema also gets a factory class in `tests/factories.py`.
 
 ## Layout
 
@@ -60,6 +62,7 @@ uv run pytest tests/test_e2e/ -n0
 Do not use `unittest.mock.patch` — if a patch is required, invert the dependency and inject a stub.
 Pair with `patch-linter` (PATCH001).
 Freeze "now" with `python-freezegun` (`freeze_time`), not `patch(datetime)`.
+Build test data with `python-polyfactory` (`build` / `create_async`), not `make_*` helpers.
 Autouse: `Container.reset()` before and after each test.
 Settings overrides: `Settings.local` / `Settings.override` (`python-settings`).
 
@@ -82,8 +85,9 @@ JSON content is a **string** in `choices[0].message.content` — use `openai_cha
 ## Database tests
 
 Session-scoped Testcontainers Postgres; per-test `asession` with a nested transaction and rollback
-(see `CONFTEST.md`). Put row data in the test (or a factory), not in the DB fixture. After a DSN
-change, call `cache_clear()` on the engine and sessionmaker factories.
+(see `CONFTEST.md`). Put row data in the test (or a factory `create_async` while `asession` is
+active — `python-polyfactory`), not in the DB fixture. After a DSN change, call `cache_clear()`
+on the engine and sessionmaker factories.
 
 ## Cache tests
 

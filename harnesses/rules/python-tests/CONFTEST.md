@@ -133,6 +133,8 @@ Set `asyncio_mode = auto` in `pytest.ini` (or `[tool.pytest.ini_options]`).
 ```python
 import httpx
 
+from tests.factories import UserFactory
+
 def test_httpx(httpx_responses):
     httpx_responses.get("https://api.example.com/data").mock(
         side_effect=[httpx.Response(200, json={"result": "ok"})],
@@ -165,6 +167,7 @@ def test_endpoint(api_client):
 
 async def test_repo(asession):
     # asession is already in a nested transaction; data rolls back after the test
+    user = await UserFactory.create_async(email="a@example.com")
     ...
 
 def test_with_stub():
