@@ -125,6 +125,8 @@ After a successful installable copy, the setup skill also writes
 - One catalog ID per directory: `harnesses/rules/<id>/` with one or more `.mdc`
   files. That ID is one layer, not the whole stack.
 - Frontmatter: `description`, and either `alwaysApply: true` or `globs`.
+- Guidance needed outside its `globs` must have a trigger pointer in an
+  `alwaysApply: true` base rule.
 - English bodies. Default package root is `project/`; note in the README if the
   installer should substitute.
 - One concern per `.mdc`. Name the layer (tooling, HTTP, persistence); leave
