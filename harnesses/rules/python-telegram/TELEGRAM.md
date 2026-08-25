@@ -1,6 +1,6 @@
 # Telegram handler helpers
 
-Copy this module to `project/infrastructure/utils/telegram.py` when the package does not already
+Copy this module to `project/infrastructure/base/telegram.py` when the package does not already
 define `processing_errors` / `timeout_with_retry`. Handlers import these decorators; they do not
 catch-and-reply errors themselves.
 
@@ -121,7 +121,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
 from project.container import Container
-from project.infrastructure.utils.telegram import processing_errors, timeout_with_retry
+from project.infrastructure.base.telegram import processing_errors, timeout_with_retry
 
 
 @timeout_with_retry

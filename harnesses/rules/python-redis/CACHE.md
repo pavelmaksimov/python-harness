@@ -66,7 +66,7 @@ async def redis_atransaction() -> AsyncIterator[Pipeline]:
 
 ## Base cache repository
 
-Merge this class into `project/components/base/repositories.py`.
+Merge this class into `project/base/repositories.py`.
 
 ```python
 from datetime import timedelta
@@ -122,7 +122,7 @@ from datetime import timedelta
 import orjson
 
 from project.datatypes import ItemIdT
-from project.components.base.repositories import CacheRepository
+from project.base.repositories import CacheRepository
 from project.components.item.schemas import ItemCacheSchema
 
 

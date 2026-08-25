@@ -5,7 +5,7 @@ or when the existing `env.py` still uses sync `engine_from_config`. Requires `py
 `python-db-sessions`, and `python-settings` (`Settings().get_database_dsn()`). Leave
 `sqlalchemy.url` unset in `alembic.ini`.
 
-If `project.components.base.models` is missing, import the repo's existing `Base` and use `Base.metadata`.
+If `project.base.models` is missing, import the repo's existing `Base` and use `Base.metadata`.
 
 ```python
 import asyncio
@@ -18,7 +18,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from project.components.base import models as base_models
+from project.base import models as base_models
 from project.settings import Settings
 
 config = context.config

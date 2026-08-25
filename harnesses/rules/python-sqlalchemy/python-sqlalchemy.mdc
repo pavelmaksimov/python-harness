@@ -11,8 +11,8 @@ alwaysApply: false
 Use SQLAlchemy 2.0 `Mapped` / `mapped_column`. JSON columns use Postgres `JSONB`.
 
 If shared ORM bases are missing, copy sibling `BASE_MODELS.md` to
-`project/components/base/models.py`. If multiple repositories share model lookup behavior, copy
-`BASE_REPOSITORIES.md` to `project/components/base/repositories.py`. Do not add a generic
+`project/base/models.py`. If multiple repositories share model lookup behavior, copy
+`BASE_REPOSITORIES.md` to `project/base/repositories.py`. Do not add a generic
 repository for one consumer.
 
 Session lifecycle, transactions, engine construction, DSN settings, and `DATABASE.md` belong to
@@ -23,7 +23,7 @@ If the repo already has Alembic, follow `python-alembic`: generate a revision af
 change and apply it. Do not add a migrator to a repo that creates tables from metadata only
 (`create_all` / `create_all_tables`).
 
-Models inherit `Base` / `TimeMixin` from `project.components.base.models`.
+Models inherit `Base` / `TimeMixin` from `project.base.models`.
 Foreign keys set `ondelete` when cascade/restrict matters. Identity and other entity keys use
 domain types from `project/datatypes.py`, not bare `int` / `str`. Primary keys: `BigInteger`.
 Postgres enums: `class Role(str, enum.Enum)` + `mapped_column(Enum(Role, name="role_enum"))`.

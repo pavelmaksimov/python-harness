@@ -70,20 +70,20 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `COMPANION.md` in the catalog `python-tests` rule dir (catalog-only; do not
    copy it to the target). Skip every companion block for a harness that was not
    approved. Typical merges:
-   - `python-sqlalchemy` → `BASE_MODELS.md` into `project/components/base/models.py`; add
+   - `python-sqlalchemy` → `BASE_MODELS.md` into `project/base/models.py`; add
      `BASE_REPOSITORIES.md` only when multiple repositories share the base;
    - `python-db-sessions` → `DATABASE.md` into
      `project/infrastructure/adapters/database.py`;
    - `python-redis` → adapter code from `CACHE.md` into
      `project/infrastructure/adapters/acache.py` and `CacheRepository` into
-     `project/components/base/repositories.py`;
+     `project/base/repositories.py`;
    - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
    For `python-base-client`, copy only the implementation selected by the user
    (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
-   `project/infrastructure/utils/base_client.py`; never merge both implementations.
+   `project/infrastructure/base/http_client.py`; never merge both implementations.
    If `di-linter` is approved, after copying it, follow that skill's
    companion-rule patch so installed `python-structure` / `python-di` /
    `python-tests` name it next to the other linters. Skip the patch when

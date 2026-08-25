@@ -3,7 +3,7 @@ description: Telegram bot adapter — python-telegram-bot handlers, polling, err
 globs:
   - "**/handlers.py"
   - "**/apps/bot.py"
-  - "**/utils/telegram.py"
+  - "**/infrastructure/base/telegram.py"
 alwaysApply: false
 ---
 
@@ -18,10 +18,10 @@ When the bot libraries need a level different from root, add `TELEGRAM_LOG_LEVEL
 (`python-development-rules`).
 
 Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers live in
-`project.components.base.handlers` (`python-structure`). Register them from
-`project.infrastructure.apps.bot`. Decorator helpers live in `project.infrastructure.utils.telegram`.
+`project.base.handlers` (`python-structure`). Register them from
+`project.infrastructure.apps.bot`. Decorator helpers live in `project.infrastructure.base.telegram`.
 If `telegram.py` or `bot.py` is missing, copy sibling `TELEGRAM.md` into
-`project/infrastructure/utils/telegram.py` and `BOT.md` into `project/infrastructure/apps/bot.py`.
+`project/infrastructure/base/telegram.py` and `BOT.md` into `project/infrastructure/apps/bot.py`.
 
 Token: `Settings().TELEGRAM_BOT_TOKEN` (`python-settings`, `SecretStr`). Unwrap with `.get_secret_value()` on
 `ApplicationBuilder().token(...)`. Add the field to `SettingsValidator` if it is missing.

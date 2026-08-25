@@ -1,21 +1,21 @@
 ---
 description: Outbound HTTP adapters — choose httpx AsyncApi or SyncApi, AppError mapping, retries
 globs:
-  - "**/utils/base_client.py"
+  - "**/infrastructure/base/http_client.py"
   - "**/adapters/*.py"
 alwaysApply: false
 ---
 
 # Outbound HTTP adapters
 
-Choose one implementation for `project/infrastructure/utils/base_client.py`:
+Choose one implementation for `project/infrastructure/base/http_client.py`:
 
 - async service: copy sibling `ASYNC_CLIENT.md` (`httpx.AsyncClient`, orjson, llm_common);
 - sync service: copy sibling `SYNC_CLIENT.md` (`httpx.Client`, orjson, llm_common).
 
 Install only the implementation the developer selects; do not combine both clients in one module.
 New external HTTP API → a module under `project/infrastructure/adapters/`. Subclass or compose the
-selected `AsyncApi` or `SyncApi`. `layers.toml`: `base_client` is **adapters**, not presentation.
+selected `AsyncApi` or `SyncApi`. `layers.toml`: `http_client` is **adapters**, not presentation.
 
 When httpx needs a level different from root, add `HTTP_REQUESTS_LOG_LEVEL` to
 `SettingsValidator` and configure `httpx` and `httpcore` with it (`python-development-rules`).

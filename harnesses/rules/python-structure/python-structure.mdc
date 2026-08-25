@@ -12,7 +12,7 @@ annotate expected collaborators with `Protocol` in `interfaces.py`.
 - **Use case** — I/O entry (HTTP, CLI, bot). Coordinates services; no persistence client or
   query language. Other components do not call use cases. Keep it short; names are business verbs.
   Input checks live here; shared check functions go in `validation.py`.
-- **Repository** — the only data-access type; stateless. Inherit from `components.base` when a
+- **Repository** — the only data-access type; stateless. Inherit from `project.base` when a
   shared base exists. Add one only when it has a real consumer.
 - **Adapter** — facade over an external system; errors and API quirks stay here so tests can stub it.
 - **Container** — `LazyInit(Services)`; take dependencies with `Container().…` inside methods.
@@ -29,8 +29,8 @@ Per-agent state under `ai/{agent}/` is a Pydantic model (TypedDict at minimum), 
 
 New external system → new module under `infrastructure/adapters/`. Raise `AppError` subclasses
 (`python-exceptions`). Outbound HTTP APIs subclass or compose the selected `AsyncApi` / `SyncApi`
-from `python-base-client` (`project/infrastructure/utils/base_client.py`; copy that rule's
-`ASYNC_CLIENT.md` or `SYNC_CLIENT.md` if missing). `layers.toml`: `base_client` is adapters, not
+from `python-base-client` (`project/infrastructure/base/http_client.py`; copy that rule's
+`ASYNC_CLIENT.md` or `SYNC_CLIENT.md` if missing). `layers.toml`: `http_client` is adapters, not
 presentation. Tests stub the adapter through `Container.local(...)` (`python-tests`).
 
 If `layers.toml` is missing, copy the `layers-linter` skill template to the

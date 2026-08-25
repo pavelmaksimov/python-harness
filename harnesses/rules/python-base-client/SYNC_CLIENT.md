@@ -1,6 +1,6 @@
 # Sync HTTP adapter helper
 
-Copy the Python block below to `project/infrastructure/utils/base_client.py` when the service uses
+Copy the Python block below to `project/infrastructure/base/http_client.py` when the service uses
 synchronous outbound HTTP. Requires `httpx`, `orjson`, `llm_common`, and the exception classes from
 `project/exceptions.py`.
 

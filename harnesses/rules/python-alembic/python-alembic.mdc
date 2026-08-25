@@ -45,5 +45,5 @@ Downgrade before switching to a branch whose revisions lag.
   not from `alembic.ini`.
 - Online migrations: `create_async_engine` + `connection.run_sync` (async SQLAlchemy / `asyncpg`).
 - Import `project/components/**/models.py` so autogenerate sees tables. Do not rglob every `.py`.
-- `target_metadata`: shared `MetaData` / `Base` in `project.components.base.models` when that
+- `target_metadata`: shared `MetaData` / `Base` in `project.base.models` when that
   module exists (`public_schema` or `Base.metadata`); otherwise the repo's existing `Base.metadata`.

@@ -1,6 +1,6 @@
 # Generic SQLAlchemy repository
 
-Copy this module to `project/components/base/repositories.py` when multiple domain repositories
+Copy this module to `project/base/repositories.py` when multiple domain repositories
 share the same model lookup behavior. Skip it when a generic base would have only one consumer.
 Requires `python-db-sessions` for `asession` / `atransaction`.
 
@@ -16,7 +16,7 @@ from typing import Any, ClassVar
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from project.components.base.models import Base
+from project.base.models import Base
 from project.exceptions import NotFoundError
 from project.infrastructure.adapters.database import asession, atransaction, current_atransaction
 

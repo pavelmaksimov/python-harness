@@ -12,7 +12,7 @@ import pytest_asyncio
 from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
 
-from project.components.base.models import Base
+from project.base.models import Base
 from project.infrastructure.adapters import database
 ```
 

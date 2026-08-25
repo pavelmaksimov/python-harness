@@ -1,6 +1,6 @@
 # Shared SQLAlchemy Base
 
-Copy this module to `project/components/base/models.py` when the package does not already define
+Copy this module to `project/base/models.py` when the package does not already define
 `Base` / `public_schema`. Domain models inherit `Base` and mix in `TimeMixin`.
 Alembic uses `public_schema` or `Base.metadata` (`python-alembic`).
 

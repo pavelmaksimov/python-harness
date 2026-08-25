@@ -25,8 +25,8 @@ description = "Facades over external systems (HTTP, DB, cache, queues) and the H
 contains_modules = [
     "project.infrastructure.adapters",
     "project.infrastructure.adapters.*",
-    "project.infrastructure.utils.base_client",
-    "project.infrastructure.utils.base_client.*",
+    "project.infrastructure.base.http_client",
+    "project.infrastructure.base.http_client.*",
 ]
 depends_on = ["libs", "adapters"]
 
@@ -37,6 +37,10 @@ contains_modules = [
     "project.components.*.models.*",
     "project.components.*.repositories",
     "project.components.*.repositories.*",
+    "project.base.models",
+    "project.base.models.*",
+    "project.base.repositories",
+    "project.base.repositories.*",
 ]
 depends_on = ["adapters", "libs", "repositories"]
 
@@ -73,16 +77,16 @@ contains_modules = [
     "project.infrastructure.apps.*",
     "project.infrastructure.utils",
     "project.infrastructure.utils.*",
+    "project.infrastructure.base.telegram",
+    "project.infrastructure.base.telegram.*",
     "project.components.*.endpoints",
     "project.components.*.endpoints.*",
     "project.components.*.handlers",
     "project.components.*.handlers.*",
+    "project.base.handlers",
+    "project.base.handlers.*",
     "project.components.*.cli",
     "project.components.*.cli.*",
-]
-exclude_modules = [
-    "project.infrastructure.utils.base_client",
-    "project.infrastructure.utils.base_client.*",
 ]
 depends_on = ["dicontainer", "usecases", "services", "libs", "presentation"]
 

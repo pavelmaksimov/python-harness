@@ -16,7 +16,7 @@ configure `redis` with it (`python-development-rules`).
 
 One adapter module owns the client. If it is missing, copy the adapter section from sibling
 `CACHE.md` into `project/infrastructure/adapters/acache.py`. Merge its base repository section
-into `project/components/base/repositories.py` and its Settings contract into `settings.py`.
+into `project/base/repositories.py` and its Settings contract into `settings.py`.
 
 | Need | Call |
 |---|---|
@@ -40,7 +40,7 @@ use the same constant for Redis keys outside cache repositories.
 
 ## CacheRepository
 
-The base `CacheRepository` always lives in `project/components/base/repositories.py`.
+The base `CacheRepository` always lives in `project/base/repositories.py`.
 Subclasses live in `project/components/{name}/repositories.py`, import that base, and end in
 `CacheRepository`. The Redis adapter contains only the client and transaction lifecycle.
 

@@ -127,7 +127,7 @@ Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
 `PYPROJECT.toml` into repo-root `pyproject.toml`, and render `PRE_COMMIT.yaml` into
 repo-root `.pre-commit-config.yaml` with package/test paths and optional hooks adapted;
 copy the remaining templates only if missing: `python-structure` → `BASE_SCHEMAS.md` into
-`project/components/base/schemas.py`;
+`project/base/schemas.py`;
 `python-settings` → `SETTINGS.md` into `project/settings.py`;
 `python-logging` → `LOGGER.md` into `project/logger.py`;
 `python-di` → `STRUCTURES.md` into `project/libs/structures.py`;
@@ -154,15 +154,15 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
 
 Templates (copy only if missing): `python-base-client` → developer chooses `ASYNC_CLIENT.md` or
-`SYNC_CLIENT.md` to copy into `project/infrastructure/utils/base_client.py` (never combine them);
-`python-sqlalchemy` → `BASE_MODELS.md` into `project/components/base/models.py` and, when multiple
-repositories share the base, `BASE_REPOSITORIES.md` into `project/components/base/repositories.py`;
+`SYNC_CLIENT.md` to copy into `project/infrastructure/base/http_client.py` (never combine them);
+`python-sqlalchemy` → `BASE_MODELS.md` into `project/base/models.py` and, when multiple
+repositories share the base, `BASE_REPOSITORIES.md` into `project/base/repositories.py`;
 `python-db-sessions` → `DATABASE.md` into `project/infrastructure/adapters/database.py`;
 `python-alembic` → `ENV.md` into
 `alembic/env.py`; `python-redis` → adapter from `CACHE.md` into
 `project/infrastructure/adapters/acache.py` and `CacheRepository` into
-`project/components/base/repositories.py`; `python-telegram` → `TELEGRAM.md`
-into `project/infrastructure/utils/telegram.py` and `BOT.md` into
+`project/base/repositories.py`; `python-telegram` → `TELEGRAM.md`
+into `project/infrastructure/base/telegram.py` and `BOT.md` into
 `project/infrastructure/apps/bot.py`.
 
 ### Enforcement

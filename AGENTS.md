@@ -148,7 +148,9 @@ After a successful installable copy, the setup skill also writes
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
   `python-db-sessions` owns the engine, session/transaction lifecycle, and database
   Settings contract. Keep both concerns out of `python-structure`.
-- `python-redis` keeps `CacheRepository` in `project/components/base/repositories.py`;
+- Shared domain base modules live in `project/base/`. Infrastructure helpers live in
+  `project/infrastructure/base/`: `http_client.py` is an adapter and `telegram.py` is presentation.
+- `python-redis` keeps `CacheRepository` in `project/base/repositories.py`;
   `project/infrastructure/adapters/acache.py` owns only the Redis client and transactions.
 - Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
   Install only when the target is a publishable library; do not fold it into
@@ -201,7 +203,7 @@ When running or editing the setup skill:
    yes. Ask separately whether Redis caching is used. For `python-base-client`,
    ask the developer to choose
    `ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md` (httpx sync), then copy only that
-   implementation to `base_client.py`. Install only when approved. After `python-tests`,
+   implementation to `http_client.py`. Install only when approved. After `python-tests`,
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.
