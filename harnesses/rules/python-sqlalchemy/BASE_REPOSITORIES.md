@@ -24,23 +24,9 @@ from project.infrastructure.adapters.database import asession, atransaction, cur
 class ORMRepository[T: Base]:
     _model: ClassVar[type[T]]
 
-    @classmethod
-    @asynccontextmanager
-    async def get_session(cls) -> AsyncIterator[AsyncSession]:
-        async with asession() as session:
-            yield session
-
-    @classmethod
-    @asynccontextmanager
-    async def get_transaction(cls) -> AsyncIterator[AsyncSession]:
-        async with atransaction() as session:
-            yield session
-
-    @classmethod
-    @asynccontextmanager
-    async def get_current_transaction(cls) -> AsyncIterator[AsyncSession]:
-        async with current_atransaction() as session:
-            yield session
+    get_session = staticmethod(asession)
+    get_transaction = staticmethod(atransaction)
+    get_current_transaction = staticmethod(current_atransaction)
 
     @classmethod
     async def get_or_none(cls, pk: object) -> T | None:
