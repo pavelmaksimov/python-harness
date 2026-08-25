@@ -128,6 +128,8 @@ After a successful installable copy, the setup skill also writes
 - Env config (`pydantic-settings`, `Settings().PARAM`) is its own core ID
   (`python-settings`). `python-di` owns Container and LazyService. Do not fold
   Settings into DI.
+- DI examples call a single-use dependency through `Container()` inline; bind
+  the dependency only when it is reused.
 - Clock in tests (`freezegun` `freeze_time`) is its own core ID
   (`python-freezegun`). Do not fold it into `python-tests`.
 - Test data factories (Polyfactory `build` / `create_async`) is its own core ID

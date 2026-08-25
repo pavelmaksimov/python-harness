@@ -127,8 +127,7 @@ from project.infrastructure.utils.telegram import processing_errors, timeout_wit
 @timeout_with_retry
 @processing_errors
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    container = Container()
-    await container.example_use_case.run(update.effective_user.id)
+    await Container().example_use_case.run(update.effective_user.id)
     await update.effective_message.reply_text("Hello")
 
 

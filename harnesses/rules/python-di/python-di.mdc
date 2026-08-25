@@ -17,13 +17,19 @@ Env config is `Settings = LazyInit(SettingsValidator)` in `project/settings.py` 
 ## Call through the proxy
 
 ```python
-Container().job_store     # yes
-container = Container()   # no — do not bind the proxy
+Container().job_store   # access dependencies through the proxy
 ```
 
-Do not store `Container` on `self` in `__init__`.
-Do not construct infrastructure clients inside a service; take them from `Container()` at the
-**point of use**. Request schemas and other value objects may be created locally.
+Call a dependency inline when it is used once:
+
+```python
+user = await Container().user_repository.get_by_id(user_id)
+```
+
+Introduce a local dependency variable only when the same dependency is used more than once.
+Keep `Container()` at the **point of use** rather than binding the proxy or storing it on `self`.
+Take infrastructure clients from `Container()` instead of constructing them inside a service.
+Request schemas and other value objects may be created locally.
 
 ```python
 class AskUseCase:
