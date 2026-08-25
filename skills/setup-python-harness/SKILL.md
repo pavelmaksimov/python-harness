@@ -74,6 +74,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
      `BASE_REPOSITORIES.md` only when multiple repositories share the base;
    - `python-db-sessions` → `DATABASE.md` into
      `project/infrastructure/adapters/database.py`;
+   - `python-redis` → adapter code from `CACHE.md` into
+     `project/infrastructure/adapters/acache.py` and `CacheRepository` into
+     `project/components/base/repositories.py`;
    - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;

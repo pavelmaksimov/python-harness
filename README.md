@@ -159,8 +159,9 @@ Templates (copy only if missing): `python-base-client` → developer chooses `AS
 repositories share the base, `BASE_REPOSITORIES.md` into `project/components/base/repositories.py`;
 `python-db-sessions` → `DATABASE.md` into `project/infrastructure/adapters/database.py`;
 `python-alembic` → `ENV.md` into
-`alembic/env.py`; `python-redis` → `CACHE.md` into
-`project/infrastructure/adapters/acache.py`; `python-telegram` → `TELEGRAM.md`
+`alembic/env.py`; `python-redis` → adapter from `CACHE.md` into
+`project/infrastructure/adapters/acache.py` and `CacheRepository` into
+`project/components/base/repositories.py`; `python-telegram` → `TELEGRAM.md`
 into `project/infrastructure/utils/telegram.py` and `BOT.md` into
 `project/infrastructure/apps/bot.py`.
 

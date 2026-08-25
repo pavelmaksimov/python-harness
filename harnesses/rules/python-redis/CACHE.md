@@ -11,14 +11,12 @@ services and use cases do not open Redis clients.
 import contextvars
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import timedelta
 from functools import lru_cache
-from typing import ClassVar
 
 import redis
 from redis.asyncio.client import Pipeline
 
-from project.settings import Constants, Settings
+from project.settings import Settings
 
 redis_async_transactions: contextvars.ContextVar[Pipeline | None] = contextvars.ContextVar(
     "current_transaction",
@@ -64,12 +62,28 @@ async def redis_atransaction() -> AsyncIterator[Pipeline]:
                 await pipe.execute()
             finally:
                 redis_async_transactions.reset(token)
+```
+
+## Base cache repository
+
+Merge this class into `project/components/base/repositories.py`.
+
+```python
+from datetime import timedelta
+from typing import ClassVar
+
+from project.infrastructure.adapters.acache import (
+    isolated_redis_atransaction,
+    redis_atransaction,
+    redis_client,
+)
+from project.settings import Constants
 
 
 class CacheRepository:
-    get_client = redis_client
-    get_isolated_transaction = isolated_redis_atransaction
-    get_transaction = redis_atransaction
+    get_client = staticmethod(redis_client)
+    get_isolated_transaction = staticmethod(isolated_redis_atransaction)
+    get_transaction = staticmethod(redis_atransaction)
     key_template: ClassVar[str]
     ttl: ClassVar[timedelta]
 
@@ -77,9 +91,6 @@ class CacheRepository:
     def key(cls, *values: object) -> str:
         return f"{Constants.REDIS_KEY_PREFIX}:{cls.key_template.format(*values)}"
 ```
-
-If `project/components/base/repositories.py` already defines `CacheRepository`, keep that
-class and omit the copy above from the adapter module.
 
 ## Settings contract
 
@@ -111,7 +122,7 @@ from datetime import timedelta
 import orjson
 
 from project.datatypes import ItemIdT
-from project.infrastructure.adapters.acache import CacheRepository, redis_atransaction
+from project.components.base.repositories import CacheRepository
 from project.components.item.schemas import ItemCacheSchema
 
 
@@ -121,20 +132,20 @@ class ItemCacheRepository(CacheRepository):
 
     @classmethod
     async def save(cls, item_id: ItemIdT, data: ItemCacheSchema) -> None:
-        async with redis_atransaction() as tr:
+        async with cls.get_transaction() as tr:
             content = orjson.dumps(data.model_dump(exclude_unset=True))
             tr.set(cls.key(item_id), content, ex=cls.ttl)
 
     @classmethod
     async def get(cls, item_id: ItemIdT) -> ItemCacheSchema | None:
-        content = await cls.client().get(cls.key(item_id))
+        content = await cls.get_client().get(cls.key(item_id))
         if content is None:
             return None
         return ItemCacheSchema(**orjson.loads(content))
 
     @classmethod
     async def delete(cls, item_id: ItemIdT) -> None:
-        async with redis_atransaction() as tr:
+        async with cls.get_transaction() as tr:
             tr.delete(cls.key(item_id))
 ```
 

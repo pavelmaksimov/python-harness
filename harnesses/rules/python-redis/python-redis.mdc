@@ -14,13 +14,13 @@ Runtime: `redis.asyncio`, orjson.
 When Redis needs a level different from root, add `REDIS_LOG_LEVEL` to `SettingsValidator` and
 configure `redis` with it (`python-development-rules`).
 
-One adapter module owns the client. If it is missing, copy sibling `CACHE.md`
-into `project/infrastructure/adapters/acache.py` (and the Settings contract into
-`SettingsValidator` in `settings.py` — see `python-settings`).
+One adapter module owns the client. If it is missing, copy the adapter section from sibling
+`CACHE.md` into `project/infrastructure/adapters/acache.py`. Merge its base repository section
+into `project/components/base/repositories.py` and its Settings contract into `settings.py`.
 
 | Need | Call |
 |---|---|
-| Read | `await cls.client().get(key)` |
+| Read | `await cls.get_client().get(key)` |
 | Write / delete | `async with redis_atransaction() as tr` |
 | Isolated write (do not join the open pipeline) | `isolated_redis_atransaction()` |
 | After host / Settings override | `redis_client.cache_clear()` |
@@ -40,15 +40,15 @@ use the same constant for Redis keys outside cache repositories.
 
 ## CacheRepository
 
-Subclasses live in `project/components/{name}/repositories.py`. Name ends in `CacheRepository`.
-If a base class already exists (`components/base/repositories.py`), subclass that; otherwise
-use `CacheRepository` from the adapter module.
+The base `CacheRepository` always lives in `project/components/base/repositories.py`.
+Subclasses live in `project/components/{name}/repositories.py`, import that base, and end in
+`CacheRepository`. The Redis adapter contains only the client and transaction lifecycle.
 
 | Attribute | Type | Rule |
 |---|---|---|
 | `key_template` | `ClassVar[str]` | Unprefixed domain template containing `{}` for the id (`"item:{}"`) |
 | `ttl` | `ClassVar[timedelta]` | Entry lifetime |
-| `client` | factory | Already `redis_client`; call `cls.client()` |
+| `get_client` | static factory | Already `redis_client`; call `cls.get_client()` |
 
 Pass every repository key to Redis as `cls.key(...)`; this produces
 `{Constants.REDIS_KEY_PREFIX}:{key_template}`.

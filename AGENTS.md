@@ -148,6 +148,8 @@ After a successful installable copy, the setup skill also writes
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
   `python-db-sessions` owns the engine, session/transaction lifecycle, and database
   Settings contract. Keep both concerns out of `python-structure`.
+- `python-redis` keeps `CacheRepository` in `project/components/base/repositories.py`;
+  `project/infrastructure/adapters/acache.py` owns only the Redis client and transactions.
 - Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
   Install only when the target is a publishable library; do not fold it into
   `python-tooling` or service stacks.
