@@ -109,7 +109,7 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
-| `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. When installing Ruff, Black, or isort, merge that tool's tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; adapt package paths, infer Ruff's minimum Python target from the repo or ask the developer, and preserve existing tables unless the user approves a merge or replacement |
+| `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-development-rules` | Python development rules | installable | General Python rules, configurable module log levels through Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-development-rules/` → `.cursor/rules/python-development-rules/` |
 | `python-structure` | Python structure | installable | Components, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-structure/` → `.cursor/rules/python-structure/` |
 | `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
@@ -124,7 +124,8 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 | `python-semver` | SemVer 2.0 (libraries) | installable | Semantic Versioning 2.0 for publishable libraries — public API, X.Y.Z bumps, pyproject version | https://semver.org/spec/v2.0.0.html | `harnesses/rules/python-semver/` → `.cursor/rules/python-semver/`. Optional; install when the repo is a library |
 
 Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
-`PYPROJECT.toml` into repo-root `pyproject.toml`;
+`PYPROJECT.toml` into repo-root `pyproject.toml`, and render `PRE_COMMIT.yaml` into
+repo-root `.pre-commit-config.yaml` with package/test paths and optional hooks adapted;
 copy the remaining templates only if missing: `python-structure` → `BASE_SCHEMAS.md` into
 `project/components/base/schemas.py`;
 `python-settings` → `SETTINGS.md` into `project/settings.py`;

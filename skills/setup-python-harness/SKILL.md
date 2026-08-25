@@ -94,6 +94,12 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    it from existing project metadata or consistent runtime / CI configuration;
    ask the developer when it is absent or ambiguous. Preserve existing tool
    tables; show conflicts and ask whether to merge, replace, or skip them.
+   Also render sibling `PRE_COMMIT.yaml` into repo-root
+   `.pre-commit-config.yaml`: adapt package and test paths, omit test paths when
+   automated tests are not selected, omit the layers hook unless `layers-linter`
+   is selected, and keep each `uv export` hook only when the target maintains
+   that requirements file or the user approves creating it. Treat an existing
+   pre-commit config as a merge / replace / skip conflict.
 10. For hybrid rows, print the upstream URL and tool install notes; still copy
     the skill/rule from this catalog when Kind is installable.
 11. Preserve existing files. If a target exists, show the conflict and ask

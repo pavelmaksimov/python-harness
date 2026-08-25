@@ -84,7 +84,7 @@ This catalog is one language stack, split into layered IDs:
   and use `di-linter` for optional strict DI enforcement
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
-library list after the table. Templates (`PYPROJECT.toml`, `SETTINGS.md`, `LOGGER.md`,
+library list after the table. Templates (`PYPROJECT.toml`, `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,
 `FSM.md`, `RETRY.md`,
 `DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
@@ -129,6 +129,9 @@ After a successful installable copy, the setup skill also writes
   installer should substitute.
 - One concern per `.mdc`. Name the layer (tooling, HTTP, persistence); leave
   version pins and Ruff selects to the target `pyproject.toml`.
+- `python-tooling/PRE_COMMIT.yaml` renders to repo-root
+  `.pre-commit-config.yaml`; adapt package/test paths and keep only hooks
+  selected by the target workflow.
 - Env config (`pydantic-settings`, `Settings().PARAM`) is its own core ID
   (`python-settings`). `python-di` owns Container and LazyService. Do not fold
   Settings into DI.
@@ -203,6 +206,9 @@ When running or editing the setup skill:
    package paths, infer Ruff's minimum Python target from project metadata or
    consistent runtime / CI configuration, ask when ambiguous, and ask before
    changing existing tables.
+   Render `PRE_COMMIT.yaml` into `.pre-commit-config.yaml`; adapt package/test
+   paths, selected enforcement hooks, and requirements export hooks, and ask
+   before changing an existing config.
 4. Never overwrite existing target files without asking (except refreshing
    `.cursor/python-harness-version` after an approved installable copy).
 5. Do not commit API keys, tokens, or machine-local absolute paths.

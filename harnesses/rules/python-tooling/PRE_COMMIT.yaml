@@ -1,0 +1,42 @@
+repos:
+  - repo: local
+    hooks:
+      - id: black-format
+        stages: [pre-commit]
+        name: black format
+        entry: uv run black
+        language: system
+        args: [project, tests]
+        pass_filenames: false
+
+      - id: ruff-check
+        stages: [pre-commit]
+        name: ruff linter
+        entry: uv run ruff
+        language: system
+        args: [check, --fix, project, tests]
+        pass_filenames: false
+
+      - id: layers-linter
+        stages: [pre-commit, pre-push]
+        name: check layer isolation and dependency direction
+        entry: uvx layers-linter
+        language: system
+        args: [project, --no-check-no-layer]
+        pass_filenames: false
+
+      - id: update-deps
+        stages: [pre-commit, pre-push]
+        name: update requirements.txt
+        entry: uv export
+        language: system
+        args: [--no-dev, --no-hashes, -o, requirements.txt]
+        pass_filenames: false
+
+      - id: update-deps-dev
+        stages: [pre-commit, pre-push]
+        name: update requirements.dev.txt
+        entry: uv export
+        language: system
+        args: [--no-hashes, -o, requirements.dev.txt, --only-group, dev]
+        pass_filenames: false
