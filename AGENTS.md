@@ -79,8 +79,9 @@ This catalog is one language stack, split into layered IDs:
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
   repo uses them)
-- **enforcement** — matching linter skills; take `layers-linter`,
-  `domain-types-linter`, and `patch-linter` with the stack; `di-linter` is optional
+- **enforcement** — matching linter skills; take `layers-linter` and
+  `domain-types-linter` with the stack, add `patch-linter` with automated tests,
+  and use `di-linter` for optional strict DI enforcement
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`PYPROJECT.toml`, `SETTINGS.md`, `LOGGER.md`,
@@ -100,8 +101,10 @@ template unless the README copy list names it. Linter configs (`layers.toml`,
    `Install from` as `source → target`.
 3. If Kind is **reference**, add Upstream + Notes only — no `harnesses/` copy.
 4. Keep IDs stable (`kebab-case`), summaries short, no secrets.
-5. Update `skills/setup-python-harness/SKILL.md` only when install layout or
-   Kind semantics change.
+5. Update `skills/setup-python-harness/SKILL.md` when install layout or Kind
+   semantics change. For every added or changed catalog ID, also update the
+   **Deterministic onboarding** capability tree and derivation table when its
+   requirement, dependency bundle, or non-inferable choice changes.
 6. When the change affects installable content, the setup skill, or install
    semantics, bump root `VERSION` and the README **Catalog version** line
    together (semver).
@@ -143,7 +146,7 @@ After a successful installable copy, the setup skill also writes
 - Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
   Install only when the target is a publishable library; do not fold it into
   `python-tooling` or service stacks.
-- Optional enforcement (`di-linter`) and optional test harnesses
+- Optional enforcement (`di-linter`) and test companion harnesses
   (`python-freezegun`, `python-polyfactory`, adapter-driven DB/Redis test blocks)
   stay out of default `python-tests` body text. The base rule keeps a short
   pointer table to catalog IDs; detailed sections and conftest fragments are
@@ -176,11 +179,20 @@ When running or editing the setup skill:
 1. Read the README catalog; present options by band (core, adapters,
    enforcement).
 2. Ask only what cannot be inferred; get approval before copying files.
-3. Install only approved **installable** paths; for hybrid/upstream tools,
+3. Derive harness bundles from approved capabilities, then install only the
+   resulting approved **installable** paths; for hybrid/upstream tools,
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
-   `patch-linter` with the stack. Offer `python-freezegun`, `python-polyfactory`,
-   and `di-linter` separately; offer `python-semver` when the target is a
-   publishable library. For `python-base-client`, ask the developer to choose
+   `patch-linter` when tests are selected. Add `python-freezegun` with every
+   automated-test bundle; derive `python-polyfactory` from automated tests plus
+   a database instead of asking about it separately. Offer `di-linter`
+   as strict enforcement. Ask whether the target is a publishable library and
+   add `python-semver` when it is. Ask whether the application is a FastAPI API,
+   Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.
+   Ask separately whether Prometheus monitoring is needed and select
+   `python-monitoring` only when yes. Ask one yes/no question for a database and select
+   `python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together when
+   yes. Ask separately whether Redis caching is used. For `python-base-client`,
+   ask the developer to choose
    `ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md` (httpx sync), then copy only that
    implementation to `base_client.py`. Install only when approved. After `python-tests`,
    patch the installed rule and merge conftest/factory templates per catalog

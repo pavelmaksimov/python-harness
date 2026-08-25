@@ -25,43 +25,44 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    (missing stamp = unknown / pre-version install).
 4. Present harnesses by band: **core**, **adapters**, **enforcement**. Recommend
    core for any Python repo, adapters that match the codebase (FastAPI,
-   SQLAlchemy ORM, database sessions, Redis; Alembic when the repo already has `alembic/` or
-   `alembic.ini`; Telegram when the repo uses python-telegram-bot, `apps/bot.py`,
+   SQLAlchemy ORM, database sessions, Alembic, Redis; Telegram when the repo uses
+   python-telegram-bot, `apps/bot.py`,
    or component `handlers.py` — skip `python-telegram` when there is no Telegram
    bot; `python-base-client` when the repo has outbound HTTP adapters under
    `infrastructure/adapters/` — skip it when there are none), and
-   `layers-linter`, `domain-types-linter`, and `patch-linter` with the stack.
+   `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
+   when automated tests are selected.
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
-   `python-monitoring`
-   when the repo scrapes Prometheus, exposes `/prometheus`, or wants `llm_common`
-   metrics (`uv add llm_common prometheus_client` — PyPI `llm_common`, not
-   `pycommons`); skip it when the repo does not scrape Prometheus. Core includes
+   Ask whether Prometheus monitoring is needed; when yes, add
+   `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
+   `llm_common`, not `pycommons`). Core includes
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
    part of `python-di`. Core includes `python-development-rules` for general Python
    conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
    `python-tooling`, and adapter rules own library-specific logger names and levels.
-   Offer `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
-   `python-polyfactory` (Polyfactory in tests, `uv add --dev polyfactory`) separately — only
-   when the repo has time-dependent tests or schema/ORM models to factory-build. Each is its own
-   core ID, not folded into `python-tests`. Offer `python-semver` when the repo is (or will be)
+   Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) with
+   every automated-test bundle. Add `python-polyfactory` (`uv add --dev polyfactory`)
+   automatically when automated tests and a database are both selected;
+   do not ask about it separately. Each remains its own core ID, not folded into
+   `python-tests`. Add `python-semver` when the repo is (or will be)
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
-   Recommend `python-sqlalchemy` for ORM models and shared ORM bases. Add
-   `python-db-sessions` for runtime persistence and engine/session lifecycle; persisted ORM
-   factories use its `atransaction()` / `asession()`, not a private sessionmaker.
+   A database answer selects `python-sqlalchemy`, `python-db-sessions`, and
+   `python-alembic` together. Persisted ORM factories use `atransaction()` /
+   `asession()`, not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
-5. Filter out entries that clearly do not fit the repo.
-6. Ask the user only about choices that cannot be inferred:
-   - which bands / adapters matter for this repo;
-   - project-only or personal installation;
-   - when `python-base-client` is approved, whether the target client is async
-     (`ASYNC_CLIENT.md`, httpx.AsyncClient) or sync (`SYNC_CLIENT.md`, httpx.Client);
-   - whether to add optional `python-freezegun`, `python-polyfactory`, `python-semver`,
-     and `di-linter`.
-7. Recommend the smallest compatible set. For each item, state the benefit,
-   install path or upstream link, and conflicts with already-present skills.
-8. Get explicit approval for the final set.
+5. Filter out entries that clearly do not fit the repo. Classify every catalog
+   ID as **install**, **skip**, or **ask**, with one evidence-based reason.
+6. Run the deterministic onboarding below. Traverse its capability tree in
+   order, then derive harness bundles from the combined answers. Do not ask
+   separately about a harness whose selection follows from an earlier answer.
+7. Render the preflight plan: detected facts, proposed IDs, exact source →
+   target writes, dependency/tool notes, companion merges, and existing-file
+   conflicts. Resolve every **ask** item and conflict before proceeding.
+8. Get one explicit approval for that exact plan. A changed answer requires a
+   refreshed plan and approval; approval of a band or ID alone is not approval
+   to overwrite an existing target.
 9. For **installable** rows, copy `Install from` source → target (see below).
    Kind means this repo is the artifact source of truth. After copying
    `python-tests`, patch the installed `python-tests.mdc` and merge conftest /
@@ -117,6 +118,69 @@ explicitly skipped, every approved hybrid entry has tool install notes shown,
 the version stamp is written after a successful installable copy (or already
 matched when nothing was copied), and the periodic-update reminder has been
 given.
+
+## Deterministic onboarding
+
+Before the first question, show this compact preflight in order:
+
+1. **Target:** repository path, project/personal scope if known, installed and
+   source catalog versions.
+2. **Detected:** package root, minimum Python version, configured tooling,
+   framework/adapters, test signals, library/service status, and existing
+   harness files. Mark each fact as detected or unknown and cite its source
+   file or path.
+3. **Selection:** every catalog ID under **install**, **skip**, or **ask**, with
+   a one-line reason. Never silently omit an ID.
+
+This is a capability tree, not a checklist of harness IDs. Ask unresolved
+top-level stages first, in order, and ask a branch question only when its
+parent capability is selected. Combine independent unresolved questions into
+one numbered batch when the interface allows it. Add detected evidence to the
+wording and skip any question with one unambiguous repository-derived answer.
+
+| Stage | Requirement | Concrete question and options |
+|---:|---|---|
+| 1 | Install scope | Install into this repository (`.cursor/`, recommended) or personally (`~/.cursor/`)? |
+| 2 | Library | Is this project a publishable library? **yes / no** |
+| 3 | Application type | What kind of application is it? **FastAPI API / Telegram bot / both / neither (worker, CLI, or library only)** |
+| 4 | Test strategy | Will this project have automated tests? **yes / no** |
+| 5 | Database | Will this project need a database? **yes / no** |
+| 6 | Redis cache | Will this project use Redis as a cache? **yes / no** |
+| 7 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
+| 8 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
+| 9 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
+| 10 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
+
+Ask stages 2–7 explicitly unless the user's request already contains the
+answer. Repository evidence supplies a recommended answer, not a reason to
+hide these product decisions.
+
+Derive the install set mechanically from the answers:
+
+| Requirement | Automatically selected harnesses and companions |
+|---|---|
+| Python project | Base core: `python-tooling`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Publishable library | `python-semver` |
+| Automated tests | `python-tests` + `python-freezegun` + `patch-linter` |
+| Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |
+| Database + automated tests | `python-polyfactory`; merge its factory companion and database fixtures from `CONFTEST_DATABASE.md` |
+| Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
+| FastAPI API | `python-fastapi` |
+| Prometheus monitoring | `python-monitoring` and its upstream package notes |
+| Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
+| Telegram bot | `python-telegram` |
+| Strict DI enforcement | `di-linter` and its companion-rule patches |
+
+Do not ask whether to install an automatically derived harness. Show the
+derivation (for example, `automated tests + database models → python-polyfactory`)
+in the preflight plan; the final plan approval approves those derived IDs too.
+Use **revise** when the user wants an exception to a derived bundle.
+
+After the answers, show the exact write plan grouped as **copy**, **merge**,
+**replace**, **manual upstream step**, and **skip**. For each existing target,
+ask one concrete conflict question: **merge / replace / skip**; ask separately
+per conflicting `pyproject.toml` tool table. Then ask: “Apply this exact plan?”
+with **yes / revise**. Write nothing to the target before this approval.
 
 ## Catalog version
 

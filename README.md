@@ -73,8 +73,9 @@ Installable artifacts live only under typed dirs in `harnesses/` (`skills/`,
 ## Catalog
 
 Three bands: install **core** for any Python service, add **adapters** the repo
-actually uses, and take `layers-linter`, `domain-types-linter`, and `patch-linter`
-with the stack so the same boundaries and the no-patch test rule are enforced.
+actually uses, and take `layers-linter` and `domain-types-linter` with the stack
+so the same boundaries are enforced. Add `patch-linter` when automated tests
+are selected.
 `di-linter` is optional — add it when the repo uses Container/LazyInit and you
 want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
@@ -86,15 +87,21 @@ Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter 
 ```
 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
-that the repo uses, plus `layers-linter`, `domain-types-linter`, and `patch-linter`.
-Offer `python-freezegun`, `python-polyfactory`, and `di-linter` separately — only
-when the repo needs them. Offer `python-semver` when the repo is (or will be) a
-publishable Python library with a public API; skip it for internal apps/services.
+that the repo uses, plus `layers-linter` and `domain-types-linter`; add
+`patch-linter` when automated tests are selected.
+Add `python-freezegun` with every automated-test bundle. Derive
+`python-polyfactory` automatically when automated tests and a database are
+selected. Offer `di-linter` as strict enforcement. Add `python-semver` when
+the repo is (or will be) a publishable Python library with a public API; skip
+it for internal apps/services.
+For a FastAPI API, add `python-fastapi`; ask separately whether Prometheus
+monitoring is needed and add `python-monitoring` only when selected.
 Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
-when the repo has no database or no Redis cache. Skip `python-alembic` when tables are
-created from metadata only (`create_all`). Skip `python-telegram` when the repo has no
-Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
+when the repo has no database or no Redis cache. A selected database installs
+`python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together. Skip
+`python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
+when Prometheus monitoring is not selected.
 For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 `python-db-sessions` (runtime session lifecycle).
 
