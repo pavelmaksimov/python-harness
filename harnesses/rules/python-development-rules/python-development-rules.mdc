@@ -1,9 +1,15 @@
 ---
-description: General Python development rules — discover FSM/retry helpers, configure log levels
+description: General Python development rules — helpers, context managers, configurable logging
 alwaysApply: true
 ---
 
 # Python development rules
+
+## Context managers
+
+Create context managers as generator functions decorated with `contextlib.contextmanager`
+or `contextlib.asynccontextmanager`. Do not implement class-based context managers with
+`__enter__` / `__exit__` or `__aenter__` / `__aexit__`.
 
 ## Workflow helpers
 
