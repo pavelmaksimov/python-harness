@@ -1,5 +1,5 @@
 ---
-description: Redis async cache — CacheRepository, redis_atransaction, orjson
+description: Redis async cache — prefixed keys, CacheRepository, redis_atransaction, orjson
 globs:
   - "**/adapters/acache.py"
   - "**/adapters/cache.py"
@@ -34,6 +34,10 @@ do not fail at import.
 
 Services and use cases never import `redis` — only cache repositories do.
 
+Every Redis key starts with the non-empty `Constants.REDIS_KEY_PREFIX`. Keep
+`key_template` domain-specific and build the complete key through `CacheRepository.key()`;
+use the same constant for Redis keys outside cache repositories.
+
 ## CacheRepository
 
 Subclasses live in `project/components/{name}/repositories.py`. Name ends in `CacheRepository`.
@@ -42,9 +46,12 @@ use `CacheRepository` from the adapter module.
 
 | Attribute | Type | Rule |
 |---|---|---|
-| `key_template` | `ClassVar[str]` | Must contain `{}` for the id (`"item:{}"`) |
+| `key_template` | `ClassVar[str]` | Unprefixed domain template containing `{}` for the id (`"item:{}"`) |
 | `ttl` | `ClassVar[timedelta]` | Entry lifetime |
 | `client` | factory | Already `redis_client`; call `cls.client()` |
+
+Pass every repository key to Redis as `cls.key(...)`; this produces
+`{Constants.REDIS_KEY_PREFIX}:{key_template}`.
 
 Keys use domain types from `project/datatypes.py`. Values are Pydantic schemas.
 Serialize with `orjson.dumps(data.model_dump(exclude_unset=True))`; load with

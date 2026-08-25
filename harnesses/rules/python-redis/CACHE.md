@@ -4,8 +4,8 @@ Copy this module to `project/infrastructure/adapters/acache.py` when the package
 already define `redis_client` / `redis_atransaction`. Cache repositories import these helpers;
 services and use cases do not open Redis clients.
 
-`Settings` must expose `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, and `redis_is_configured()`
-(see below).
+`Constants` must expose a non-empty `REDIS_KEY_PREFIX`. `Settings` must expose
+`REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, and `redis_is_configured()` (see below).
 
 ```python
 import contextvars
@@ -18,7 +18,7 @@ from typing import ClassVar
 import redis
 from redis.asyncio.client import Pipeline
 
-from project.settings import Settings
+from project.settings import Constants, Settings
 
 redis_async_transactions: contextvars.ContextVar[Pipeline | None] = contextvars.ContextVar(
     "current_transaction",
@@ -67,9 +67,15 @@ async def redis_atransaction() -> AsyncIterator[Pipeline]:
 
 
 class CacheRepository:
-    client = redis_client
+    get_client = redis_client
+    get_isolated_transaction = isolated_redis_atransaction
+    get_transaction = redis_atransaction
     key_template: ClassVar[str]
     ttl: ClassVar[timedelta]
+
+    @classmethod
+    def key(cls, *values: object) -> str:
+        return f"{Constants.REDIS_KEY_PREFIX}:{cls.key_template.format(*values)}"
 ```
 
 If `project/components/base/repositories.py` already defines `CacheRepository`, keep that
@@ -77,9 +83,14 @@ class and omit the copy above from the adapter module.
 
 ## Settings contract
 
-Add these fields and methods to `SettingsValidator` if missing (`python-settings`).
+Add the constant to `Constants` and the fields and methods to `SettingsValidator` if missing
+(`python-settings`). Use a stable application-specific prefix.
 
 ```python
+class Constants:
+    REDIS_KEY_PREFIX: str = "project"
+
+
 class SettingsValidator(BaseSettings):
     REDIS_HOST: str | None = None
     REDIS_PORT: int = 6379
@@ -112,11 +123,11 @@ class ItemCacheRepository(CacheRepository):
     async def save(cls, item_id: ItemIdT, data: ItemCacheSchema) -> None:
         async with redis_atransaction() as tr:
             content = orjson.dumps(data.model_dump(exclude_unset=True))
-            tr.set(cls.key_template.format(item_id), content, ex=cls.ttl)
+            tr.set(cls.key(item_id), content, ex=cls.ttl)
 
     @classmethod
     async def get(cls, item_id: ItemIdT) -> ItemCacheSchema | None:
-        content = await cls.client().get(cls.key_template.format(item_id))
+        content = await cls.client().get(cls.key(item_id))
         if content is None:
             return None
         return ItemCacheSchema(**orjson.loads(content))
@@ -124,7 +135,7 @@ class ItemCacheRepository(CacheRepository):
     @classmethod
     async def delete(cls, item_id: ItemIdT) -> None:
         async with redis_atransaction() as tr:
-            tr.delete(cls.key_template.format(item_id))
+            tr.delete(cls.key(item_id))
 ```
 
 ## Test fixtures
