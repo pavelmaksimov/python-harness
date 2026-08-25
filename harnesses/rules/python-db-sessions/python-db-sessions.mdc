@@ -1,0 +1,44 @@
+---
+description: Async SQLAlchemy engine, sessions, transactions, and database settings
+globs:
+  - "**/adapters/database.py"
+  - "**/settings.py"
+alwaysApply: false
+---
+
+# Database sessions
+
+Runtime: SQLAlchemy 2 async (`asyncpg`). One adapter module owns the engine and session lifecycle.
+If it is missing, copy sibling `DATABASE.md` into
+`project/infrastructure/adapters/database.py` and merge its Settings contract into `settings.py`
+(`python-settings`).
+
+| Need | Call |
+|---|---|
+| Read | `async with asession() as session` |
+| Write / commit | `async with atransaction() as session` |
+| Nested write inside an open tx | `atransaction()` → savepoint |
+| Join the open tx, or begin if none | `current_atransaction()` |
+| Create schema in tests/e2e | `create_all_tables(metadata)` |
+| After DSN / Settings override | `aengine_factory.cache_clear()` and `async_sessionmaker_factory.cache_clear()` |
+
+`asession()` reuses the `ContextVar` session or opens and closes one.
+`atransaction()` begins a transaction, or a savepoint when one is already active.
+Do not call `session.commit()` / `session.close()` inside these helpers.
+
+Cache the engine for one process-wide connection pool. Cache the sessionmaker only so it remains
+bound to that engine. Never cache `AsyncSession`; `asession()` owns ContextVar reuse.
+
+Get the DSN from `Settings().get_database_dsn()` (`SQLALCHEMY_DATABASE_DSN` or assembled `DB_*`).
+Optional `DB_SCHEMA` becomes `search_path`; pass `DATABASE_PRE_PING` to the engine. If persistence
+is optional, check `database_is_configured()` instead of failing at import time.
+
+Repositories import session helpers. Services and use cases do not open sessions. A use case that
+must write through several repositories wraps the calls in one `atransaction()`.
+
+Tests use Testcontainers Postgres, schema creation through ORM metadata, and one nested transaction
+with rollback per test (`python-tests` / `CONFTEST_DATABASE.md`). After a DSN override, clear the
+engine and sessionmaker caches.
+
+When `python-monitoring` is installed, register the engine after metrics initialization with
+`register_sqlalchemy_engine_monitoring(engine, database="…")`.

@@ -79,7 +79,7 @@ Use `HttpxClientWithMonitoring` when you only need a tracked httpx client withou
 
 ## Optional
 
-- **SQLAlchemy** (`python-sqlalchemy`): after metrics init,
+- **SQLAlchemy pool** (`python-db-sessions`): after metrics init,
   `register_sqlalchemy_engine_monitoring(engine, database="…")` (async engines are fine).
 - **LLM** (`record_llm_request`, `record_llm_usage`, …): only if the repo already calls LLMs. Do not
   add langchain, `AuthHttpClient`, or Keycloak for this harness.

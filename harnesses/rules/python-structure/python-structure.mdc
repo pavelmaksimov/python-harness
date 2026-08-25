@@ -1,5 +1,5 @@
 ---
-description: Component layout — apps, adapters, components, base generics, libs, layers
+description: Component layout — apps, adapters, components, libs, and layers
 alwaysApply: true
 ---
 
@@ -7,8 +7,8 @@ alwaysApply: true
 
 Group modules by component (one domain per directory). Put new code in the matching layer;
 do not mix adapters with services or use cases.
-SQLAlchemy stays in `adapters`, `orm` (`models.py`), and `repo` (`repositories.py`).
-Redis stays in `adapters` (`acache.py`) and `repo` (`*CacheRepository` in `repositories.py`).
+Persistence clients stay in `adapters`; persistence models and repositories stay in their
+component modules.
 
 ```text
 project/
@@ -18,10 +18,10 @@ project/
   infrastructure/apps/main.py         production entry
   infrastructure/adapters/            external systems (HTTP, DB, cache, queues)
   infrastructure/utils/               framework helpers, not domain (`base_client` → adapters in layers.toml)
-  components/base/                    shared generics used by every domain component
-    models.py                         SQLAlchemy Base / MetaData (`public_schema`), TimeMixin
+  components/base/                    shared types used by every domain component
+    models.py                         shared persistence model bases (when needed)
     schemas.py                        Pydantic envelopes (`ApiResponseSchema[T]`)
-    repositories.py                   generic repository base (async; when the repo needs one)
+    repositories.py                   shared repository base (when the repo needs one)
     handlers.py                       shared Telegram handlers (when the repo has a bot)
   components/{name}/
     endpoints.py                      HTTP handlers
@@ -29,7 +29,7 @@ project/
     use_cases.py                      orchestration
     service.py                        stateless domain behavior
     repositories.py                   all data access
-    models.py                         ORM
+    models.py                         persistence models
     schemas.py                        Pydantic
     enums.py                          closed value sets
     exceptions.py                     component errors
@@ -53,38 +53,25 @@ Domain workflows with explicit states use `python-fsm` (`project/libs/fsm.py`).
 Transient I/O retries use `python-retry` (`project/libs/retry.py`).
 `endpoints.py` and `apps/api.py` belong with the FastAPI adapter;
 `handlers.py` and `apps/bot.py` belong with the Telegram adapter (`python-telegram`);
-`models.py` belongs with the SQLAlchemy adapter;
-`repositories.py` holds SQLAlchemy and Redis cache repositories (`python-sqlalchemy`, `python-redis`).
+`models.py` and `repositories.py` belong to the persistence layer selected by the project.
 
-## Shared generics (`components/base`)
+## Shared types (`components/base`)
 
 Put cross-component generics in `project/components/base/`. Domain components subclass or reuse
-them; do not copy `Base`, CRUD helpers, or the HTTP envelope into each `components/{name}/`.
+them; do not copy shared model bases, repository helpers, or the HTTP envelope into each
+`components/{name}/`.
 Keep feature-specific code in the domain component.
 
-`libs/` stays domain-free and infrastructure-free (`fsm`, `retry`, `structures`). ORM `Base` and
-generic repositories live in `components/base`, not in `libs/`. `layers.toml` globs
+`libs/` stays domain-free and infrastructure-free (`fsm`, `retry`, `structures`). Shared model and
+repository bases live in `components/base`, not in `libs/`. `layers.toml` globs
 `project.components.*` already cover `base`.
 
 | File | When | Copy if missing |
 |---|---|---|
-| `models.py` | SQLAlchemy | sibling `BASE_MODELS.md` → `project/components/base/models.py` (`python-sqlalchemy`, `python-alembic`) |
+| `models.py` | persistence model base | install the selected persistence rule |
 | `schemas.py` | FastAPI envelope | sibling `BASE_SCHEMAS.md` → `project/components/base/schemas.py` (`python-fastapi`) |
-| `repositories.py` | generic ORM/cache repo | write async `asession` / `atransaction` (`python-sqlalchemy`); Redis `CacheRepository` follows `python-redis` |
+| `repositories.py` | shared repository base | install the selected persistence rule |
 | `handlers.py` | Telegram bot | shared handlers only (`python-telegram`); register from `apps/bot.py` |
-
-If the repo needs a generic ORM repository, inherit domain repos from it. Session helpers are
-async (`asession` / `atransaction` / `current_atransaction`), not sync `Session`:
-
-```python
-class ORMRepository[T: Base]:
-    _model: ClassVar[type[T]]
-
-    @classmethod
-    async def get_or_none(cls, pk: object) -> T | None:
-        async with asession() as session:
-            return await session.get(cls._model, pk)
-```
 
 ## Layers
 
@@ -92,11 +79,11 @@ Lower layers do not import higher ones. Domain modules do not import adapters or
 annotate expected collaborators with `Protocol` in `interfaces.py`.
 
 - **Service** — stateless; hides a business process. Put work that other components will reuse here.
-- **Use case** — I/O entry (HTTP, CLI, bot). Coordinates services; no SQL, no `AsyncSession`,
-  no Redis client. Other components do not call use cases. Keep it short; names are business verbs.
+- **Use case** — I/O entry (HTTP, CLI, bot). Coordinates services; no persistence client or
+  query language. Other components do not call use cases. Keep it short; names are business verbs.
   Input checks live here; shared check functions go in `validation.py`.
 - **Repository** — the only data-access type; stateless. Inherit from `components.base` when a
-  generic base exists. One extra repository when one transaction spans models that do not belong together.
+  shared base exists. Add one only when it has a real consumer.
 - **Adapter** — facade over an external system; errors and API quirks stay here so tests can stub it.
 - **Container** — `LazyInit(Services)`; take dependencies with `Container().…` inside methods.
 

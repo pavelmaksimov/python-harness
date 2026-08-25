@@ -152,22 +152,9 @@ class SettingsValidator(BaseSettings):
         return self.E2E_TEST_POSTGRES_DSN
 ```
 
-## Repository usage
-
-```python
-from project.infrastructure.adapters.database import asession, atransaction
-
-async def save(instance) -> None:
-    async with atransaction() as session:
-        session.add(instance)
-
-async def get(pk):
-    async with asession() as session:
-        return await session.get(Model, pk)
-```
-
 ## Test fixtures
 
-Copy `init_database` and `asession` from the `python-tests` rule (`CONFTEST.md`) into `tests/conftest.py`.
+Copy `init_database` and `asession` from the `python-tests` rule (`CONFTEST_DATABASE.md`) into
+`tests/conftest.py`.
 After a DSN override, `cache_clear()` the factories. Nested transaction + rollback isolates rows.
 Persist test rows with `create_async` (`python-polyfactory`) while this `asession` fixture is active.

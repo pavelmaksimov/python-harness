@@ -10,7 +10,8 @@ alwaysApply: false
 
 # Alembic migrations
 
-Pair with `python-sqlalchemy`. Skip this harness when the repo creates tables from metadata only
+Pair with `python-sqlalchemy` and `python-db-sessions`. Skip this harness when the repo creates
+tables from metadata only
 (`create_all` / `create_all_tables`). CLI and autogenerate behaviour come from Alembic
 (https://alembic.sqlalchemy.org/en/latest/tutorial.html); this rule owns layout.
 

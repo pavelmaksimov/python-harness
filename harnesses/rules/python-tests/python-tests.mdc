@@ -84,7 +84,7 @@ below — do not invent local variants.
 |---|---|---|
 | Test data factories | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py`; companion patch in this file |
 | Frozen clock in tests | `python-freezegun` | — |
-| Postgres / ORM tests | `python-sqlalchemy` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
+| Postgres / ORM tests | `python-sqlalchemy` + `python-db-sessions` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
 | Redis cache tests | `python-redis` | Redis fixtures from `CACHE.md` → `tests/conftest.py`; companion patch in this file |
 
 Companion patches for the installer live in sibling `COMPANION.md` (catalog repo only — not copied

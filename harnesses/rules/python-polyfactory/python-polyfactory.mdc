@@ -10,7 +10,7 @@ alwaysApply: false
 Package: PyPI **`polyfactory`** (`uv add --dev polyfactory`). Pair with `python-tests`.
 If `tests/factories.py` is missing, copy sibling `FACTORIES.md` into `tests/factories.py`
 (merge; do not overwrite without asking). Include the ORM block only when `python-sqlalchemy`
-is installed.
+and `python-db-sessions` are installed.
 
 Call factories on the class in the test body. Do not wrap them in `make_*` helpers.
 Do not `@register_fixture` / `register_fixture(...)`.
@@ -41,7 +41,7 @@ async def test_user_persisted(asession):
 
 ## ORM persistence
 
-SQLAlchemy factories persist through `atransaction()` from `python-sqlalchemy`
+SQLAlchemy factories persist through `atransaction()` from `python-db-sessions`
 (`project/infrastructure/adapters/database.py`). Flush only — never `commit()` inside
 the factory. Do not set `__async_session__` / `__session__` to a private sessionmaker.
 

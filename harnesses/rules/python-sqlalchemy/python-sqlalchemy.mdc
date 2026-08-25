@@ -1,58 +1,29 @@
 ---
-description: SQLAlchemy async adapter — asession, atransaction, ORM models, optional Postgres
+description: SQLAlchemy ORM models, shared Base and generic repositories
 globs:
-  - "**/adapters/database.py"
   - "**/models.py"
   - "**/repositories.py"
 alwaysApply: false
 ---
 
-# SQLAlchemy adapter
+# SQLAlchemy ORM
 
-Runtime: SQLAlchemy 2 async (`asyncpg`). JSON columns use `JSONB`.
+Use SQLAlchemy 2.0 `Mapped` / `mapped_column`. JSON columns use Postgres `JSONB`.
 
-When SQLAlchemy needs a level different from root, add `SQLALCHEMY_LOG_LEVEL` to
-`SettingsValidator` and configure `sqlalchemy` and `sqlalchemy.engine` with it
-(`python-development-rules`).
+If shared ORM bases are missing, copy sibling `BASE_MODELS.md` to
+`project/components/base/models.py`. If multiple repositories share model lookup behavior, copy
+`BASE_REPOSITORIES.md` to `project/components/base/repositories.py`. Do not add a generic
+repository for one consumer.
 
-One adapter module owns the engine and sessions. If it is missing, copy sibling `DATABASE.md`
-into `project/infrastructure/adapters/database.py` (and the Settings contract into
-`SettingsValidator` in `settings.py` — see `python-settings`).
-
-| Need | Call |
-|---|---|
-| Read | `async with asession() as session` |
-| Write / commit | `async with atransaction() as session` |
-| Nested write inside an open tx | `atransaction()` → savepoint |
-| Join the open tx, or begin if none | `current_atransaction()` |
-| Create schema in tests/e2e | `create_all_tables(metadata)` |
-| After DSN / Settings override | `aengine_factory.cache_clear()` and `async_sessionmaker_factory.cache_clear()` |
-
-`asession()` reuses the `ContextVar` session or opens one and closes it on exit.
-`atransaction()` begins, or `begin_nested()` when already in a transaction.
-Do not call `session.commit()` / `session.close()` by hand inside these helpers.
-
-`aengine_factory` is `@lru_cache` because `create_async_engine` owns a connection pool —
-one engine per process. `async_sessionmaker_factory` is cached only so it stays bound to
-that engine. Do not cache `AsyncSession`: `asession()` already reuses via ContextVar.
-
-DSN from `Settings().get_database_dsn()` (`SQLALCHEMY_DATABASE_DSN` or assembled `DB_*`).
-Optional `DB_SCHEMA` → `search_path`. `DATABASE_PRE_PING` on the engine.
-
-If the product can run without Postgres, skip persistence when `database_is_configured()` is false;
-do not fail at import. Side-effect writes log `logger.exception` and leave the main flow running.
-Writes that are the result still go through a repository inside `atransaction()`.
-A use case that must write through several repositories wraps the calls in one `atransaction()`
-(or a `Repositories.transaction()` helper on the container, if the repo already has one).
+Session lifecycle, transactions, engine construction, DSN settings, and `DATABASE.md` belong to
+`python-db-sessions`. ORM repositories use its `asession()` / `atransaction()` helpers; they do
+not create a private engine or sessionmaker.
 
 If the repo already has Alembic, follow `python-alembic`: generate a revision after every model
 change and apply it. Do not add a migrator to a repo that creates tables from metadata only
 (`create_all` / `create_all_tables`).
 
-## ORM models
-
-SQLAlchemy 2.0: `Mapped` / `mapped_column`. Models inherit `Base` / `TimeMixin` from
-`project.components.base.models` (`python-structure`). JSON columns use `JSONB`.
+Models inherit `Base` / `TimeMixin` from `project.components.base.models`.
 Foreign keys set `ondelete` when cascade/restrict matters. Identity and other entity keys use
 domain types from `project/datatypes.py`, not bare `int` / `str`. Primary keys: `BigInteger`.
 Postgres enums: `class Role(str, enum.Enum)` + `mapped_column(Enum(Role, name="role_enum"))`.
@@ -63,12 +34,7 @@ Application rules stay in Python — no new triggers or stored procedures.
 A new model also gets a `SQLAlchemyFactory` in `tests/factories.py` (`python-polyfactory`).
 Follow existing `__tablename__` style in the repo.
 
-Services and use cases never import SQLAlchemy, never create `AsyncSession`, never write SQL —
-only repositories do.
+Services and use cases never import SQLAlchemy or write SQL; only repositories do.
 
-Tests: Testcontainers Postgres, schema via `create_all`, then a nested transaction per test and
-rollback (fixtures in `python-tests` / `CONFTEST.md`). Row data stays in the test or a factory
-`build` / `create_async` (`python-polyfactory`).
-
-When `python-monitoring` is installed, after `build_prometheus_metrics` call
-`register_sqlalchemy_engine_monitoring(engine, database="…")` (async engines are fine).
+Tests build ORM rows with `python-polyfactory`. Persisted tests additionally install
+`python-db-sessions` and use its Testcontainers transaction fixture from `python-tests`.

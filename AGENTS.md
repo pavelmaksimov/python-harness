@@ -84,7 +84,8 @@ This catalog is one language stack, split into layered IDs:
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`PYPROJECT.toml`, `SETTINGS.md`, `LOGGER.md`,
-`STRUCTURES.md`, `BASE_MODELS.md`, `BASE_SCHEMAS.md`, `FSM.md`, `RETRY.md`,
+`STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,
+`FSM.md`, `RETRY.md`,
 `DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
 `TELEGRAM.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live in the rule dir they
 belong to; mention the copy path on that band. Disclosed agent reference next
@@ -134,8 +135,11 @@ After a successful installable copy, the setup skill also writes
   (`python-freezegun`). Do not fold it into `python-tests`.
 - Test data factories (Polyfactory `build` / `create_async`) is its own core ID
   (`python-polyfactory`). Do not fold it into `python-tests`. Persist ORM rows
-  through `asession` / `atransaction` (`python-sqlalchemy`), not a private
+  through `asession` / `atransaction` (`python-db-sessions`), not a private
   sessionmaker.
+- `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
+  `python-db-sessions` owns the engine, session/transaction lifecycle, and database
+  Settings contract. Keep both concerns out of `python-structure`.
 - Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
   Install only when the target is a publishable library; do not fold it into
   `python-tooling` or service stacks.

@@ -7,7 +7,8 @@ Shared fixtures stay here. Modular tests live under `tests/test_modules/`; e2e u
 `tests/test_e2e/` (e2e-only fixtures may go in `tests/test_e2e/conftest.py`).
 Keep payloads out of fixtures — put scenario data in the test body.
 
-When `python-sqlalchemy` is installed, merge sibling `CONFTEST_DATABASE.md` into this file.
+When `python-sqlalchemy` and `python-db-sessions` are installed, merge sibling
+`CONFTEST_DATABASE.md` into this file.
 When `python-redis` is installed, merge the Redis fixtures from `python-redis` / `CACHE.md`.
 
 ```python

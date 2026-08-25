@@ -81,7 +81,7 @@ pair the other linters so they mention it too.
 
 ```text
 Core          python-tooling · python-development-rules · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-alembic · python-redis · python-telegram · python-monitoring
+Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
 
@@ -95,6 +95,8 @@ Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an a
 when the repo has no database or no Redis cache. Skip `python-alembic` when tables are
 created from metadata only (`create_all`). Skip `python-telegram` when the repo has no
 Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
+For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
+`python-db-sessions` (runtime session lifecycle).
 
 ### Core
 
@@ -111,13 +113,12 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-retry/` → `.cursor/rules/python-retry/` |
 | `python-tests` | Python tests | installable | pytest layout, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
 | `python-freezegun` | Frozen time | installable | freezegun `freeze_time` — stopped UTC clock in tests, not `patch(datetime)` | https://github.com/spulec/freezegun | `harnesses/rules/python-freezegun/` → `.cursor/rules/python-freezegun/`. Package: `uv add --dev freezegun` |
-| `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `atransaction` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
+| `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `python-db-sessions` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
 | `python-semver` | SemVer 2.0 (libraries) | installable | Semantic Versioning 2.0 for publishable libraries — public API, X.Y.Z bumps, pyproject version | https://semver.org/spec/v2.0.0.html | `harnesses/rules/python-semver/` → `.cursor/rules/python-semver/`. Optional; install when the repo is a library |
 
 Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
 `PYPROJECT.toml` into repo-root `pyproject.toml`;
-copy the remaining templates only if missing: `python-structure` → `BASE_MODELS.md` into
-`project/components/base/models.py` and `BASE_SCHEMAS.md` into
+copy the remaining templates only if missing: `python-structure` → `BASE_SCHEMAS.md` into
 `project/components/base/schemas.py`;
 `python-settings` → `SETTINGS.md` into `project/settings.py`;
 `python-logging` → `LOGGER.md` into `project/logger.py`;
@@ -125,7 +126,8 @@ copy the remaining templates only if missing: `python-structure` → `BASE_MODEL
 `python-fsm` → `FSM.md` into `project/libs/fsm.py`;
 `python-retry` → `RETRY.md` into `project/libs/retry.py`;
 `python-tests` → `CONFTEST.md` into `tests/conftest.py` (HTTP core only);
-when `python-sqlalchemy` is also approved → `CONFTEST_DATABASE.md` into `tests/conftest.py`;
+when `python-sqlalchemy` and `python-db-sessions` are also approved →
+`CONFTEST_DATABASE.md` into `tests/conftest.py`;
 when `python-polyfactory` is approved → `FACTORIES.md` into `tests/factories.py`.
 After install, patch installed `python-tests.mdc` per catalog `COMPANION.md` for each
 approved optional harness (do not copy `COMPANION.md` to the target).
@@ -136,7 +138,8 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 |---|---|---|---|---|---|
 | `python-fastapi` | FastAPI HTTP | installable | FastAPI, SSE, ORJSON, URL versioning, AppError handlers, httpx, uvloop | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fastapi/` → `.cursor/rules/python-fastapi/` |
 | `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-base-client/` → `.cursor/rules/python-base-client/` |
-| `python-sqlalchemy` | SQLAlchemy async | installable | `asession` / `atransaction`, ORM models, optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
+| `python-sqlalchemy` | SQLAlchemy ORM | installable | ORM models, `Base` / `TimeMixin`, generic `ORMRepository` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
+| `python-db-sessions` | Database sessions | installable | Async engine, `asession` / `atransaction`, DSN and optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-db-sessions/` → `.cursor/rules/python-db-sessions/` |
 | `python-alembic` | Alembic migrations | installable | Async Alembic env, autogenerate from ORM models, versions outside `project/` | https://alembic.sqlalchemy.org/ | `harnesses/rules/python-alembic/` → `.cursor/rules/python-alembic/` |
 | `python-redis` | Redis cache | installable | `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
@@ -144,8 +147,10 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 
 Templates (copy only if missing): `python-base-client` → developer chooses `ASYNC_CLIENT.md` or
 `SYNC_CLIENT.md` to copy into `project/infrastructure/utils/base_client.py` (never combine them);
-`python-sqlalchemy` → `DATABASE.md` into
-`project/infrastructure/adapters/database.py`; `python-alembic` → `ENV.md` into
+`python-sqlalchemy` → `BASE_MODELS.md` into `project/components/base/models.py` and, when multiple
+repositories share the base, `BASE_REPOSITORIES.md` into `project/components/base/repositories.py`;
+`python-db-sessions` → `DATABASE.md` into `project/infrastructure/adapters/database.py`;
+`python-alembic` → `ENV.md` into
 `alembic/env.py`; `python-redis` → `CACHE.md` into
 `project/infrastructure/adapters/acache.py`; `python-telegram` → `TELEGRAM.md`
 into `project/infrastructure/utils/telegram.py` and `BOT.md` into

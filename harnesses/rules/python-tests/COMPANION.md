@@ -21,7 +21,7 @@ Read `tests/factories.py` before adding data helpers.
 2. In **What belongs where**, add a row after the `tests/conftest.py` row:
 
 ```markdown
-| `tests/factories.py` | Polyfactory classes (`python-polyfactory`) — `build(**overrides)` in memory, `create_async` to persist when `python-sqlalchemy` is installed |
+| `tests/factories.py` | Polyfactory classes (`python-polyfactory`) — `build(**overrides)` in memory, `create_async` to persist when `python-db-sessions` is installed |
 ```
 
 3. After `Duplicate literals in tests are fine.`, add:
@@ -53,9 +53,10 @@ Patch `python-tests.mdc` — after the patch-linter pairing line, add:
 Freeze "now" with `python-freezegun` (`freeze_time`), not `patch(datetime)`.
 ```
 
-## `python-sqlalchemy`
+## `python-db-sessions`
 
-When approved, merge sibling `CONFTEST_DATABASE.md` into `tests/conftest.py` if missing (merge).
+When `python-db-sessions` and `python-sqlalchemy` are approved, merge sibling
+`CONFTEST_DATABASE.md` into `tests/conftest.py` if missing (merge).
 
 Patch `python-tests.mdc`:
 

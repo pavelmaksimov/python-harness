@@ -25,7 +25,7 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    (missing stamp = unknown / pre-version install).
 4. Present harnesses by band: **core**, **adapters**, **enforcement**. Recommend
    core for any Python repo, adapters that match the codebase (FastAPI,
-   SQLAlchemy, Redis; Alembic when the repo already has `alembic/` or
+   SQLAlchemy ORM, database sessions, Redis; Alembic when the repo already has `alembic/` or
    `alembic.ini`; Telegram when the repo uses python-telegram-bot, `apps/bot.py`,
    or component `handlers.py` — skip `python-telegram` when there is no Telegram
    bot; `python-base-client` when the repo has outbound HTTP adapters under
@@ -47,8 +47,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    core ID, not folded into `python-tests`. Offer `python-semver` when the repo is (or will be)
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
-   When `python-sqlalchemy` is selected, ORM factories
-   persist through `atransaction()` / `asession()`, not a private sessionmaker.
+   Recommend `python-sqlalchemy` for ORM models and shared ORM bases. Add
+   `python-db-sessions` for runtime persistence and engine/session lifecycle; persisted ORM
+   factories use its `atransaction()` / `asession()`, not a private sessionmaker.
    Do not offer the stack as one catch-all ID.
 5. Filter out entries that clearly do not fit the repo.
 6. Ask the user only about choices that cannot be inferred:
@@ -68,8 +69,13 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `COMPANION.md` in the catalog `python-tests` rule dir (catalog-only; do not
    copy it to the target). Skip every companion block for a harness that was not
    approved. Typical merges:
+   - `python-sqlalchemy` → `BASE_MODELS.md` into `project/components/base/models.py`; add
+     `BASE_REPOSITORIES.md` only when multiple repositories share the base;
+   - `python-db-sessions` → `DATABASE.md` into
+     `project/infrastructure/adapters/database.py`;
    - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
-   - `python-sqlalchemy` → `CONFTEST_DATABASE.md` into `tests/conftest.py`;
+   - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
+     `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
    For `python-base-client`, copy only the implementation selected by the user
    (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into

@@ -1,8 +1,9 @@
 # Database conftest fixtures
 
-Merge into `tests/conftest.py` when `python-sqlalchemy` is installed (do not overwrite without asking).
-Requires `python-sqlalchemy` (`DATABASE.md` in the adapter) and, for ORM rows in tests,
-`python-polyfactory` with the ORM block in `tests/factories.py`.
+Merge into `tests/conftest.py` when `python-db-sessions` is installed (do not overwrite without asking).
+Requires `python-db-sessions` (`DATABASE.md` in the adapter) and `python-sqlalchemy` for ORM
+metadata. For ORM rows in tests, add `python-polyfactory` with the ORM block in
+`tests/factories.py`.
 
 Add these imports to the existing conftest imports:
 

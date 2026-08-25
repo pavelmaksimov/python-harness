@@ -17,7 +17,7 @@ class ItemSchemaFactory(ModelFactory[ItemSchema]): ...
 
 `ItemSchemaFactory.build(title="x")` — in-memory payload, no database.
 
-## ORM (when `python-sqlalchemy` is installed)
+## ORM (when `python-sqlalchemy` and `python-db-sessions` are installed)
 
 Persist through `atransaction()` so the session is the same one `asession()` /
 the `asession` fixture already opened. Flush only: the test fixture rolls back.
