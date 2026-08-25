@@ -83,7 +83,7 @@ This catalog is one language stack, split into layered IDs:
   `domain-types-linter`, and `patch-linter` with the stack; `di-linter` is optional
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
-library list after the table. Templates (`SETTINGS.md`, `LOGGER.md`,
+library list after the table. Templates (`PYPROJECT.toml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_SCHEMAS.md`, `FSM.md`, `RETRY.md`,
 `DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
 `TELEGRAM.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live in the rule dir they
@@ -182,6 +182,11 @@ When running or editing the setup skill:
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.
+   When `python-tooling` installs Ruff, Black, or isort, merge only the selected
+   tools' tables from `PYPROJECT.toml` into the target `pyproject.toml`; adapt
+   package paths, infer Ruff's minimum Python target from project metadata or
+   consistent runtime / CI configuration, ask when ambiguous, and ask before
+   changing existing tables.
 4. Never overwrite existing target files without asking (except refreshing
    `.cursor/python-harness-version` after an approved installable copy).
 5. Do not commit API keys, tokens, or machine-local absolute paths.

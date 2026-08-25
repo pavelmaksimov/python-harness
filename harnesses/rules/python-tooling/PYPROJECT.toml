@@ -1,0 +1,146 @@
+[tool.ruff]
+line-length = 120
+indent-width = 4
+include = ["project/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+ignore = [
+    "COM812",
+    "E731",
+    "E741",
+    "C901",
+    "RET504",
+    "SIM117",
+    "B019",
+    "BLE001",
+    "EM101",
+    "S101",
+    "TRY301",
+    "ARG001",
+    "FBT001",
+    "FBT002",
+    "ICN003",
+    "PYI001",
+    "UP028",
+    "UP035",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "N802",
+    "TRY300",
+]
+
+select = [
+    "E",
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "B",
+    "S",
+    "BLE",
+    "RSE",
+    "TRY004",
+    "TRY201",
+    "TRY203",
+    "TRY300",
+    "TRY301",
+    "TRY401",
+    "ASYNC",
+    "UP",
+    "FURB",
+    "PERF",
+    "FLY",
+    "SIM",
+    "C",
+    "PIE",
+    "RUF",
+    "ERA",
+    "A",
+    "COM",
+    "Q",
+    "ISC",
+    "N",
+    "C90",
+    "RET",
+    "ARG",
+    "FBT",
+    "SLF",
+    "SLOT",
+    "ICN",
+    "TID",
+    "TC",
+    "FA",
+    "PYI",
+    "G",
+    "LOG",
+    "T20",
+    "INP",
+    "FAST",
+    "NPY",
+    "PTH",
+    "YTT",
+    "PT",
+    "INT",
+    "PLC",
+    "PLE",
+    "PLW0127",
+    "PLW0128",
+    "PLW0245",
+    "PLW0406",
+    "PLW0602",
+    "PLW0603",
+    "PLW0642",
+    "PLW0711",
+    "PLW1501",
+    "PLW1508",
+    "PLW1509",
+    "PLW1510",
+    "PLW2101",
+    "PLW2901",
+    "PLW3301",
+    "D201",
+    "D204",
+    "D206",
+    "D207",
+    "D208",
+    "D209",
+    "D210",
+    "D211",
+    "D213",
+    "D300",
+    "D402",
+    "D403",
+    "D418",
+    "D419",
+    "TD004",
+    "TD005",
+    "TD006",
+    "TD007",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
+
+[tool.isort]
+known_first_party = ["project", "tests"]
+no_lines_before = ["local-folder"]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+
+[tool.black]
+line-length = 120
+include = '(project/.*\.py|tests/.*\.py)$'
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id", "type", "filter"]

@@ -100,7 +100,7 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
-| `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/` |
+| `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. When installing Ruff, Black, or isort, merge that tool's tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; adapt package paths, infer Ruff's minimum Python target from the repo or ask the developer, and preserve existing tables unless the user approves a merge or replacement |
 | `python-structure` | Python structure | installable | Components, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-structure/` → `.cursor/rules/python-structure/` |
 | `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
 | `python-settings` | Python settings | installable | pydantic-settings env contract, `Settings().PARAM` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-settings/` → `.cursor/rules/python-settings/` |
@@ -113,7 +113,9 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 | `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `atransaction` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
 | `python-semver` | SemVer 2.0 (libraries) | installable | Semantic Versioning 2.0 for publishable libraries — public API, X.Y.Z bumps, pyproject version | https://semver.org/spec/v2.0.0.html | `harnesses/rules/python-semver/` → `.cursor/rules/python-semver/`. Optional; install when the repo is a library |
 
-Templates (copy only if missing): `python-structure` → `BASE_MODELS.md` into
+Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
+`PYPROJECT.toml` into repo-root `pyproject.toml`;
+copy the remaining templates only if missing: `python-structure` → `BASE_MODELS.md` into
 `project/components/base/models.py` and `BASE_SCHEMAS.md` into
 `project/components/base/schemas.py`;
 `python-settings` → `SETTINGS.md` into `project/settings.py`;

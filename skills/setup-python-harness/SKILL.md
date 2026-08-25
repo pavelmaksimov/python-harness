@@ -78,6 +78,13 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `di-linter` was not approved.
    For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
    root when missing (substitute `project` if the package name differs).
+   When `python-tooling` is approved and Ruff, Black, or isort is being installed,
+   read sibling `PYPROJECT.toml` and merge only the selected tools' `[tool.*]`
+   tables into the target `pyproject.toml`. Adapt package paths. Set Ruff's
+   `target-version` to the repository's minimum supported Python version: infer
+   it from existing project metadata or consistent runtime / CI configuration;
+   ask the developer when it is absent or ambiguous. Preserve existing tool
+   tables; show conflicts and ask whether to merge, replace, or skip them.
 10. For hybrid rows, print the upstream URL and tool install notes; still copy
     the skill/rule from this catalog when Kind is installable.
 11. Preserve existing files. If a target exists, show the conflict and ask
