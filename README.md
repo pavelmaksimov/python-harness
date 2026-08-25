@@ -80,7 +80,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
+Core          python-tooling · python-development-rules · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
@@ -101,10 +101,11 @@ Telegram bot. Skip `python-monitoring` when the repo does not scrape Prometheus.
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. When installing Ruff, Black, or isort, merge that tool's tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; adapt package paths, infer Ruff's minimum Python target from the repo or ask the developer, and preserve existing tables unless the user approves a merge or replacement |
+| `python-development-rules` | Python development rules | installable | General Python rules, configurable module log levels through Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-development-rules/` → `.cursor/rules/python-development-rules/` |
 | `python-structure` | Python structure | installable | Components, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-structure/` → `.cursor/rules/python-structure/` |
 | `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
 | `python-settings` | Python settings | installable | pydantic-settings env contract, `Settings().PARAM` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-settings/` → `.cursor/rules/python-settings/` |
-| `python-logging` | Python logging | installable | `setup_logging()` / dictConfig, levels from Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-logging/` → `.cursor/rules/python-logging/` |
+| `python-logging` | Python logging | installable | Technology-neutral `setup_logging()` / dictConfig, root level from Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-logging/` → `.cursor/rules/python-logging/` |
 | `python-di` | Python DI | installable | LazyInit, Container, LazyService — no process globals | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-di/` → `.cursor/rules/python-di/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fsm/` → `.cursor/rules/python-fsm/` |
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-retry/` → `.cursor/rules/python-retry/` |

@@ -37,8 +37,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    metrics (`uv add llm_common prometheus_client` — PyPI `llm_common`, not
    `pycommons`); skip it when the repo does not scrape Prometheus. Core includes
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
-   part of `python-di`. Core includes `python-logging` (`dictConfig` /
-   `setup_logging()`) as its own ID; call-site hygiene stays in `python-tooling`.
+   part of `python-di`. Core includes `python-development-rules` for general Python
+   conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
+   `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
+   `python-tooling`, and adapter rules own library-specific logger names and levels.
    Offer `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
    `python-polyfactory` (Polyfactory in tests, `uv add --dev polyfactory`) separately — only
    when the repo has time-dependent tests or schema/ORM models to factory-build. Each is its own

@@ -42,10 +42,8 @@ Settings = LazyInit(SettingsValidator)
 - Closed env names: `Enum` (`Envs`).
 - Derived values: `@model_validator` on `SettingsValidator`. Adapter-specific fields (DSN, …)
   stay in that adapter's contract.
-- Logging (`python-logging`): always `LOG_LEVEL`; optional `WRITE_LOGS_TO_FILE`; `Constants.LOG_FORMAT`
-  when the formatter is shared. Per-library fields only when that library is in the repo:
-  `FASTAPI_LOG_LEVEL`, `TELEGRAM_LOG_LEVEL`, `HTTP_REQUESTS_LOG_LEVEL`, `SQLALCHEMY_LOG_LEVEL`,
-  `REDIS_LOG_LEVEL`.
+- Logging (`python-logging`): `LOG_LEVEL`; `Constants.LOG_FORMAT` when the formatter is shared.
+  Follow `python-development-rules` for technology-specific log-level fields.
 - Read config through Settings fields, not `os.getenv` / `os.environ`.
 - `extra="allow"` so undeclared host env does not fail startup.
 

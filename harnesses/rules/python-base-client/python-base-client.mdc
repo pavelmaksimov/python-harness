@@ -17,6 +17,9 @@ Install only the implementation the developer selects; do not combine both clien
 New external HTTP API → a module under `project/infrastructure/adapters/`. Subclass or compose the
 selected `AsyncApi` or `SyncApi`. `layers.toml`: `base_client` is **adapters**, not presentation.
 
+When httpx needs a level different from root, add `HTTP_REQUESTS_LOG_LEVEL` to
+`SettingsValidator` and configure `httpx` and `httpcore` with it (`python-development-rules`).
+
 `name_for_monitoring` is required (API clients suffix `_api`). When the path is dynamic, pass
 `resource_for_monitoring` as a template with no IDs (`invoices/{invoice_id}`, not `invoices/123`).
 

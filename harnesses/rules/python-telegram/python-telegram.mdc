@@ -13,6 +13,10 @@ Runtime: [python-telegram-bot](https://docs.python-telegram-bot.org/) (`Applicat
 `HTTPXRequest`, `AIORateLimiter`, `concurrent_updates`). Extra: `python-telegram-bot[job-queue,rate-limiter]`.
 Not aiogram.
 
+When the bot libraries need a level different from root, add `TELEGRAM_LOG_LEVEL` to
+`SettingsValidator` and configure `telegram`, `telegram.ext`, and `apscheduler` with it
+(`python-development-rules`).
+
 Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers live in
 `project.components.base.handlers` (`python-structure`). Register them from
 `project.infrastructure.apps.bot`. Decorator helpers live in `project.infrastructure.utils.telegram`.

@@ -1,0 +1,35 @@
+---
+description: General Python development rules — configurable module log levels
+alwaysApply: true
+---
+
+# Python development rules
+
+## Configurable logging
+
+When a module or library needs a log level different from root, add a descriptive
+`*_LOG_LEVEL` field to `SettingsValidator` and pass `Settings().<FIELD>` to its named logger
+configuration. This keeps every log level configurable through environment-backed Settings.
+
+```python
+class SettingsValidator(BaseSettings):
+    HTTP_LOG_LEVEL: str = "INFO"
+
+
+config = {
+    ...
+    "loggers": {
+        "httpx": {
+            {
+              "level": Settings().HTTP_LOG_LEVEL,
+              "handlers": [],
+              "propagate": True,
+          }
+        }
+    },
+    ...
+}
+```
+
+The rule that owns the technology chooses the Settings field and logger names. Use the root
+`Settings().LOG_LEVEL` when a separate level is unnecessary.

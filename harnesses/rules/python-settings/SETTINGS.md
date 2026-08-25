@@ -3,8 +3,8 @@
 Copy this module to `project/settings.py` when the package does not already define
 `Settings` / `SettingsValidator`. Requires `LazyInit` from `project/libs/structures.py`
 (`python-di` → `STRUCTURES.md`). Keep `env.example` in sync with required fields.
-Logging: `LOG_LEVEL`, optional `WRITE_LOGS_TO_FILE`, and `Constants.LOG_FORMAT` (`python-logging`).
-Add per-library `*_LOG_LEVEL` fields only for libraries the repo uses.
+Logging: `LOG_LEVEL` and `Constants.LOG_FORMAT` (`python-logging`). Follow
+`python-development-rules` for technology-specific `*_LOG_LEVEL` fields.
 
 ```python
 from enum import Enum
@@ -29,7 +29,6 @@ class Constants:
 class SettingsValidator(BaseSettings):
     ENV: Envs = Envs.LOCAL
     LOG_LEVEL: str = "INFO"
-    WRITE_LOGS_TO_FILE: bool = False
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent / ".env",

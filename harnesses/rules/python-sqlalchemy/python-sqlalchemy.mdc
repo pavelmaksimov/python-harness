@@ -11,6 +11,10 @@ alwaysApply: false
 
 Runtime: SQLAlchemy 2 async (`asyncpg`). JSON columns use `JSONB`.
 
+When SQLAlchemy needs a level different from root, add `SQLALCHEMY_LOG_LEVEL` to
+`SettingsValidator` and configure `sqlalchemy` and `sqlalchemy.engine` with it
+(`python-development-rules`).
+
 One adapter module owns the engine and sessions. If it is missing, copy sibling `DATABASE.md`
 into `project/infrastructure/adapters/database.py` (and the Settings contract into
 `SettingsValidator` in `settings.py` — see `python-settings`).

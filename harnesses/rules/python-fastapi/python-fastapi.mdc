@@ -23,6 +23,8 @@ uv run uvicorn project.infrastructure.apps.api:app --host 0.0.0.0 --loop uvloop
 ```
 
 Call `setup_logging()` once in the app lifespan or `main.py` (`python-logging`).
+When FastAPI/uvicorn needs a level different from root, add `FASTAPI_LOG_LEVEL` to
+`SettingsValidator` and configure `uvicorn` and `fastapi` with it (`python-development-rules`).
 
 ## Responses
 
