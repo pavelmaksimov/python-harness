@@ -37,7 +37,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
    `llm_common`, not `pycommons`). Core includes
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
-   part of `python-di`. Core includes `python-development-rules` for general Python
+   part of `python-di`. Core includes `python-workflow` for repository navigation before
+   analysis and `python-development-rules` for general Python
    conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
    `python-tooling`, and adapter rules own library-specific logger names and levels.
@@ -170,7 +171,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `python-tooling`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |

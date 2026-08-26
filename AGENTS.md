@@ -74,7 +74,7 @@ Rules:
 
 This catalog is one language stack, split into layered IDs:
 
-- **core** — tooling, `python-development-rules`, structure, exceptions, settings, logging, DI, FSM, retry,
+- **core** — tooling, `python-workflow`, `python-development-rules`, structure, exceptions, settings, logging, DI, FSM, retry,
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the

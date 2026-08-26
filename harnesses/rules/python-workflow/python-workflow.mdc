@@ -1,0 +1,14 @@
+---
+description: Repository navigation before Python code research and analysis
+alwaysApply: true
+---
+
+# Python repository workflow
+
+Before researching the repository or analyzing its code, architecture, or project structure:
+
+1. Read `project/container.py` to identify registered dependencies and their relationships.
+2. List all Python modules (`*.py`) in the repository.
+
+Use the container and module list as the navigation map for subsequent targeted reading. If
+`project/container.py` is absent, note that and continue from the module list.
