@@ -35,10 +35,37 @@ before implementing or reviewing either pattern, even when editing a caller rath
 ## Bounded concurrency
 
 Run independent asynchronous tasks concurrently whenever they can be parallelized. Create one
-shared `asyncio.Semaphore` per batch and hold it around each task's work so concurrency is always
-bounded. Define the positive limit as a descriptive `*_CONCURRENCY_LIMIT` field on
+shared `asyncio.Semaphore` per constrained resource and reuse it across batches so concurrency is
+always bounded. Define the positive limit as a descriptive `*_CONCURRENCY_LIMIT` field on
 `SettingsValidator` and construct the semaphore with `Settings().<FIELD>`; never hardcode the
 limit or create a separate semaphore inside each task.
+
+Create semaphores lazily in `project/semaphores.py` using `LazyInit` from `python-di`. Name each
+property after the constrained resource, not after the numeric limit:
+
+```python
+import asyncio
+from functools import cached_property
+
+from project.libs.structures import LazyInit
+from project.settings import Settings
+
+
+class SemaphoresContainer:
+    @cached_property
+    def external_api_requests(self) -> asyncio.Semaphore:
+        return asyncio.Semaphore(Settings().EXTERNAL_API_CONCURRENCY_LIMIT)
+
+
+Semaphores = LazyInit(SemaphoresContainer)
+```
+
+Acquire the shared semaphore only around the operation whose concurrency it limits:
+
+```python
+async with Semaphores().external_api_requests:
+    response = await client.get(url)
+```
 
 Keep tasks sequential when one depends on another's result or when their shared state requires
 ordering.
