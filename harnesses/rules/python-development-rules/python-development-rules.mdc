@@ -1,5 +1,5 @@
 ---
-description: General Python development rules — helpers, context managers, configurable logging
+description: General Python development rules — helpers, context managers, bounded concurrency, configurable logging
 alwaysApply: true
 ---
 
@@ -31,6 +31,17 @@ transition graph. Put retries around the smallest independently repeatable adapt
 writes require idempotency, and each attempt requires its own timeout. Apply the detailed rule
 before implementing or reviewing either pattern, even when editing a caller rather than
 `project/libs/fsm.py` or `project/libs/retry.py`.
+
+## Bounded concurrency
+
+Run independent asynchronous tasks concurrently whenever they can be parallelized. Create one
+shared `asyncio.Semaphore` per batch and hold it around each task's work so concurrency is always
+bounded. Define the positive limit as a descriptive `*_CONCURRENCY_LIMIT` field on
+`SettingsValidator` and construct the semaphore with `Settings().<FIELD>`; never hardcode the
+limit or create a separate semaphore inside each task.
+
+Keep tasks sequential when one depends on another's result or when their shared state requires
+ordering.
 
 ## Configurable logging
 
