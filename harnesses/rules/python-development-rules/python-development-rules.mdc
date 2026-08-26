@@ -5,6 +5,12 @@ alwaysApply: true
 
 # Python development rules
 
+## Module exports
+
+Do not add `__all__` to modules by default. Keep the public surface implicit through
+module names that do not start with `_`; use a leading underscore for private helpers.
+Add `__all__` only when a concrete compatibility or tooling requirement calls for it.
+
 ## Context managers
 
 Create context managers as generator functions decorated with `contextlib.contextmanager`
