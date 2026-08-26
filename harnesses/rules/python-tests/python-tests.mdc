@@ -86,6 +86,7 @@ below — do not invent local variants.
 | Frozen clock in tests | `python-freezegun` | — |
 | Postgres / ORM tests | `python-sqlalchemy` + `python-db-sessions` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
 | Redis cache tests | `python-redis` | Redis fixtures from `CACHE.md` → `tests/conftest.py`; companion patch in this file |
+| Branch-coverage gate (default 95%) | `python-coverage` | sibling `PYPROJECT.md` `[tool.coverage.*]` → repo-root `pyproject.toml` (merge); `uv add --dev pytest-cov` |
 
 Companion patches for the installer live in sibling `COMPANION.md` (catalog repo only — not copied
 to the target).

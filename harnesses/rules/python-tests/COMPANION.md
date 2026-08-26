@@ -3,8 +3,9 @@
 Apply after copying harness rules to the target repo. Patch only IDs the user approved.
 Skip every block for a harness that was not installed. Do not copy this file to the target.
 
-Source: catalog `harnesses/rules/python-tests/`. Target: `.cursor/rules/python-tests/python-tests.mdc`
-(and `tests/conftest.py` / `tests/factories.py` as noted).
+Source: catalog `harnesses/rules/python-tests/`. Targets: `.cursor/rules/python-tests/python-tests.mdc`
+and, for the `python-coverage` block only, `.cursor/rules/python-workflow/python-workflow.mdc`
+(plus `tests/conftest.py` / `tests/factories.py` as noted).
 
 ## `python-polyfactory`
 
@@ -71,6 +72,43 @@ Patch `python-tests.mdc`:
 Session-scoped Testcontainers Redis; `flushdb` per test (fixtures in `python-redis` / `CACHE.md`).
 After a host override, `redis_client.cache_clear()`.
 ```
+
+## `python-coverage`
+
+Optional harness — apply this whole block only when the user approves it.
+When not approved: no pointer-table row in `python-tests.mdc`, no workflow
+patch, no config merge.
+
+When approved:
+
+1. Install the skill dir (`SKILL.md` → `.cursor/skills/python-coverage/`). The
+   sibling `PYPROJECT.md` stays catalog-side: merge its `[tool.coverage.*]`
+   tables into repo-root `pyproject.toml` if missing (merge; ask before
+   replacing existing tables). Add `uv add --dev pytest-cov`; add
+   `uv add --dev diff-cover` only when the user picks diff mode (legacy
+   baseline); no diff-cover config table exists — the skill passes CLI flags.
+2. Patch `python-tests.mdc` — add the pointer-table row only.
+3. Append to `.cursor/rules/python-workflow/python-workflow.mdc`:
+
+```markdown
+## Coverage gate after a task
+
+After finishing a task that changed Python modules under `project/`, run the
+coverage skill before reporting completion:
+
+1. Run `.cursor/skills/python-coverage/` (`python-coverage`): pytest with
+   coverage on the modular suite, gated per its mode (`fail_under`, or
+   `diff-cover` over changed lines).
+2. If the gate fails, close the reported gaps with tests first — the skill's
+   workflow defines how.
+
+Do not report the task complete while the coverage gate fails or while lines
+changed by this task remain uncovered. If the skill is not installed, skip
+this step.
+```
+
+Without approval nothing is appended to `python-workflow.mdc` — the rule stays
+as shipped.
 
 ## `di-linter`
 

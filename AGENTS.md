@@ -81,7 +81,8 @@ This catalog is one language stack, split into layered IDs:
   repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter` and
   `domain-types-linter` with the stack, add `patch-linter` with automated tests,
-  and use `di-linter` for optional strict DI enforcement
+  offer `python-coverage` as an optional gate with tests, and use `di-linter`
+  for optional strict DI enforcement
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`PYPROJECT.toml`, `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
@@ -193,7 +194,10 @@ When running or editing the setup skill:
 3. Derive harness bundles from approved capabilities, then install only the
    resulting approved **installable** paths; for hybrid/upstream tools,
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
-   `patch-linter` when tests are selected. Add `python-freezegun` and
+   `patch-linter` when tests are selected. Offer `python-coverage` as optional
+   when tests are selected; only on approval merge its `PYPROJECT.md`
+   `[tool.coverage.*]` into the target `pyproject.toml`, add
+   `uv add --dev pytest-cov`, and apply the companion workflow patch. Add `python-freezegun` and
    `python-polyfactory` with every automated-test bundle instead of asking about
    either separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
    Offer `di-linter`

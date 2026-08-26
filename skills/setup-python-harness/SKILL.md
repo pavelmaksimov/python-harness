@@ -32,7 +32,16 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `infrastructure/adapters/` — skip it when there are none; `python-speech`
    when the repo uses transcription or speech synthesis), and
    `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
-   when automated tests are selected.
+   when automated tests are selected. Offer `python-coverage` as **optional**
+   when automated tests are selected (never auto-derive it): full mode gates
+   total branch coverage at `fail_under` 95%; diff mode (`diff-cover` over
+   changed lines) fits legacy baselines that cannot reach the threshold soon.
+   On approval, merge sibling `PYPROJECT.md` `[tool.coverage.*]` tables into
+   repo-root `pyproject.toml`, add `uv add --dev pytest-cov` (plus
+   `uv add --dev diff-cover` in diff mode),
+   and apply the companion patches from the catalog `COMPANION.md`
+   (`python-tests` pointer row + `python-workflow` "Coverage gate after a
+   task" section). Without approval, install nothing and patch nothing.
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
@@ -157,17 +166,19 @@ wording and skip any question with one unambiguous repository-derived answer.
 | 2 | Library | Is this project a publishable library? **yes / no** |
 | 3 | Application type | What kind of application is it? **FastAPI API / Telegram bot / both / neither (worker, CLI, or library only)** |
 | 4 | Test strategy | Will this project have automated tests? **yes / no** |
-| 5 | Database | Will this project need a database? **yes / no** |
-| 6 | Redis cache | Will this project use Redis as a cache? **yes / no** |
-| 7 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
-| 8 | Speech I/O | Does this project need speech processing? **none / STT / TTS / both** |
-| 9 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
-| 10 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
-| 11 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
+| 5 | Coverage gate | Only when stage 4 = yes: enforce a coverage gate with `python-coverage`? **full mode (branch ≥95%) / diff mode — changed lines only, for a legacy baseline / no** |
+| 6 | Database | Will this project need a database? **yes / no** |
+| 7 | Redis cache | Will this project use Redis as a cache? **yes / no** |
+| 8 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
+| 9 | Speech I/O | Does this project need speech processing? **none / STT / TTS / both** |
+| 10 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
+| 11 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
+| 12 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
 
-Ask stages 2–8 explicitly unless the user's request already contains the
+Ask stages 2–9 explicitly unless the user's request already contains the
 answer. Repository evidence supplies a recommended answer, not a reason to
-hide these product decisions.
+hide these product decisions. Stage 5 is asked only after stage 4 = yes; its
+"no" answer installs nothing coverage-related.
 
 Derive the install set mechanically from the answers:
 
@@ -176,6 +187,7 @@ Derive the install set mechanically from the answers:
 | Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
+| Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
 | Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |
 | Database + automated tests | Add and merge `FACTORIES_ORM.md`; merge database fixtures from `CONFTEST_DATABASE.md` |
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |

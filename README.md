@@ -75,7 +75,10 @@ Installable artifacts live only under typed dirs in `harnesses/` (`skills/`,
 Three bands: install **core** for any Python service, add **adapters** the repo
 actually uses, and take `layers-linter` and `domain-types-linter` with the stack
 so the same boundaries are enforced. Add `patch-linter` when automated tests
-are selected.
+are selected. `python-coverage` is optional — offer it when automated tests
+are selected; on approval it also appends the post-task coverage-gate step to
+the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, no
+rule carries coverage instructions.
 `di-linter` is optional — add it when the repo uses Container/LazyInit and you
 want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
@@ -83,7 +86,7 @@ pair the other linters so they mention it too.
 ```text
 Core          python-tooling · python-workflow · python-development-rules · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring · python-speech
-Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
+Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
@@ -179,10 +182,13 @@ Hybrid: tool from upstream, skill from this repo.
 | `domain-types-linter` | domain-types-linter | installable | Domain types in business-logic annotations | https://github.com/pavelmaksimov/domain-types-linter | Tool: `uvx --from domain-types-linter dt-linter`. Skill: `harnesses/skills/domain-types-linter/SKILL.md` → `.cursor/skills/domain-types-linter/SKILL.md` |
 | `patch-linter` | patch-linter | installable | Forbid `unittest.mock.patch` and pytest `monkeypatch` in tests | https://github.com/pavelmaksimov/patch-linter | Tool: `uvx patch-linter`. Skill: `harnesses/skills/patch-linter/SKILL.md` → `.cursor/skills/patch-linter/SKILL.md` |
 | `di-linter` | di-linter | installable | Optional. In-process construction and test patches | https://github.com/pavelmaksimov/di-linter | Tool: `uvx di-linter`. Skill: `harnesses/skills/di-linter/` → `.cursor/skills/di-linter/`. Template: sibling `di.toml` → repo-root `di.toml` (copy only if missing; substitute package name if not `project/`). If added, patch companion rules so they pair it with the other linters |
+| `python-coverage` | Coverage gate (pytest-cov) | installable | Optional. Enforce branch coverage ≥ `fail_under` (default 95%), or diff mode: changed lines vs base branch at 100% (`diff-cover`) for legacy baselines; skill closes reported gaps with tests | https://github.com/pavelmaksimov/python-harness | Skill: `harnesses/skills/python-coverage/` → `.cursor/skills/python-coverage/`. Merge `[tool.coverage.*]` tables from sibling `PYPROJECT.md` into repo-root `pyproject.toml` (copy only missing tables/keys). Packages: `uv add --dev pytest-cov`; diff mode adds `uv add --dev diff-cover`. Offer when automated tests are selected; never auto-install |
 
 Templates (copy only if missing): `layers-linter` → `layers.toml` into repo-root
 `layers.toml`; `di-linter` → `di.toml` into repo-root `di.toml`. Substitute
-`project` if the package name differs.
+`project` if the package name differs. `python-coverage` merges sibling
+`PYPROJECT.md` `[tool.coverage.*]` into repo-root `pyproject.toml` (no
+standalone file; substitute `project` if the package name differs).
 
 ## Install the setup skill globally
 
