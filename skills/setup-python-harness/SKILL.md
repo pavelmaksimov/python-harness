@@ -29,7 +29,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    python-telegram-bot, `apps/bot.py`,
    or component `handlers.py` — skip `python-telegram` when there is no Telegram
    bot; `python-base-client` when the repo has outbound HTTP adapters under
-   `infrastructure/adapters/` — skip it when there are none), and
+   `infrastructure/adapters/` — skip it when there are none; `python-speech`
+   when the repo uses transcription or speech synthesis), and
    `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
    when automated tests are selected.
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
@@ -159,11 +160,12 @@ wording and skip any question with one unambiguous repository-derived answer.
 | 5 | Database | Will this project need a database? **yes / no** |
 | 6 | Redis cache | Will this project use Redis as a cache? **yes / no** |
 | 7 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
-| 8 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
-| 9 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
-| 10 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
+| 8 | Speech I/O | Does this project need speech processing? **none / STT / TTS / both** |
+| 9 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
+| 10 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
+| 11 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
 
-Ask stages 2–7 explicitly unless the user's request already contains the
+Ask stages 2–8 explicitly unless the user's request already contains the
 answer. Repository evidence supplies a recommended answer, not a reason to
 hide these product decisions.
 
@@ -179,6 +181,7 @@ Derive the install set mechanically from the answers:
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
 | FastAPI API | `python-fastapi` |
 | Prometheus monitoring | `python-monitoring` and its upstream package notes |
+| STT, TTS, or both | `python-speech`; install only the selected provider/media dependencies |
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |

@@ -82,7 +82,7 @@ pair the other linters so they mention it too.
 
 ```text
 Core          python-tooling · python-workflow · python-development-rules · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
+Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring · python-speech
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional)
 ```
 
@@ -100,7 +100,8 @@ Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an a
 when the repo has no database or no Redis cache. A selected database installs
 `python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together. Skip
 `python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
-when Prometheus monitoring is not selected.
+when Prometheus monitoring is not selected. Add `python-speech` when the project
+uses speech-to-text, text-to-speech, or both; skip it when there is no speech I/O.
 For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 `python-db-sessions` (runtime session lifecycle).
 
@@ -154,6 +155,7 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `python-redis` | Redis cache | installable | Prefixed keys, `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
+| `python-speech` | OpenAI STT and TTS | installable | OGG-to-WAV transcription with a configurable model and MP3 speech with configurable voice instructions | https://github.com/pavelmaksimov/python-harness | `harnesses/skills/python-speech/` → `.cursor/skills/python-speech/`. Dependencies: `openai`, `pydub`, and system `ffmpeg`. |
 
 Templates (copy only if missing): `python-base-client` → developer chooses `ASYNC_CLIENT.md` or
 `SYNC_CLIENT.md` to copy into `project/infrastructure/base/http_client.py` (never combine them);
