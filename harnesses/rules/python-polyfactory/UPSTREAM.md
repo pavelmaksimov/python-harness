@@ -19,4 +19,5 @@ Stack constraints (do not reintroduce from upstream):
 
 - Call factories on the class — no [pytest fixtures](https://polyfactory.litestar.dev/latest/usage/fixtures.html).
 - Persist ORM via `atransaction()` / `asession()` (`python-db-sessions`), not `__async_session__` + `commit()`.
-- Keep Beanie / Odmantic / attrs / msgspec / TypedDict examples out unless the catalog gains those IDs.
+- The base template covers stdlib dataclasses, `TypedDict`, and Pydantic models.
+  Adapter-specific model examples belong to their matching catalog IDs.

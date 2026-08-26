@@ -1,5 +1,5 @@
 ---
-description: Polyfactory test factories — generated schema data through class-level build and batch
+description: Polyfactory test factories — generated typed model data through class-level build and batch
 globs:
   - tests/**
 alwaysApply: false
@@ -20,10 +20,12 @@ helpers, or use `@register_fixture` / `register_fixture(...)`.
 
 | Need | Call |
 |---|---|
-| Pydantic / schema | `ItemSchemaFactory.build(**overrides)` |
-| Several schemas | `ItemSchemaFactory.batch(n, **overrides)` |
+| Pydantic model | `ItemSchemaFactory.build(**overrides)` |
+| Dataclass | `ItemFactory.build(**overrides)` |
+| TypedDict | `ItemPayloadFactory.build(**overrides)` |
+| Several values | `Factory.batch(n, **overrides)` |
 
-A new request schema gets a factory class in `tests/factories.py`.
+A new typed model used in tests gets a factory class in `tests/factories.py`.
 Overrides in the test beat factory defaults.
 
 ```python
