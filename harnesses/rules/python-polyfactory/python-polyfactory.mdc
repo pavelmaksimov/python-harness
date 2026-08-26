@@ -12,8 +12,10 @@ If `tests/factories.py` is missing, copy sibling `FACTORIES.md` into `tests/fact
 (merge; do not overwrite without asking). Include the ORM block only when `python-sqlalchemy`
 and `python-db-sessions` are installed.
 
-Call factories on the class in the test body. Do not wrap them in `make_*` helpers.
-Do not `@register_fixture` / `register_fixture(...)`.
+Generate all test data through Polyfactory classes. Call factories directly in the test body.
+Fixtures provide environment and resources, not generated payloads or model instances.
+Do not generate data in fixtures or arbitrary helper functions, wrap factories in `make_*`
+helpers, or use `@register_fixture` / `register_fixture(...)`.
 
 | Need | Call |
 |---|---|

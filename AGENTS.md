@@ -142,7 +142,9 @@ After a successful installable copy, the setup skill also writes
 - Clock in tests (`freezegun` `freeze_time`) is its own core ID
   (`python-freezegun`). Do not fold it into `python-tests`.
 - Test data factories (Polyfactory `build` / `create_async`) is its own core ID
-  (`python-polyfactory`). Do not fold it into `python-tests`. Persist ORM rows
+  (`python-polyfactory`) and installs with every automated-test bundle. Generate test data
+  through factory classes, not fixtures or arbitrary helper functions. Do not fold it into
+  `python-tests`. Persist ORM rows
   through `asession` / `atransaction` (`python-db-sessions`), not a private
   sessionmaker.
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
@@ -155,7 +157,7 @@ After a successful installable copy, the setup skill also writes
 - Library release versioning (SemVer 2.0) is its own core ID (`python-semver`).
   Install only when the target is a publishable library; do not fold it into
   `python-tooling` or service stacks.
-- Optional enforcement (`di-linter`) and test companion harnesses
+- Optional enforcement (`di-linter`) and separate test companion harnesses
   (`python-freezegun`, `python-polyfactory`, adapter-driven DB/Redis test blocks)
   stay out of default `python-tests` body text. The base rule keeps a short
   pointer table to catalog IDs; detailed sections and conftest fragments are
@@ -191,9 +193,9 @@ When running or editing the setup skill:
 3. Derive harness bundles from approved capabilities, then install only the
    resulting approved **installable** paths; for hybrid/upstream tools,
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
-   `patch-linter` when tests are selected. Add `python-freezegun` with every
-   automated-test bundle; derive `python-polyfactory` from automated tests plus
-   a database instead of asking about it separately. Offer `di-linter`
+   `patch-linter` when tests are selected. Add `python-freezegun` and
+   `python-polyfactory` with every automated-test bundle instead of asking about
+   either separately. Offer `di-linter`
    as strict enforcement. Ask whether the target is a publishable library and
    add `python-semver` when it is. Ask whether the application is a FastAPI API,
    Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.

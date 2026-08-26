@@ -41,10 +41,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
    `python-tooling`, and adapter rules own library-specific logger names and levels.
-   Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) with
-   every automated-test bundle. Add `python-polyfactory` (`uv add --dev polyfactory`)
-   automatically when automated tests and a database are both selected;
-   do not ask about it separately. Each remains its own core ID, not folded into
+   Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
+   `python-polyfactory` (`uv add --dev polyfactory`) with every automated-test
+   bundle; do not ask about either separately. Each remains its own core ID, not folded into
    `python-tests`. Add `python-semver` when the repo is (or will be)
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
@@ -170,9 +169,9 @@ Derive the install set mechanically from the answers:
 |---|---|
 | Python project | Base core: `python-tooling`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
-| Automated tests | `python-tests` + `python-freezegun` + `patch-linter` |
+| Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |
-| Database + automated tests | `python-polyfactory`; merge its factory companion and database fixtures from `CONFTEST_DATABASE.md` |
+| Database + automated tests | Merge database fixtures from `CONFTEST_DATABASE.md`; Polyfactory ORM factories persist through `python-db-sessions` |
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
 | FastAPI API | `python-fastapi` |
 | Prometheus monitoring | `python-monitoring` and its upstream package notes |
@@ -181,7 +180,7 @@ Derive the install set mechanically from the answers:
 | Strict DI enforcement | `di-linter` and its companion-rule patches |
 
 Do not ask whether to install an automatically derived harness. Show the
-derivation (for example, `automated tests + database models → python-polyfactory`)
+derivation (for example, `automated tests → python-polyfactory`)
 in the preflight plan; the final plan approval approves those derived IDs too.
 Use **revise** when the user wants an exception to a derived bundle.
 

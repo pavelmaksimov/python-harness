@@ -89,9 +89,8 @@ Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter` and `domain-types-linter`; add
 `patch-linter` when automated tests are selected.
-Add `python-freezegun` with every automated-test bundle. Derive
-`python-polyfactory` automatically when automated tests and a database are
-selected. Offer `di-linter` as strict enforcement. Add `python-semver` when
+Add `python-freezegun` and `python-polyfactory` with every automated-test
+bundle. Offer `di-linter` as strict enforcement. Add `python-semver` when
 the repo is (or will be) a publishable Python library with a public API; skip
 it for internal apps/services.
 For a FastAPI API, add `python-fastapi`; ask separately whether Prometheus
@@ -120,7 +119,7 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-retry/` → `.cursor/rules/python-retry/` |
 | `python-tests` | Python tests | installable | pytest layout, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
 | `python-freezegun` | Frozen time | installable | freezegun `freeze_time` — stopped UTC clock in tests, not `patch(datetime)` | https://github.com/spulec/freezegun | `harnesses/rules/python-freezegun/` → `.cursor/rules/python-freezegun/`. Package: `uv add --dev freezegun` |
-| `python-polyfactory` | Polyfactory | installable | Polyfactory `build` / `create_async`; ORM persist via `python-db-sessions` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory` |
+| `python-polyfactory` | Polyfactory | installable | All generated test data through Polyfactory `build` / `create_async`; ORM persist via `python-db-sessions` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory`; install with every automated-test bundle |
 | `python-semver` | SemVer 2.0 (libraries) | installable | Semantic Versioning 2.0 for publishable libraries — public API, X.Y.Z bumps, pyproject version | https://semver.org/spec/v2.0.0.html | `harnesses/rules/python-semver/` → `.cursor/rules/python-semver/`. Optional; install when the repo is a library |
 
 Templates: `python-tooling` → merge selected Ruff / Black / isort tables from

@@ -8,40 +8,9 @@ Source: catalog `harnesses/rules/python-tests/`. Target: `.cursor/rules/python-t
 
 ## `python-polyfactory`
 
-When approved, copy `python-polyfactory/FACTORIES.md` → `tests/factories.py` if missing (merge).
-
-Patch `python-tests.mdc`:
-
-1. After the first `Read tests/conftest.py` paragraph, add:
-
-```markdown
-Read `tests/factories.py` before adding data helpers.
-```
-
-2. In **What belongs where**, add a row after the `tests/conftest.py` row:
-
-```markdown
-| `tests/factories.py` | Polyfactory classes (`python-polyfactory`) — `build(**overrides)` in memory, `create_async` to persist when `python-db-sessions` is installed |
-```
-
-3. After `Duplicate literals in tests are fine.`, add:
-
-```markdown
-Prefer a factory class call in the test (`UserFactory.build(...)`, `python-polyfactory`) over a shared data fixture.
-A new ORM model or request schema also gets a factory class in `tests/factories.py`.
-```
-
-4. In the layout tree, after `conftest.py`, add:
-
-```markdown
-  factories.py
-```
-
-5. After the patch-linter pairing line, add:
-
-```markdown
-Build test data with `python-polyfactory` (`build` / `create_async`), not `make_*` helpers.
-```
+Copy `python-polyfactory/FACTORIES.md` → `tests/factories.py` if missing (merge).
+Factory rules stay in the separately installed `python-polyfactory.mdc`; do not duplicate them
+in `python-tests.mdc`.
 
 ## `python-freezegun`
 

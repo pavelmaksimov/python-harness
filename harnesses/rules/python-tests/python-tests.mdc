@@ -74,7 +74,7 @@ def test_external_api(httpx_responses):
 LLM/OpenAI-style calls: mock the chat-completions URL from `Settings()` with `httpx_responses`.
 JSON content is a **string** in `choices[0].message.content` — use `openai_chat_completion_response`.
 
-## Optional harnesses (install when needed)
+## Companion harnesses
 
 This rule stays stack-agnostic. When the repo gains a concern, install the matching catalog ID
 from `python-harness` (re-run the setup skill or copy that rule dir) and apply the companion patch
@@ -82,7 +82,7 @@ below — do not invent local variants.
 
 | Need | Catalog ID | Also copy / merge |
 |---|---|---|
-| Test data factories | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py`; companion patch in this file |
+| Generated test data (default with automated tests) | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py` |
 | Frozen clock in tests | `python-freezegun` | — |
 | Postgres / ORM tests | `python-sqlalchemy` + `python-db-sessions` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
 | Redis cache tests | `python-redis` | Redis fixtures from `CACHE.md` → `tests/conftest.py`; companion patch in this file |
