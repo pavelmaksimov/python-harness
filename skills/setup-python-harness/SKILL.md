@@ -38,7 +38,7 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `llm_common`, not `pycommons`). Core includes
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
    part of `python-di`. Core includes `python-workflow` for repository navigation before
-   analysis and `python-development-rules` for general Python
+   analysis and preserving reusable researched solutions, and `python-development-rules` for general Python
    conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
    `python-tooling`, and adapter rules own library-specific logger names and levels.

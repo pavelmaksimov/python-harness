@@ -12,3 +12,13 @@ Before researching the repository or analyzing its code, architecture, or projec
 
 Use the container and module list as the navigation map for subsequent targeted reading. If
 `project/container.py` is absent, note that and continue from the module list.
+
+## Reusable solutions
+
+If you did not know how to complete a task and had to research the solution, preserve the
+result when the task is typical and likely to recur:
+
+1. Write the reusable procedure in an existing relevant document or a focused Markdown file.
+2. Add a link to that document in the root `AGENTS.md` so the next agent can find it directly.
+
+Do not add documentation for one-off or project-irrelevant discoveries.
