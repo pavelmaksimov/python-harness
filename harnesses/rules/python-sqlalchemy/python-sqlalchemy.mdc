@@ -35,6 +35,9 @@ A new model also gets a `SQLAlchemyFactory` in `tests/factories.py` (`python-pol
 Follow existing `__tablename__` style in the repo.
 
 Services and use cases never import SQLAlchemy or write SQL; only repositories do.
+Design repository queries to avoid N+1 access: do not query or lazy-load related data inside
+loops. Fetch related rows with a set-based query or explicit eager loading (`selectinload` /
+`joinedload`), and account for the total query count on list operations.
 
 Tests build ORM rows with `python-polyfactory`. Persisted tests additionally install
 `python-db-sessions` and use its Testcontainers transaction fixture from `python-tests`.
