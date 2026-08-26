@@ -87,7 +87,7 @@ Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Templates (`PYPROJECT.toml`, `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,
 `FSM.md`, `RETRY.md`,
-`DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `BOT.md`,
+`DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `FACTORIES_ORM.md`, `BOT.md`,
 `TELEGRAM.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live in the rule dir they
 belong to; mention the copy path on that band. Disclosed agent reference next
 to a rule (e.g. Polyfactory `FIELDS.md`, `CUSTOM_TYPES.md`) is not an install
@@ -144,9 +144,9 @@ After a successful installable copy, the setup skill also writes
 - Test data factories (Polyfactory `build` / `create_async`) is its own core ID
   (`python-polyfactory`) and installs with every automated-test bundle. Generate test data
   through factory classes, not fixtures or arbitrary helper functions. Do not fold it into
-  `python-tests`. Persist ORM rows
-  through `asession` / `atransaction` (`python-db-sessions`), not a private
-  sessionmaker.
+  `python-tests`. Keep one rule file; collect all ORM-specific guidance in
+  `FACTORIES_ORM.md` and add it only with `python-sqlalchemy` + `python-db-sessions`.
+  Persist ORM rows through `asession` / `atransaction`, not a private sessionmaker.
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
   `python-db-sessions` owns the engine, session/transaction lifecycle, and database
   Settings contract. Keep both concerns out of `python-structure`.
@@ -195,7 +195,8 @@ When running or editing the setup skill:
    print install notes. Recommend `layers-linter`, `domain-types-linter`, and
    `patch-linter` when tests are selected. Add `python-freezegun` and
    `python-polyfactory` with every automated-test bundle instead of asking about
-   either separately. Offer `di-linter`
+   either separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
+   Offer `di-linter`
    as strict enforcement. Ask whether the target is a publishable library and
    add `python-semver` when it is. Ask whether the application is a FastAPI API,
    Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.

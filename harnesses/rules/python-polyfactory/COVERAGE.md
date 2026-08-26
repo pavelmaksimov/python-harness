@@ -22,6 +22,3 @@ Notes:
 - Nested collections embed the sub-model's coverage examples (often length 1 per group).
 - Recursive models raise `RecursionError`.
 - `__min_collection_length__` / `__max_collection_length__` are ignored for coverage.
-
-For persisted ORM rows, build coverage in memory then `create_async` only the cases the
-test needs — or pass overrides — while the `asession` fixture is active.

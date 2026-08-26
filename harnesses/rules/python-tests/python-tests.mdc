@@ -82,7 +82,7 @@ below — do not invent local variants.
 
 | Need | Catalog ID | Also copy / merge |
 |---|---|---|
-| Generated test data (default with automated tests) | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py` |
+| Generated test data (default with automated tests) | `python-polyfactory` | `FACTORIES.md` → `tests/factories.py`; add `FACTORIES_ORM.md` only with ORM |
 | Frozen clock in tests | `python-freezegun` | — |
 | Postgres / ORM tests | `python-sqlalchemy` + `python-db-sessions` | sibling `CONFTEST_DATABASE.md` → `tests/conftest.py`; companion patch in this file |
 | Redis cache tests | `python-redis` | Redis fixtures from `CACHE.md` → `tests/conftest.py`; companion patch in this file |

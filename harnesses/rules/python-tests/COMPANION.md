@@ -12,6 +12,10 @@ Copy `python-polyfactory/FACTORIES.md` → `tests/factories.py` if missing (merg
 Factory rules stay in the separately installed `python-polyfactory.mdc`; do not duplicate them
 in `python-tests.mdc`.
 
+When `python-sqlalchemy` and `python-db-sessions` are approved, also copy
+`FACTORIES_ORM.md` beside the Polyfactory rule and merge its template into
+`tests/factories.py`.
+
 ## `python-freezegun`
 
 When approved, install the rule dir only (no `python-tests.mdc` body patch required beyond the pointer table).

@@ -9,8 +9,8 @@ Package: https://github.com/litestar-org/polyfactory · PyPI `polyfactory`
 
 | Local file | Refresh from |
 |---|---|
-| `python-polyfactory.mdc` | [Usage index](https://polyfactory.litestar.dev/latest/usage/index.html), [Declaring factories](https://polyfactory.litestar.dev/latest/usage/declaring_factories.html), [SQLAlchemyFactory](https://polyfactory.litestar.dev/latest/usage/library_factories/sqlalchemy_factory.html), [Factory configuration](https://polyfactory.litestar.dev/latest/usage/configuration.html) (persistence only) |
-| `FACTORIES.md` | [Pydantic ModelFactory](https://polyfactory.litestar.dev/latest/usage/declaring_factories.html) (pydantic section), [SQLAlchemyFactory](https://polyfactory.litestar.dev/latest/usage/library_factories/sqlalchemy_factory.html) |
+| `python-polyfactory.mdc`, `FACTORIES.md` | [Usage index](https://polyfactory.litestar.dev/latest/usage/index.html), [Declaring factories](https://polyfactory.litestar.dev/latest/usage/declaring_factories.html) |
+| `FACTORIES_ORM.md` | [SQLAlchemyFactory](https://polyfactory.litestar.dev/latest/usage/library_factories/sqlalchemy_factory.html), [Factory configuration](https://polyfactory.litestar.dev/latest/usage/configuration.html), [Handling custom types](https://polyfactory.litestar.dev/latest/usage/handling_custom_types.html), [Model coverage](https://polyfactory.litestar.dev/latest/usage/model_coverage.html) |
 | `FIELDS.md` | [Factory fields](https://polyfactory.litestar.dev/latest/usage/fields.html), [post_generated](https://polyfactory.litestar.dev/latest/usage/decorators.html) |
 | `CUSTOM_TYPES.md` | [Handling custom types](https://polyfactory.litestar.dev/latest/usage/handling_custom_types.html) |
 | `COVERAGE.md` | [Model coverage](https://polyfactory.litestar.dev/latest/usage/model_coverage.html) |

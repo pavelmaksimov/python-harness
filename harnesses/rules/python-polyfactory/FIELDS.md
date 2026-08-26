@@ -1,8 +1,8 @@
 # Factory fields
 
 Read when customizing how a factory fills attributes — defaults, `Use` / `Ignore` /
-`Require`, values derived from other fields, nested factories, or an FK taken from a
-row already created in the test. Call the factory class in the test (`UserFactory.build`);
+`Require`, values derived from other fields, or nested factories.
+Call the factory class in the test (`ItemSchemaFactory.build`);
 do not register factory fixtures.
 
 Hardcoded class attributes become fixed defaults. Prefer a callable, `Use`, or a
@@ -39,9 +39,9 @@ pets = Use(PetFactory.batch, size=2)
 ```python
 from polyfactory import Ignore, Require
 
-class UserFactory(BaseSQLAlchemyFactory[User]):
-    password_hash = Ignore()          # leave unset / None
-    email = Require()                  # build(email=...) required
+class ItemSchemaFactory(ModelFactory[ItemSchema]):
+    description = Ignore()            # leave unset / None
+    title = Require()                  # build(title=...) required
 ```
 
 ## PostGenerated / `@post_generated`
@@ -71,14 +71,3 @@ Parameters after `cls` must match other field names. Plain `PostGenerated(fn)` r
 class OrderFactory(ModelFactory[OrderSchema]):
     item = ItemSchemaFactory  # build(item={"title": "x"}) overrides the nested build
 ```
-
-This stack stores FK ids / id arrays, not `relationship()` graphs. Prefer passing ids:
-
-```python
-async def test_order(asession):
-    user = await UserFactory.create_async()
-    order = await OrderFactory.create_async(user_id=user.id)
-```
-
-Resolve async lookups **outside** the factory, then pass the value into `build` /
-`create_async`. Do not open a session inside a field callable.

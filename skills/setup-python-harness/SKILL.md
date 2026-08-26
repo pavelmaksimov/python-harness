@@ -48,8 +48,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
    A database answer selects `python-sqlalchemy`, `python-db-sessions`, and
-   `python-alembic` together. Persisted ORM factories use `atransaction()` /
-   `asession()`, not a private sessionmaker.
+   `python-alembic` together. Only that ORM bundle adds `FACTORIES_ORM.md` to the
+   Polyfactory rule and merges its template; persisted factories use `atransaction()` / `asession()`.
    Do not offer the stack as one catch-all ID.
 5. Filter out entries that clearly do not fit the repo. Classify every catalog
    ID as **install**, **skip**, or **ask**, with one evidence-based reason.
@@ -76,7 +76,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    - `python-redis` → adapter code from `CACHE.md` into
      `project/infrastructure/adapters/acache.py` and `CacheRepository` into
      `project/base/repositories.py`;
-   - `python-polyfactory` → `FACTORIES.md` into `tests/factories.py`;
+   - `python-polyfactory` → install the single `python-polyfactory.mdc` rule and merge
+     `FACTORIES.md` into `tests/factories.py`; omit `FACTORIES_ORM.md` without ORM;
+   - `python-polyfactory` with `python-sqlalchemy` + `python-db-sessions` → install
+     `FACTORIES_ORM.md` beside the rule and merge its template into `tests/factories.py`;
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
@@ -171,7 +174,7 @@ Derive the install set mechanically from the answers:
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |
-| Database + automated tests | Merge database fixtures from `CONFTEST_DATABASE.md`; Polyfactory ORM factories persist through `python-db-sessions` |
+| Database + automated tests | Add and merge `FACTORIES_ORM.md`; merge database fixtures from `CONFTEST_DATABASE.md` |
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
 | FastAPI API | `python-fastapi` |
 | Prometheus monitoring | `python-monitoring` and its upstream package notes |

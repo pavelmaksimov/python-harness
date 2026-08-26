@@ -2,8 +2,8 @@
 
 Merge into `tests/conftest.py` when `python-db-sessions` is installed (do not overwrite without asking).
 Requires `python-db-sessions` (`DATABASE.md` in the adapter) and `python-sqlalchemy` for ORM
-metadata. For ORM rows in tests, add `python-polyfactory` with the ORM block in
-`tests/factories.py`.
+metadata. For ORM rows in tests, add `FACTORIES_ORM.md` to the Polyfactory rule and merge
+its template into `tests/factories.py`.
 
 Add these imports to the existing conftest imports:
 
