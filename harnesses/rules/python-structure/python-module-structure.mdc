@@ -32,16 +32,21 @@ project/
     use_cases.py                      orchestration
     service.py                        stateless domain behavior
     repositories.py                   all data access
-    models.py                         persistence models
-    schemas.py                        Pydantic
+    models.py                         persistence models, ORM models
+    schemas.py                        DTO objects, API body/response schemas, Pydantic models
     enums.py                          closed value sets
     exceptions.py                     component errors
     interfaces.py                     Protocol stubs for adapters
     validation.py                     input-check helpers used by use cases
     cli.py                            CLI
-    ai/{agent}/                       agent, prompts, tools, schemas, exceptions
+    ai/{agent}/agent.py               prompts, tools, schemas, exceptions
+    ai/{agent}/prompts.py
+    ai/{agent}/tools.py
+    ai/{agent}/schemas.py             DTO objects
+    ai/{agent}/exceptions.py
   libs/                               reusable, no domain, no infrastructure
-  exceptions.py                       AppError
+  exceptions.py                       AppError - base exceptions
+  datatypes.py                        Domain types, tiny types
   logger.py
   settings.py
   container.py
