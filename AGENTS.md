@@ -150,7 +150,7 @@ After a successful installable copy, the setup skill also writes
   Persist ORM rows through `asession` / `atransaction`, not a private sessionmaker.
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
   `python-db-sessions` owns the engine, session/transaction lifecycle, and database
-  Settings contract. Keep both concerns out of `python-structure`.
+  Settings contract. Keep both concerns out of `python-architecture`.
 - Shared domain base modules live in `project/base/`. Infrastructure helpers live in
   `project/infrastructure/base/`: `http_client.py` is an adapter and `telegram.py` is presentation.
 - `python-redis` keeps `CacheRepository` in `project/base/repositories.py`;
@@ -181,7 +181,7 @@ After a successful installable copy, the setup skill also writes
 - Keep `SKILL.md` concise; put long reference in sibling files if needed.
 - Prefer English skill bodies in this public repo.
 - Linter config templates (`layers.toml`, `di.toml`) and skill examples use
-  package root `project/` and `components/`, matching `python-structure`. Do not
+  package root `project/` and `components/`, matching `python-architecture`. Do not
   keep a parallel `domains/` layout.
 
 ## Bootstrap behaviour

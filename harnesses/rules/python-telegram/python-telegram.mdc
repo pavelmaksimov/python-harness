@@ -18,7 +18,7 @@ When the bot libraries need a level different from root, add `TELEGRAM_LOG_LEVEL
 (`python-development-rules`).
 
 Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers live in
-`project.base.handlers` (`python-structure`). Register them from
+`project.base.handlers` (`python-architecture`). Register them from
 `project.infrastructure.apps.bot`. Decorator helpers live in `project.infrastructure.base.telegram`.
 If `telegram.py` or `bot.py` is missing, copy sibling `TELEGRAM.md` into
 `project/infrastructure/base/telegram.py` and `BOT.md` into `project/infrastructure/apps/bot.py`.

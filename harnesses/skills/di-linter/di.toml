@@ -1,4 +1,4 @@
-# python-structure + python-di. Package root is `project/` — substitute if the repo differs.
+# python-architecture + python-di. Package root is `project/` — substitute if the repo differs.
 # Copy to the repository root. Keep use cases and domain services strict.
 
 project-root = "project"

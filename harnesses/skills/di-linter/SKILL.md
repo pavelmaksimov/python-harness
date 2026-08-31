@@ -58,7 +58,7 @@ tests/test_modules/test_orders.py:8: Patch usage in tests: @patch('project.compo
    rules that already pair other linters so they mention `di-linter`:
 
 ```text
-python-structure pairing:
+python-architecture pairing:
   Pair with `layers-linter` and `domain-types-linter`.
   → Pair with `layers-linter`, `di-linter`, and `domain-types-linter`.
 python-di Tests bullet (if that rule is present):
@@ -113,7 +113,7 @@ repository = UserRepository()  # di: skip
 Optional. Search order: `--config-path`, else `./di.toml`, else `di.toml` next to the project root.
 
 Canonical template: sibling `di.toml` (`project/` + `components/`, matching
-`python-structure` and `python-di`). Copy to the repository root; substitute
+`python-architecture` and `python-di`). Copy to the repository root; substitute
 the package name if needed. Composition root is excluded; use cases and domain
 services stay strict.
 

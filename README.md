@@ -84,7 +84,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-workflow · python-development-rules · python-structure · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
+Core          python-tooling · python-workflow · python-development-rules · python-architecture · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring · python-speech
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
@@ -115,7 +115,7 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-development-rules` | Python development rules | installable | General Python rules, decorator-based context managers, configurable module log levels through Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-development-rules/` → `.cursor/rules/python-development-rules/` |
-| `python-structure` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-structure/` → `.cursor/rules/python-structure/` |
+| `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
 | `python-settings` | Python settings | installable | pydantic-settings env contract, `Settings().PARAM` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-settings/` → `.cursor/rules/python-settings/` |
 | `python-logging` | Python logging | installable | Technology-neutral `setup_logging()` / dictConfig, root level from Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-logging/` → `.cursor/rules/python-logging/` |
@@ -130,7 +130,7 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
 `PYPROJECT.toml` into repo-root `pyproject.toml`, and render `PRE_COMMIT.yaml` into
 repo-root `.pre-commit-config.yaml` with package/test paths and optional hooks adapted;
-copy the remaining templates only if missing: `python-structure` → `BASE_SCHEMAS.md` into
+copy the remaining templates only if missing: `python-architecture` → `BASE_SCHEMAS.md` into
 `project/base/schemas.py`;
 `python-settings` → `SETTINGS.md` into `project/settings.py`;
 `python-logging` → `LOGGER.md` into `project/logger.py`;

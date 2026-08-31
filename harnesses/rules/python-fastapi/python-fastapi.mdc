@@ -29,7 +29,7 @@ When FastAPI/uvicorn needs a level different from root, add `FASTAPI_LOG_LEVEL` 
 ## Responses
 
 Use a shared envelope (`ApiResponse` / `ApiResponseSchema[T]` from `project.base.schemas`,
-`python-structure`) as `response_model` when the OpenAPI shape matters.
+`python-architecture`) as `response_model` when the OpenAPI shape matters.
 Prefer `ORJSONResponse` (`response_class`) for JSON. `response_model` validation is extra cost
 on large payloads.
 

@@ -64,7 +64,7 @@ mypackage/domain/service.py:3: Layers [domain] cannot use restricted library 'sq
 ## `layers.toml`
 
 Canonical template: sibling `layers.toml` (`project/` + `components/`, matching
-`python-structure`). Copy to the repository root; substitute the package name if
+`python-architecture`). Copy to the repository root; substitute the package name if
 needed. Do not keep a parallel `domains/` layout.
 
 ### Layers

@@ -1,4 +1,4 @@
-# python-structure layout. Package root is `project/` — substitute if the repo differs.
+# python-architecture layout. Package root is `project/` — substitute if the repo differs.
 # Copy to the repository root. Each module must match exactly one layer.
 
 exclude_modules = ["*.__init__"]

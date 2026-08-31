@@ -98,7 +98,7 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
    `project/infrastructure/base/http_client.py`; never merge both implementations.
    If `di-linter` is approved, after copying it, follow that skill's
-   companion-rule patch so installed `python-structure` / `python-di` /
+   companion-rule patch so installed `python-architecture` / `python-di` /
    `python-tests` name it next to the other linters. Skip the patch when
    `di-linter` was not approved.
    For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
@@ -184,7 +184,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-structure`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-architecture`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
