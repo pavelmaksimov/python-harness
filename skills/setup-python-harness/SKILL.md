@@ -47,8 +47,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
    `llm_common`, not `pycommons`). Core includes `python-workflow` for repository navigation before
-   analysis and preserving reusable researched solutions, and `python-libs` for the always-on helper
-   index and disclosed implementations. Core `python-architecture` is one rule dir with six
+   analysis, post-task verification through subagents (linters, autotests, coverage when
+   installed), and preserving reusable researched solutions, and `python-libs` for the always-on
+   helper index and disclosed implementations. Core `python-architecture` is one rule dir with six
    sibling rule files: `python-architecture.mdc` (module layout), `python-exceptions.mdc`
    (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
    `python-logging.mdc` (`dictConfig` / `setup_logging()`), `python-di.mdc` (Container,

@@ -77,8 +77,8 @@ actually uses, and take `layers-linter` and `domain-types-linter` with the stack
 so the same boundaries are enforced. Add `patch-linter` when automated tests
 are selected. `python-coverage` is optional — offer it when automated tests
 are selected; on approval it also appends the post-task coverage-gate step to
-the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, no
-rule carries coverage instructions.
+the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, the
+`python-workflow` coverage check stays skipped and no gate is configured.
 `di-linter` is optional — add it when the repo uses Container/LazyInit and you
 want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
@@ -118,7 +118,7 @@ pairs with any project layout.
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
-| `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
+| `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; after a task, run linters, autotests, and coverage through subagents; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
 | `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml`; sibling rule files: `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`, `python-development-rules.mdc` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-fsm.mdc` → `.cursor/rules/python-libs/python-fsm.mdc`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |

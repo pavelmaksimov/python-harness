@@ -1,5 +1,5 @@
 ---
-description: Repository navigation before Python code research and analysis
+description: Repository navigation before Python code research and analysis; post-task verification through subagents
 alwaysApply: true
 ---
 
@@ -12,6 +12,21 @@ Before researching the repository or analyzing its code, architecture, or projec
 
 Use the container and module list as the navigation map for subsequent targeted reading. If
 `project/container.py` is absent, note that and continue from the module list.
+
+## Post-task verification through subagents
+
+After completing the task, launch linters, autotests, and the coverage gate as subagents —
+not in the main session. Their output stays out of the working context and the checks can
+run in parallel:
+
+1. Linters — Ruff and the installed enforcement linters (`layers-linter`, `domain-types-linter`, `patch-linter`).
+2. Autotests — `uv run pytest tests/test_modules/`.
+3. Coverage gate — only when `python-coverage` is installed: the autotest run carries
+   `--cov --cov-report=term-missing`; the skill defines the modes and thresholds.
+
+Wait for the reports, fix findings in the main session, then relaunch the failing checks
+through subagents until every report is green. Do not report the task complete while a
+check is red or still running. Skip a check whose tool or suite is not installed.
 
 ## Reusable solutions
 
