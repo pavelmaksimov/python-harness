@@ -1,5 +1,5 @@
 ---
-description: SQLAlchemy ORM models, shared Base and generic repositories
+description: SQLAlchemy ORM models, shared Base and generic repositories, Use when writing or reviewing SQLAlchemy ORM models, queries, sessions, transactions.
 globs:
   - "**/models.py"
   - "**/repositories.py"
