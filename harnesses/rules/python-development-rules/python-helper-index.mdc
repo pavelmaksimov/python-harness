@@ -1,0 +1,20 @@
+---
+description: Discover existing FSM, retry, and outbound HTTP helpers before reimplementing them
+alwaysApply: true
+---
+
+# Python helper index
+
+Before designing or reviewing a reusable infrastructure helper or its caller, match the need
+below and read its design rule. Read the implementation template only when adding, adapting,
+or reviewing the helper itself. Use only rows whose design rule is installed in the target
+repository.
+
+| Need | Existing helper | Design | Implementation |
+|---|---|---|---|
+| Finite persisted lifecycle with a meaningful transition graph | `StateMachine` / `AsyncStateMachine` | [`python-fsm.mdc`](../python-fsm/python-fsm.mdc) | [`FSM.md`](../python-fsm/FSM.md) |
+| Smallest independently repeatable transient adapter operation; idempotent writes and per-attempt timeout | `retry_on_exception` / `retry_unless_exception` | [`python-retry.mdc`](../python-retry/python-retry.mdc) | [`RETRY.md`](../python-retry/RETRY.md) |
+| Outbound HTTP adapter using the developer-selected async or sync client | `AsyncApi` / `SyncApi` | [`python-base-client.mdc`](../python-base-client/python-base-client.mdc) | [`ASYNC_CLIENT.md`](../python-base-client/ASYNC_CLIENT.md) or [`SYNC_CLIENT.md`](../python-base-client/SYNC_CLIENT.md) |
+
+Use ordinary conditionals for independent flags or lifecycles without a meaningful transition
+graph.

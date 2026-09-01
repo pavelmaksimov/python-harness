@@ -17,21 +17,6 @@ Create context managers as generator functions decorated with `contextlib.contex
 or `contextlib.asynccontextmanager`. Do not implement class-based context managers with
 `__enter__` / `__exit__` or `__aenter__` / `__aexit__`.
 
-## Workflow helpers
-
-Before writing state-transition checks or retry loops, load the matching installed rule:
-
-| Need | Use | Read before designing |
-|---|---|---|
-| Finite persisted lifecycle with state-dependent operations | `StateMachine` / `AsyncStateMachine` | `.cursor/rules/python-fsm/python-fsm.mdc` |
-| Retry transient adapter I/O | `retry_on_exception` / `retry_unless_exception` | `.cursor/rules/python-retry/python-retry.mdc` |
-
-Use ordinary conditionals for independent flags or a lifecycle without a meaningful
-transition graph. Put retries around the smallest independently repeatable adapter operation;
-writes require idempotency, and each attempt requires its own timeout. Apply the detailed rule
-before implementing or reviewing either pattern, even when editing a caller rather than
-`project/libs/fsm.py` or `project/libs/retry.py`.
-
 ## Bounded concurrency
 
 Run independent asynchronous tasks concurrently whenever they can be parallelized. Create one
