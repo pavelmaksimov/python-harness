@@ -2,7 +2,7 @@
 description: Async SQLAlchemy engine, sessions, transactions, and database settings
 globs:
   - "**/adapters/database.py"
-  - "**/settings.py"
+  - "**/repositories.py"
 alwaysApply: false
 ---
 
