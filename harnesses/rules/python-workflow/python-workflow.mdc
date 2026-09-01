@@ -28,6 +28,7 @@ Wait for the reports, fix findings in the main session, then relaunch the failin
 through subagents until every report is green. Do not report the task complete while a
 check is red or still running. Skip a check whose tool or suite is not installed.
 
+
 ## Reusable solutions
 
 If you did not know how to complete a task and had to research the solution, preserve the
@@ -44,3 +45,11 @@ Do not add documentation for one-off or project-irrelevant discoveries.
 When a task is done and it produced (or will produce) changes in the repository,
 end the reply with a proposed commit message. Do **not** create the commit unless
 the user explicitly asks.
+
+
+## Optional changelog handoff
+
+When the `keep-a-changelog` skill is installed, use it after each task with a notable user- or
+contributor-facing change. Record the completed change before the final response. If the task
+refines work already represented by the current unreleased or same-date entry, update that
+entry to describe the final result instead of adding a duplicate.

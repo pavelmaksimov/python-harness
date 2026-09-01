@@ -98,7 +98,8 @@ Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter` and `domain-types-linter`; add
 `patch-linter` when automated tests are selected.
 Add `python-freezegun` and `python-polyfactory` with every automated-test
-bundle. Offer `di-linter` as strict enforcement. Add `python-semver` when
+bundle. Offer `keep-a-changelog` for post-task release notes and `di-linter`
+as strict enforcement. Add `python-semver` when
 the repo is (or will be) a publishable Python library with a public API; skip
 it for internal apps/services.
 For a FastAPI API, add `python-fastapi`; ask separately whether Prometheus
@@ -123,6 +124,7 @@ pairs with any project layout.
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `conventional-commits` | Conventional Commits | installable | Default commit-message drafting and validation; `python-workflow` proposes a message after changed tasks that did not create a commit | https://www.conventionalcommits.org/en/v1.0.0/ | `harnesses/skills/conventional-commits/` → `.cursor/skills/conventional-commits/`; install with every core bundle |
+| `keep-a-changelog` | Keep a Changelog | installable | Optional post-task changelog: SemVer release sections for libraries, ISO-date sections for projects without library versions; refinements update the current entry | https://keepachangelog.com/en/1.1.0/ | `harnesses/skills/keep-a-changelog/` → `.cursor/skills/keep-a-changelog/`; offer during onboarding, never auto-install |
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; verify tasks through subagents; preserve reusable research; propose uncreated commits | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |

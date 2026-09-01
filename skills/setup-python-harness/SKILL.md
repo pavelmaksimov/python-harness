@@ -46,9 +46,14 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
-   `llm_common`, not `pycommons`). Core includes `python-workflow` for repository navigation before
+   `llm_common`, not `pycommons`). Core includes the `conventional-commits` skill by default and
+   `python-workflow` for repository navigation before
    analysis, post-task verification through subagents (linters, autotests, coverage when
-   installed), and preserving reusable researched solutions, and `python-libs` for the always-on
+   installed), preserving reusable researched solutions, and proposing a Conventional Commit
+   message when a changed task did not create its commit. Offer `keep-a-changelog` as optional;
+   when installed, the workflow records notable completed changes and updates the current entry
+   when a task is refined. Libraries use versioned release sections; projects without library
+   versions use ISO-date sections. Core also includes `python-libs` for the always-on
    helper index and disclosed implementations. Core `python-architecture` is one rule dir with six
    sibling rule files: `python-architecture.mdc` (module layout), `python-exceptions.mdc`
    (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
@@ -183,17 +188,19 @@ wording and skip any question with one unambiguous repository-derived answer.
 | 10 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
 | 11 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
 | 12 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
+| 13 | Changelog | Maintain notable post-task changes with `keep-a-changelog`? **yes / no** |
 
-Ask stages 2–9 explicitly unless the user's request already contains the
-answer. Repository evidence supplies a recommended answer, not a reason to
+Ask stages 2–9 and 13 explicitly unless the user's request already contains
+the answer. Repository evidence supplies a recommended answer, not a reason to
 hide these product decisions. Stage 5 is asked only after stage 4 = yes; its
-"no" answer installs nothing coverage-related.
+"no" answer installs nothing coverage-related. Stage 13 is an independent
+optional choice and never auto-installs a skill.
 
 Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (six sibling rule files: structure, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `conventional-commits`, `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (six sibling rule files: structure, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
@@ -206,6 +213,7 @@ Derive the install set mechanically from the answers:
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |
+| Changelog approved (stage 13) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |
 
 Do not ask whether to install an automatically derived harness. Show the
 derivation (for example, `automated tests → python-polyfactory`)
