@@ -32,8 +32,8 @@ Cache the engine for one process-wide connection pool. Cache the sessionmaker on
 bound to that engine. Never cache `AsyncSession`; `asession()` owns ContextVar reuse.
 
 Get the DSN from `Settings().SQLALCHEMY_DATABASE_DSN` (explicit or assembled from `DB_*`).
-Optional `DB_SCHEMA` becomes `search_path`; pass `DATABASE_PRE_PING` to the engine. If persistence
-is optional, check `database_is_configured()` instead of failing at import time.
+Optional `DB_SCHEMA` becomes `search_path`; pass the SQLAlchemy pool settings to the engine. If
+persistence is optional, check `database_is_configured()` instead of failing at import time.
 
 Repositories import session helpers. Services and use cases do not open sessions. A use case that
 must write through several repositories wraps the calls in one `atransaction()`.

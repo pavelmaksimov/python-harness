@@ -4,7 +4,8 @@ Copy this module to `project/infrastructure/adapters/database.py` when the packa
 already define `asession` / `atransaction`. Repositories import these helpers; services and use
 cases do not open sessions.
 
-`Settings` must expose `SQLALCHEMY_DATABASE_DSN`, `DB_SCHEMA`, and `DATABASE_PRE_PING` (see below).
+`Settings` must expose `SQLALCHEMY_DATABASE_DSN`, `DB_SCHEMA`, and the SQLAlchemy pool settings
+(see below).
 
 ```python
 import contextvars
@@ -35,7 +36,9 @@ def aengine_factory() -> AsyncEngine:
 
     return create_async_engine(
         str(dsn),
-        pool_pre_ping=Settings().DATABASE_PRE_PING,
+        pool_pre_ping=Settings().SQLALCHEMY_DATABASE_PRE_PING,
+        pool_size=Settings().SQLALCHEMY_POOL_SIZE,
+        max_overflow=Settings().SQLALCHEMY_MAX_OVERFLOW,
         connect_args=connect_args,
     )
 
@@ -121,7 +124,9 @@ class SettingsValidator(BaseSettings):
     DB_USER: str | None = None
     DB_PASSWORD: SecretStr | None = None
     SQLALCHEMY_DATABASE_DSN: PostgresDsn | None = None
-    DATABASE_PRE_PING: bool = False
+    SQLALCHEMY_DATABASE_PRE_PING: bool = False
+    SQLALCHEMY_POOL_SIZE: int = 5
+    SQLALCHEMY_MAX_OVERFLOW: int = 10
 
     @model_validator(mode="after")
     def build_sqlalchemy_database_dsn(self) -> "SettingsValidator":
