@@ -34,7 +34,6 @@ component modules.
 
 ```text
 project/
-  datatypes.py                        NewType domain ids and names
   infrastructure/apps/api.py          FastAPI app, router registration
   infrastructure/apps/bot.py          Telegram bot, handler registration
   infrastructure/apps/main.py         production entry
