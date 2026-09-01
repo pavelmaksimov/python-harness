@@ -1,6 +1,7 @@
 ---
-description: dictConfig logging — setup_logging() at process start, levels from Settings
+description: logging rules, dictConfig logging — setup_logging() at process start, levels from Settings
 globs: "**/logger.py"
+globs: "**/infrastructure/apps/**/*.py"
 alwaysApply: false
 ---
 
@@ -20,5 +21,3 @@ Formatter: `Constants.LOG_FORMAT` when present, else `%(asctime)s - %(name)s - %
 The base setup does not name frameworks, clients, databases, brokers, or other integrations.
 Technology-specific rules own their logger names and optional `*_LOG_LEVEL` Settings fields.
 Follow `python-development-rules` when a selected module needs its own configurable level.
-
-Helpers such as `timer` / `get_log_id` may live in `project/libs/log.py`; they are not this harness.
