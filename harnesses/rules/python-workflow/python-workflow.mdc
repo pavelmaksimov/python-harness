@@ -1,5 +1,5 @@
 ---
-description: Repository navigation before Python code research and analysis; post-task verification through subagents
+description: Repository navigation before Python code research and analysis; post-task verification and commit handoff
 alwaysApply: true
 ---
 
@@ -37,3 +37,10 @@ result when the task is typical and likely to recur:
 2. Add a link to that document in the root `AGENTS.md` so the next agent can find it directly.
 
 Do not add documentation for one-off or project-irrelevant discoveries.
+
+
+## Propose Conventional Commit after the task
+
+When a task is done and it produced (or will produce) changes in the repository,
+end the reply with a proposed commit message. Do **not** create the commit unless
+the user explicitly asks.

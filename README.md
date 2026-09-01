@@ -75,7 +75,12 @@ Installable artifacts live only under typed dirs in `harnesses/` (`skills/`,
 Three bands: install **core** for any Python service, add **adapters** the repo
 actually uses, and take `layers-linter` and `domain-types-linter` with the stack
 so the same boundaries are enforced. Add `patch-linter` when automated tests
-are selected. `python-coverage` is optional — offer it when automated tests
+are selected. Install `conventional-commits` with every core bundle; when a
+task changes tracked files without creating a commit, `python-workflow` ends
+the response with a proposed Conventional Commit message. `keep-a-changelog`
+is optional; when selected, the workflow records notable completed changes and
+updates the current entry when a task is refined. `python-coverage` is optional —
+offer it when automated tests
 are selected; on approval it also appends the post-task coverage-gate step to
 the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, the
 `python-workflow` coverage check stays skipped and no gate is configured.
@@ -84,7 +89,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
+Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
@@ -117,8 +122,9 @@ pairs with any project layout.
 
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
+| `conventional-commits` | Conventional Commits | installable | Default commit-message drafting and validation; `python-workflow` proposes a message after changed tasks that did not create a commit | https://www.conventionalcommits.org/en/v1.0.0/ | `harnesses/skills/conventional-commits/` → `.cursor/skills/conventional-commits/`; install with every core bundle |
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
-| `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; after a task, run linters, autotests, and coverage through subagents; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
+| `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; verify tasks through subagents; preserve reusable research; propose uncreated commits | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
 | `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml`; sibling rule files: `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`, `python-development-rules.mdc` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-fsm.mdc` → `.cursor/rules/python-libs/python-fsm.mdc`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |
