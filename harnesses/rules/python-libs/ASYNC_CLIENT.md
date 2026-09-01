@@ -1,14 +1,14 @@
-# Sync HTTP adapter helper
+# Async HTTP adapter helper implementation
 
 Copy the Python block below to `project/infrastructure/base/http_client.py` when the service uses
-synchronous outbound HTTP. Requires `httpx`, `orjson`, `llm_common`, and the exception classes from
+asynchronous outbound HTTP. Requires `httpx`, `orjson`, `llm_common`, and the exception classes from
 `project/exceptions.py`.
 
 ```python
 import logging
 import time
 import typing as t
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 
 import httpx
 import orjson
@@ -184,12 +184,12 @@ class TelemetryCallback(Callback):
         )
 
 
-class SyncApi:
+class AsyncApi:
     ApiError = ExternalApiError
     ServerError = ServerError
     ClientError = ClientError
     ConnectionError = ExternalHTTPConnectionError
-    ClientSession = httpx.Client
+    ClientSession = httpx.AsyncClient
     name_for_monitoring: str
 
     def __init__(
@@ -202,8 +202,8 @@ class SyncApi:
         log_level: int | str = logging.INFO,
         logging_extra_data: bool = False,
     ):
-        self.name_for_monitoring = name_for_monitoring
         self.api_root = api_root
+        self.name_for_monitoring = name_for_monitoring
         self.request_settings = request_settings or {}
         self.headers = headers or {}
         self.callbacks: list[Callback] = [
@@ -228,19 +228,19 @@ class SyncApi:
         for callback in self.callbacks:
             callback.response_data_callback(*args, **kwargs)
 
-    @contextmanager
-    def Session(self, **session_settings):  # noqa: N802
+    @asynccontextmanager
+    async def Session(self, **session_settings):  # noqa: N802
         if self.session:
             yield self.session
         else:
             try:
-                with self.ClientSession(**session_settings) as session:
+                async with self.ClientSession(**session_settings) as session:
                     self.session = session
                     yield session
             finally:
                 self.session = None
 
-    def call_endpoint(
+    async def call_endpoint(
         self,
         resource: str,
         *,
@@ -251,24 +251,23 @@ class SyncApi:
         data: t.Any = None,
         json: t.Any = None,
         request_settings: dict | None = None,
-        session: httpx.Client | None = None,
+        session: httpx.AsyncClient | None = None,
     ) -> t.Any:
         resource_for_monitoring = resource_for_monitoring or resource
         url = self.api_root
         if resource:
             url = f"{self.api_root}/{resource}"
-
         headers = self.headers | (headers or {})
         request_settings = self.request_settings | (request_settings or {})
 
-        with session or self.session or self.Session() as sess:
+        async with session or self.session or self.Session() as sess:
             self.request_callback(
                 method, url, headers=headers, params=params, data=data, json=json
             )
             start_time = time.perf_counter()
 
             try:
-                response = sess.request(
+                response = await sess.request(
                     method,
                     url,
                     params=params,
@@ -354,7 +353,7 @@ class IClient(t.Protocol):
     ClientError: type[Exception]
     ConnectionError: type[Exception]
 
-    Api: t.ClassVar[type[SyncApi]]
+    Api: t.ClassVar[type[AsyncApi]]
     api_root: str
-    api: SyncApi
+    api: AsyncApi
 ```

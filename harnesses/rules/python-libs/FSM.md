@@ -1,4 +1,4 @@
-# State machine helper
+# State machine helper implementation
 
 Copy this module to `project/libs/fsm.py` when the package does not already define
 `StateMachine` / `AsyncStateMachine`.

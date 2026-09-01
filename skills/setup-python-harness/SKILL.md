@@ -48,8 +48,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `llm_common`, not `pycommons`). Core includes
    `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
    part of `python-di`. Core includes `python-workflow` for repository navigation before
-   analysis and preserving reusable researched solutions, and `python-development-rules` for general Python
-   conventions and configurable module log levels. Core includes `python-logging` (`dictConfig` /
+   analysis and preserving reusable researched solutions, `python-development-rules` for general Python
+   conventions and configurable module log levels, and `python-libs` for the always-on helper
+   index and disclosed implementations. Core includes `python-logging` (`dictConfig` /
    `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
    `python-tooling`, and adapter rules own library-specific logger names and levels.
    Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
@@ -80,6 +81,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `COMPANION.md` in the catalog `python-tests` rule dir (catalog-only; do not
    copy it to the target). Skip every companion block for a harness that was not
    approved. Typical merges:
+   - `python-fsm` → render `harnesses/rules/python-libs/FSM.md` into
+     `project/libs/fsm.py`;
+   - `python-retry` → render `harnesses/rules/python-libs/RETRY.md` into
+     `project/libs/retry.py`;
    - `python-sqlalchemy` → `BASE_MODELS.md` into `project/base/models.py`; add
      `BASE_REPOSITORIES.md` only when multiple repositories share the base;
    - `python-db-sessions` → `DATABASE.md` into
@@ -94,8 +99,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
-   For `python-base-client`, copy only the implementation selected by the user
-   (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
+   For `python-base-client`, render only the implementation selected by the user from
+   `harnesses/rules/python-libs/` (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
    `project/infrastructure/base/http_client.py`; never merge both implementations.
    If `di-linter` is approved, after copying it, follow that skill's
    companion-rule patch so installed `python-architecture` / `python-di` /
@@ -184,7 +189,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-architecture`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-libs`, `python-architecture`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |

@@ -7,7 +7,7 @@ alwaysApply: false
 # Retries
 
 Use `retry_on_exception` / `retry_unless_exception` from `project/libs/retry.py` for transient
-I/O (HTTP, DB, Redis). Copy sibling `RETRY.md` if that module is missing. Both wrappers
+I/O (HTTP, DB, Redis). Copy [`RETRY.md`](../python-libs/RETRY.md) if that module is missing. Both wrappers
 cover sync and async via `iscoroutinefunction`. Do not add tenacity, backoff, or other
 retry packages when this helper exists.
 

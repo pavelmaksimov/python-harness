@@ -74,7 +74,7 @@ Rules:
 
 This catalog is one language stack, split into layered IDs:
 
-- **core** — tooling, `python-workflow`, `python-development-rules`, structure, exceptions, settings, logging, DI, FSM, retry,
+- **core** — tooling, `python-workflow`, `python-development-rules`, `python-libs`, structure, exceptions, settings, logging, DI, FSM, retry,
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
@@ -85,11 +85,13 @@ This catalog is one language stack, split into layered IDs:
   for optional strict DI enforcement
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
-library list after the table. Templates (`PYPROJECT.toml`, `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
+library list after the table. Shared helper implementation guides (`FSM.md`, `RETRY.md`,
+`ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live together in `harnesses/rules/python-libs/`;
+their design guidance stays in the owning rule ID. Other templates (`PYPROJECT.toml`,
+`PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,
-`FSM.md`, `RETRY.md`,
 `DATABASE.md`, `ENV.md`, `CACHE.md`, `CONFTEST.md`, `FACTORIES.md`, `FACTORIES_ORM.md`, `BOT.md`,
-`TELEGRAM.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live in the rule dir they
+`TELEGRAM.md`) live in the rule dir they
 belong to; mention the copy path on that band. Disclosed agent reference next
 to a rule (e.g. Polyfactory `FIELDS.md`, `CUSTOM_TYPES.md`) is not an install
 template unless the README copy list names it. Linter configs (`layers.toml`,
@@ -132,6 +134,8 @@ After a successful installable copy, the setup skill also writes
   installer should substitute.
 - One concern per `.mdc`. Name the layer (tooling, HTTP, persistence); leave
   version pins and Ruff selects to the target `pyproject.toml`.
+- Shared helper implementations live in `harnesses/rules/python-libs/`. Keep design guidance
+  in its owning rule ID and link each implementation from `python-libs.mdc`.
 - `python-tooling/PRE_COMMIT.yaml` renders to repo-root
   `.pre-commit-config.yaml`; adapt package/test paths and keep only hooks
   selected by the target workflow.
@@ -209,8 +213,9 @@ When running or editing the setup skill:
    `python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together when
    yes. Ask separately whether Redis caching is used. For `python-base-client`,
    ask the developer to choose
-   `ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md` (httpx sync), then copy only that
-   implementation to `http_client.py`. Install only when approved. After `python-tests`,
+   `harnesses/rules/python-libs/ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md`
+   (httpx sync), then render only that implementation to `http_client.py`.
+   Install only when approved. After `python-tests`,
    patch the installed rule and merge conftest/factory templates per catalog
    `COMPANION.md` for each approved optional harness. If `di-linter` is approved,
    patch companion rules in the target so they name it next to the other linters.

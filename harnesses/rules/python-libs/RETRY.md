@@ -1,4 +1,4 @@
-# Retry helper
+# Retry helper implementation
 
 Copy this module to `project/libs/retry.py` when the package does not already define
 `retry_on_exception` / `retry_unless_exception`.

@@ -10,8 +10,8 @@ alwaysApply: false
 
 Choose one implementation for `project/infrastructure/base/http_client.py`:
 
-- async service: copy sibling `ASYNC_CLIENT.md` (`httpx.AsyncClient`, orjson, llm_common);
-- sync service: copy sibling `SYNC_CLIENT.md` (`httpx.Client`, orjson, llm_common).
+- async service: copy [`ASYNC_CLIENT.md`](../python-libs/ASYNC_CLIENT.md) (`httpx.AsyncClient`, orjson, llm_common);
+- sync service: copy [`SYNC_CLIENT.md`](../python-libs/SYNC_CLIENT.md) (`httpx.Client`, orjson, llm_common).
 
 Install only the implementation the developer selects; do not combine both clients in one module.
 New external HTTP API → a module under `project/infrastructure/adapters/`. Subclass or compose the
