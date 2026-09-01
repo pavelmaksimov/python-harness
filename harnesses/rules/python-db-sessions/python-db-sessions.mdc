@@ -25,11 +25,13 @@ If it is missing, copy sibling `DATABASE.md` into
 `asession()` reuses the `ContextVar` session or opens and closes one.
 `atransaction()` begins a transaction, or a savepoint when one is already active.
 Do not call `session.commit()` / `session.close()` inside these helpers.
+Do not spawn concurrent database work inside an active `asession()` / `atransaction()` context:
+`AsyncSession` is not concurrency-safe, and each concurrent task needs its own session lifecycle.
 
 Cache the engine for one process-wide connection pool. Cache the sessionmaker only so it remains
 bound to that engine. Never cache `AsyncSession`; `asession()` owns ContextVar reuse.
 
-Get the DSN from `Settings().get_database_dsn()` (`SQLALCHEMY_DATABASE_DSN` or assembled `DB_*`).
+Get the DSN from `Settings().SQLALCHEMY_DATABASE_DSN` (explicit or assembled from `DB_*`).
 Optional `DB_SCHEMA` becomes `search_path`; pass `DATABASE_PRE_PING` to the engine. If persistence
 is optional, check `database_is_configured()` instead of failing at import time.
 

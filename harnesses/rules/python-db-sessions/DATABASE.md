@@ -4,7 +4,7 @@ Copy this module to `project/infrastructure/adapters/database.py` when the packa
 already define `asession` / `atransaction`. Repositories import these helpers; services and use
 cases do not open sessions.
 
-`Settings` must expose `get_database_dsn()`, `DB_SCHEMA`, and `DATABASE_PRE_PING` (see below).
+`Settings` must expose `SQLALCHEMY_DATABASE_DSN`, `DB_SCHEMA`, and `DATABASE_PRE_PING` (see below).
 
 ```python
 import contextvars
@@ -21,28 +21,22 @@ asession_storage: contextvars.ContextVar[AsyncSession | None] = contextvars.Cont
 )
 
 
-def database_dsn() -> str:
-    dsn = Settings().get_database_dsn()
+@lru_cache  # process-wide pool; cache_clear() after a DSN override
+def aengine_factory() -> AsyncEngine:
+    dsn = Settings().SQLALCHEMY_DATABASE_DSN
     if not dsn:
         msg = "Database is not configured: set SQLALCHEMY_DATABASE_DSN or DB_* variables"
         raise RuntimeError(msg)
-    return str(dsn)
 
-
-def _engine_connect_args() -> dict:
     connect_args: dict = {}
     schema = Settings().DB_SCHEMA
     if schema:
         connect_args["server_settings"] = {"search_path": schema}
-    return connect_args
 
-
-@lru_cache  # process-wide pool; cache_clear() after a DSN override
-def aengine_factory() -> AsyncEngine:
     return create_async_engine(
-        database_dsn(),
+        str(dsn),
         pool_pre_ping=Settings().DATABASE_PRE_PING,
-        connect_args=_engine_connect_args(),
+        connect_args=connect_args,
     )
 
 
@@ -128,7 +122,6 @@ class SettingsValidator(BaseSettings):
     DB_PASSWORD: SecretStr | None = None
     SQLALCHEMY_DATABASE_DSN: PostgresDsn | None = None
     DATABASE_PRE_PING: bool = False
-    E2E_TEST_POSTGRES_DSN: str | None = None
 
     @model_validator(mode="after")
     def build_sqlalchemy_database_dsn(self) -> "SettingsValidator":
@@ -144,13 +137,12 @@ class SettingsValidator(BaseSettings):
         return self
 
     def database_is_configured(self) -> bool:
-        return bool(self.SQLALCHEMY_DATABASE_DSN or self.E2E_TEST_POSTGRES_DSN)
-
-    def get_database_dsn(self) -> PostgresDsn | str | None:
-        if self.SQLALCHEMY_DATABASE_DSN:
-            return self.SQLALCHEMY_DATABASE_DSN
-        return self.E2E_TEST_POSTGRES_DSN
+        return bool(self.SQLALCHEMY_DATABASE_DSN)
 ```
+
+`ContextVar` reuse is sequential within one asyncio task. Do not spawn concurrent database work
+inside an active `asession()` / `atransaction()` context; each concurrent task needs its own
+session lifecycle.
 
 ## Test fixtures
 
