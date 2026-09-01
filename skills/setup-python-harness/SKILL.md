@@ -29,8 +29,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    python-telegram-bot, `apps/bot.py`,
    or component `handlers.py` — skip `python-telegram` when there is no Telegram
    bot; `python-base-client` when the repo has outbound HTTP adapters under
-   `infrastructure/adapters/` — skip it when there are none; `python-speech`
-   when the repo uses transcription or speech synthesis), and
+   `infrastructure/adapters/` — skip it when there are none; the `python-libs`
+   speech adapter (`SPEECH.md`) when the repo uses transcription or speech
+   synthesis), and
    `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
    when automated tests are selected. Offer `python-coverage` as **optional**
    when automated tests are selected (never auto-derive it): full mode gates
@@ -198,7 +199,7 @@ Derive the install set mechanically from the answers:
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
 | FastAPI API | `python-fastapi` |
 | Prometheus monitoring | `python-monitoring` and its upstream package notes |
-| STT, TTS, or both | `python-speech`; install only the selected provider/media dependencies |
+| STT, TTS, or both | `python-libs` speech template `python-libs/SPEECH.md`; install only the selected provider/media dependencies |
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |

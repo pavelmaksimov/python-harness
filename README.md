@@ -85,7 +85,7 @@ pair the other linters so they mention it too.
 
 ```text
 Core          python-tooling · python-workflow · python-development-rules · python-libs · python-architecture · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring · python-speech
+Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
 
@@ -103,8 +103,9 @@ Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an a
 when the repo has no database or no Redis cache. A selected database installs
 `python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together. Skip
 `python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
-when Prometheus monitoring is not selected. Add `python-speech` when the project
-uses speech-to-text, text-to-speech, or both; skip it when there is no speech I/O.
+when Prometheus monitoring is not selected. Render the speech adapter from
+`python-libs` (`SPEECH.md`) when the project uses speech-to-text,
+text-to-speech, or both; skip it when there is no speech I/O.
 For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 `python-db-sessions` (runtime session lifecycle).
 
@@ -114,8 +115,7 @@ For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
 |---|---|---|---|---|---|
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
-| `python-development-rules` | Python development rules | installable | General Python rules, decorator-based context managers, configurable module log levels through Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-development-rules/` → `.cursor/rules/python-development-rules/` |
-| `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, and outbound HTTP helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
+| `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
 | `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
 | `python-settings` | Python settings | installable | pydantic-settings env contract, `Settings().PARAM` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-settings/` → `.cursor/rules/python-settings/` |
@@ -159,7 +159,6 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `python-redis` | Redis cache | installable | Prefixed keys, `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
-| `python-speech` | OpenAI STT and TTS | installable | OGG-to-WAV transcription with a configurable model and MP3 speech with configurable voice instructions | https://github.com/pavelmaksimov/python-harness | `harnesses/skills/python-speech/` → `.cursor/skills/python-speech/`. Dependencies: `openai`, `pydub`, and system `ffmpeg`. |
 
 Templates (copy only if missing): `python-base-client` → developer chooses
 `harnesses/rules/python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md`; render only that
@@ -172,7 +171,8 @@ repositories share the base, `BASE_REPOSITORIES.md` into `project/base/repositor
 `project/infrastructure/adapters/acache.py` and `CacheRepository` into
 `project/base/repositories.py`; `python-telegram` → `TELEGRAM.md`
 into `project/infrastructure/base/telegram.py` and `BOT.md` into
-`project/infrastructure/apps/bot.py`.
+`project/infrastructure/apps/bot.py`; speech (`python-libs`) → `SPEECH.md` into
+`project/infrastructure/adapters/speech.py` (only when the repo uses speech I/O).
 
 ### Enforcement
 

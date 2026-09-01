@@ -77,8 +77,8 @@ This catalog is one language stack, split into layered IDs:
 - **core** — tooling, `python-workflow`, `python-development-rules`, `python-libs`, structure, exceptions, settings, logging, DI, FSM, retry,
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
-- **adapters** — HTTP, persistence, cache, monitoring, Telegram (only if the
-  repo uses them)
+- **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech (only if
+  the repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter` and
   `domain-types-linter` with the stack, add `patch-linter` with automated tests,
   offer `python-coverage` as an optional gate with tests, and use `di-linter`
@@ -86,7 +86,7 @@ This catalog is one language stack, split into layered IDs:
 
 Do not collapse the stack into one catch-all rule ID or a comma-separated
 library list after the table. Shared helper implementation guides (`FSM.md`, `RETRY.md`,
-`ASYNC_CLIENT.md`, `SYNC_CLIENT.md`) live together in `harnesses/rules/python-libs/`;
+`ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`) live together in `harnesses/rules/python-libs/`;
 their design guidance stays in the owning rule ID. Other templates (`PYPROJECT.toml`,
 `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,

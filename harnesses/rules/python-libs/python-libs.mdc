@@ -1,5 +1,5 @@
 ---
-description: Discover existing FSM, retry, and outbound HTTP helper libraries before reimplementing them
+description: Discover existing FSM, retry, outbound HTTP, and speech helper libraries before reimplementing them
 alwaysApply: true
 ---
 
@@ -15,6 +15,15 @@ repository.
 | Finite persisted lifecycle with a meaningful transition graph | `StateMachine` / `AsyncStateMachine` | [`python-fsm.mdc`](../python-fsm/python-fsm.mdc) | [`FSM.md`](FSM.md) |
 | Smallest independently repeatable transient adapter operation; idempotent writes and per-attempt timeout | `retry_on_exception` / `retry_unless_exception` | [`python-retry.mdc`](../python-retry/python-retry.mdc) | [`RETRY.md`](RETRY.md) |
 | Outbound HTTP adapter using the developer-selected async or sync client | `AsyncApi` / `SyncApi` | [`python-base-client.mdc`](../python-base-client/python-base-client.mdc) | [`ASYNC_CLIENT.md`](ASYNC_CLIENT.md) or [`SYNC_CLIENT.md`](SYNC_CLIENT.md) |
+| OpenAI speech-to-text or text-to-speech through the existing LLM client | `stt` / `tts` | this rule | [`SPEECH.md`](SPEECH.md) |
 
 Use ordinary conditionals for independent flags or lifecycles without a meaningful transition
 graph.
+
+## Speech
+
+Dependencies: `openai`, `pydub`, and system `ffmpeg` (`uv add openai pydub`).
+Render [`SPEECH.md`](SPEECH.md) into `project/infrastructure/adapters/speech.py`
+(copy only if missing).
+- Telegram voice messages: download as bytes (`download_as_bytearray()`),
+  pass `bytes` to `stt`.

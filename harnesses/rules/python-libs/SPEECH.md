@@ -1,17 +1,9 @@
----
-name: python-speech
-description: Installs OpenAI speech-to-text and text-to-speech adapters for Python backends. Use when adding OGG voice transcription with a configurable model or generated MP3 speech with configurable voice instructions.
----
+# Speech adapter (OpenAI STT / TTS)
 
-# OpenAI STT and TTS
-
-Create the selected files under `project/infrastructure/adapters/` from the
-templates below. Substitute the package root and existing LLM client, retry,
-exception, and monitoring imports when the target repository uses other paths.
-
-Dependencies: `openai`, `pydub`, and system `ffmpeg`.
-
-## `speech.py`
+Render into `project/infrastructure/adapters/speech.py` (copy only if missing).
+Reuse the target repository's LLM client factory (shown here as `llm_client()`)
+plus its retry, exception, and logging conventions. Dependencies: `openai`,
+`pydub`, and system `ffmpeg`.
 
 ```python
 import asyncio
@@ -43,14 +35,14 @@ async def stt(
     language: str = "ru",
 ) -> str:
     """
-    Конвертирует входной .ogg в WAV (mono, 16kHz, PCM16) и отправляет в транскрибацию.
+    Converts an .ogg voice message to WAV and transcribes it.
 
-    Для телеграм используйте скачивание в байты
+    Download Telegram voice messages as bytes first:
 
     ogg_data = await voice_file.download_as_bytearray()
-    await stt(ogg_data)
+    text = await stt(bytes(ogg_data), model="whisper-1")
     """
-    wav_buffer = await asyncio.to_thread(convert_ogg_to_wav_bytes, bytes(voice))
+    wav_buffer = await asyncio.to_thread(convert_ogg_to_wav, bytes(voice))
 
     resp = await llm_client().audio.transcriptions.create(
         model=model,
@@ -60,27 +52,18 @@ async def stt(
     )
 
     return resp if isinstance(resp, str) else getattr(resp, "text", str(resp))
-```
 
-## `speech.py`
-
-```python
-import io
-
-from openai import AsyncOpenAI
-
-def llm_client() -> AsyncOpenAI: ...
 
 async def tts(
     text: str,
     instructions: str,
-    model="gpt-4o-mini-tts",
+    model: str = "gpt-4o-mini-tts",
     voice: str = "alloy",
-) -> io.BytesIO:
+) -> BytesIO:
     response = await llm_client().audio.speech.create(
         input=text, instructions=instructions, model=model, voice=voice
     )
-    file = io.BytesIO(response.content)
+    file = BytesIO(response.content)
     file.name = "voice.mp3"
     file.seek(0)
 
