@@ -210,7 +210,7 @@ When running or editing the setup skill:
    Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.
    Ask separately whether Prometheus monitoring is needed and select
    `python-monitoring` only when yes. Ask one yes/no question for a database and select
-   `python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together when
+   `python-sqlalchemy`, the `sqlalchemy` best-practices skill, `python-db-sessions`, and `python-alembic` together when
    yes. Ask separately whether Redis caching is used. For `python-base-client`,
    ask the developer to choose
    `harnesses/rules/python-libs/ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md`

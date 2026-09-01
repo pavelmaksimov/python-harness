@@ -60,8 +60,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `python-tests`. Add `python-semver` when the repo is (or will be)
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
-   A database answer selects `python-sqlalchemy`, `python-db-sessions`, and
-   `python-alembic` together. Only that ORM bundle adds `FACTORIES_ORM.md` to the
+   A database answer selects `python-sqlalchemy`, the `sqlalchemy` best-practices
+   skill (copy the whole skill dir with `references/`), `python-db-sessions`,
+   and `python-alembic` together. Only that ORM bundle adds `FACTORIES_ORM.md` to the
    Polyfactory rule and merges its template; persisted factories use `atransaction()` / `asession()`.
    Do not offer the stack as one catch-all ID.
 5. Filter out entries that clearly do not fit the repo. Classify every catalog
@@ -194,7 +195,7 @@ Derive the install set mechanically from the answers:
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
-| Database | `python-sqlalchemy` + `python-db-sessions` + `python-alembic` |
+| Database | `python-sqlalchemy` + `sqlalchemy` skill (whole dir incl. `references/`) + `python-db-sessions` + `python-alembic` |
 | Database + automated tests | Add and merge `FACTORIES_ORM.md`; merge database fixtures from `CONFTEST_DATABASE.md` |
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
 | FastAPI API | `python-fastapi` |

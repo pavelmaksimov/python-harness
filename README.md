@@ -85,7 +85,7 @@ pair the other linters so they mention it too.
 
 ```text
 Core          python-tooling · python-workflow · python-development-rules · python-libs · python-architecture · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
+Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
 
@@ -101,13 +101,17 @@ monitoring is needed and add `python-monitoring` only when selected.
 Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. A selected database installs
-`python-sqlalchemy`, `python-db-sessions`, and `python-alembic` together. Skip
+`python-sqlalchemy`, the `sqlalchemy` skill, `python-db-sessions`, and
+`python-alembic` together. Skip
 `python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
 when Prometheus monitoring is not selected. Render the speech adapter from
 `python-libs` (`SPEECH.md`) when the project uses speech-to-text,
 text-to-speech, or both; skip it when there is no speech I/O.
-For SQLAlchemy-backed persistence, install both `python-sqlalchemy` (ORM) and
-`python-db-sessions` (runtime session lifecycle).
+For SQLAlchemy-backed persistence, install `python-sqlalchemy` (project
+structure: `Base` / `TimeMixin`, generic repositories), `python-db-sessions`
+(runtime session lifecycle), and the `sqlalchemy` skill (low-level 2.x
+mechanics: models, queries, dialects). The skill is architecture-neutral and
+pairs with any project layout.
 
 ### Core
 
@@ -154,6 +158,7 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `python-fastapi` | FastAPI HTTP | installable | FastAPI, SSE, ORJSON, URL versioning, AppError handlers, httpx, uvloop | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fastapi/` → `.cursor/rules/python-fastapi/` |
 | `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-base-client/` → `.cursor/rules/python-base-client/`; render only the selected `python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md` to `project/infrastructure/base/http_client.py` |
 | `python-sqlalchemy` | SQLAlchemy ORM | installable | ORM models, `Base` / `TimeMixin`, generic `ORMRepository` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
+| `sqlalchemy` | SQLAlchemy 2.x practices (skill) | installable | Low-level, architecture-neutral ORM models, 2.0 query API, loader strategies, session semantics, dialect rules (PostgreSQL, MySQL/MariaDB, SQLite, SQL Server, Oracle) | https://docs.sqlalchemy.org/ | Skill: `harnesses/skills/sqlalchemy/` → `.cursor/skills/sqlalchemy/` (copy the whole dir: `SKILL.md` + `references/`). Content follows the official SQLAlchemy documentation; skill from this repo. Pairs with `python-sqlalchemy` (structure) and `python-db-sessions` (sessions) but forces no architecture |
 | `python-db-sessions` | Database sessions | installable | Async engine, `asession` / `atransaction`, DSN and optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-db-sessions/` → `.cursor/rules/python-db-sessions/` |
 | `python-alembic` | Alembic migrations | installable | Async Alembic env, autogenerate from ORM models, versions outside `project/` | https://alembic.sqlalchemy.org/ | `harnesses/rules/python-alembic/` → `.cursor/rules/python-alembic/` |
 | `python-redis` | Redis cache | installable | Prefixed keys, `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
