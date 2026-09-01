@@ -15,7 +15,7 @@ Not aiogram.
 
 When the bot libraries need a level different from root, add `TELEGRAM_LOG_LEVEL` to
 `SettingsValidator` and configure `telegram`, `telegram.ext`, and `apscheduler` with it
-(`python-development-rules`).
+(`python-architecture/python-development-rules.mdc`).
 
 Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers live in
 `project.base.handlers` (`python-architecture`). Register them from
@@ -23,7 +23,7 @@ Handlers live in `project.components.{name}.handlers`. Shared bot-wide handlers 
 If `telegram.py` or `bot.py` is missing, copy sibling `TELEGRAM.md` into
 `project/infrastructure/base/telegram.py` and `BOT.md` into `project/infrastructure/apps/bot.py`.
 
-Token: `Settings().TELEGRAM_BOT_TOKEN` (`python-settings`, `SecretStr`). Unwrap with `.get_secret_value()` on
+Token: `Settings().TELEGRAM_BOT_TOKEN` (`python-architecture/python-settings.mdc`, `SecretStr`). Unwrap with `.get_secret_value()` on
 `ApplicationBuilder().token(...)`. Add the field to `SettingsValidator` if it is missing.
 
 Handlers are presentation (bot I/O), like FastAPI endpoints: take collaborators via `Container()`, call use

@@ -28,7 +28,7 @@ Prefer `retry_unless_exception` when the call should retry everything except lis
 control-flow errors. Do not retry `AppError` types that are not transient
 (`NotFoundError`, `AuthError`, 4xx `ClientError`) unless the caller lists them.
 A subclass may also inherit the library exception so the decorator can still match it
-(`python-exceptions`).
+(`python-architecture/python-exceptions.mdc`).
 
 The helper logs a warning per retry and an error on final failure (`python-tooling`;
 no `extra=`). Callers do not log the same failure again.

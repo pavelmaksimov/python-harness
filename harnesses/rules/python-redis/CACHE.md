@@ -95,7 +95,7 @@ class CacheRepository:
 ## Settings contract
 
 Add the constant to `Constants` and the fields and methods to `SettingsValidator` if missing
-(`python-settings`). Use a stable application-specific prefix.
+(`python-architecture/python-settings.mdc`). Use a stable application-specific prefix.
 
 ```python
 class Constants:

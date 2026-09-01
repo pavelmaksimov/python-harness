@@ -97,7 +97,7 @@ Infrastructure-wide helpers live in `project/infrastructure/base/`.
 ## Adapters
 
 New external system → new module under `infrastructure/adapters/`. Raise `AppError` subclasses
-(`python-exceptions`). Outbound HTTP APIs subclass or compose the selected `AsyncApi` / `SyncApi`
+(`python-exceptions.mdc`). Outbound HTTP APIs subclass or compose the selected `AsyncApi` / `SyncApi`
 from `python-base-client` (`project/infrastructure/base/http_client.py`; copy the selected
 `.cursor/rules/python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md` if missing). `layers.toml`: `http_client` is adapters, not
 presentation. Tests stub the adapter through `Container.local(...)` (`python-tests`).

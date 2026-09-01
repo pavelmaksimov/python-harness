@@ -2,7 +2,7 @@
 
 Copy this module to `alembic/env.py` when introducing Alembic (after `uv run alembic init -t async alembic`)
 or when the existing `env.py` still uses sync `engine_from_config`. Requires `python-sqlalchemy`,
-`python-db-sessions`, and `python-settings` (`Settings().get_database_dsn()`). Leave
+`python-db-sessions`, and `python-architecture/python-settings.mdc` (`Settings().get_database_dsn()`). Leave
 `sqlalchemy.url` unset in `alembic.ini`.
 
 If `project.base.models` is missing, import the repo's existing `Base` and use `Base.metadata`.

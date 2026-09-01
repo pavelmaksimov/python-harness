@@ -8,7 +8,7 @@ alwaysApply: true
 Application config is `SettingsValidator` (pydantic-settings `BaseSettings`, Pydantic v2) wrapped as
 `Settings = LazyInit(SettingsValidator)` in `project/settings.py`.
 If that module is missing, copy sibling `SETTINGS.md` into `project/settings.py`.
-`LazyInit` comes from `python-di` (`STRUCTURES.md` → `project/libs/structures.py`).
+`LazyInit` comes from `python-di.mdc` (sibling `STRUCTURES.md` → `project/libs/structures.py`).
 
 ## Env contract
 
@@ -42,8 +42,8 @@ Settings = LazyInit(SettingsValidator)
 - Closed env names: `Enum` (`Envs`).
 - Derived values: `@model_validator` on `SettingsValidator`. Adapter-specific fields (DSN, …)
   stay in that adapter's contract.
-- Logging (`python-logging`): `LOG_LEVEL`; `Constants.LOG_FORMAT` when the formatter is shared.
-  Follow `python-development-rules` for technology-specific log-level fields.
+- Logging (`python-logging.mdc`): `LOG_LEVEL`; `Constants.LOG_FORMAT` when the formatter is shared.
+  Follow `python-development-rules.mdc` for technology-specific log-level fields.
 - Read config through Settings fields, not `os.getenv` / `os.environ`.
 - `extra="allow"` so undeclared host env does not fail startup.
 

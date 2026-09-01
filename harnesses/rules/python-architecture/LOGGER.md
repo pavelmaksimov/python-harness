@@ -1,8 +1,8 @@
 # Logging setup module
 
 Copy this module to `project/logger.py` when the package does not already define `setup_logging`.
-Call it once at process start. Levels come from `Settings()` (`python-settings`). Follow
-`python-development-rules` when a module needs a level different from the root logger.
+Call it once at process start. Levels come from `Settings()` (`python-settings.mdc`). Follow
+`python-development-rules.mdc` when a module needs a level different from the root logger.
 
 ```python
 import logging.config

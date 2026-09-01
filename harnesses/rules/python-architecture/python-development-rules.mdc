@@ -25,7 +25,7 @@ always bounded. Define the positive limit as a descriptive `*_CONCURRENCY_LIMIT`
 `SettingsValidator` and construct the semaphore with `Settings().<FIELD>`; never hardcode the
 limit or create a separate semaphore inside each task.
 
-Create semaphores lazily in `project/semaphores.py` using `LazyInit` from `python-di`. Name each
+Create semaphores lazily in `project/semaphores.py` using `LazyInit` from `python-di.mdc`. Name each
 property after the constrained resource, not after the numeric limit:
 
 ```python

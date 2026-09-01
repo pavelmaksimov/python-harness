@@ -22,7 +22,7 @@ if env not in ("test", "local"):
     build_prometheus_metrics(project_name="project", env=prometheus_env)
 ```
 
-With `python-settings`, skip when `is_autotest()` or `is_local()`. Map the remaining process env onto
+With `python-architecture/python-settings.mdc`, skip when `is_autotest()` or `is_local()`. Map the remaining process env onto
 `dev` | `preprod` | `prod`.
 
 ## FastAPI

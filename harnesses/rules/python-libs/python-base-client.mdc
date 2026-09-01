@@ -18,14 +18,14 @@ New external HTTP API → a module under `project/infrastructure/adapters/`. Sub
 selected `AsyncApi` or `SyncApi`. `layers.toml`: `http_client` is **adapters**, not presentation.
 
 When httpx needs a level different from root, add `HTTP_REQUESTS_LOG_LEVEL` to
-`SettingsValidator` and configure `httpx` and `httpcore` with it (`python-development-rules`).
+`SettingsValidator` and configure `httpx` and `httpcore` with it (`python-architecture/python-development-rules.mdc`).
 
 `name_for_monitoring` is required (API clients suffix `_api`). When the path is dynamic, pass
 `resource_for_monitoring` as a template with no IDs (`invoices/{invoice_id}`, not `invoices/123`).
 
 ## Errors
 
-Map in `error_handling` so domain code never sees httpx exceptions (`python-exceptions`):
+Map in `error_handling` so domain code never sees httpx exceptions (`python-architecture/python-exceptions.mdc`):
 
 | Failure | Raise |
 |---|---|

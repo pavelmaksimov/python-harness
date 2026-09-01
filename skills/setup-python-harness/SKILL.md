@@ -46,14 +46,15 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
-   `llm_common`, not `pycommons`). Core includes
-   `python-settings` (pydantic-settings, `Settings().PARAM`) as its own ID, not as
-   part of `python-di`. Core includes `python-workflow` for repository navigation before
-   analysis and preserving reusable researched solutions, `python-development-rules` for general Python
-   conventions and configurable module log levels, and `python-libs` for the always-on helper
-   index and disclosed implementations. Core includes `python-logging` (`dictConfig` /
-   `setup_logging()`) as its own technology-neutral ID; call-site hygiene stays in
-   `python-tooling`, and adapter rules own library-specific logger names and levels.
+   `llm_common`, not `pycommons`). Core includes `python-workflow` for repository navigation before
+   analysis and preserving reusable researched solutions, and `python-libs` for the always-on helper
+   index and disclosed implementations. Core `python-architecture` is one rule dir with six
+   sibling rule files: `python-architecture.mdc` (module layout), `python-exceptions.mdc`
+   (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
+   `python-logging.mdc` (`dictConfig` / `setup_logging()`), `python-di.mdc` (Container,
+   LazyInit), and `python-development-rules.mdc` (general conventions, configurable module
+   log levels). Call-site hygiene stays in `python-tooling`, and adapter rules own
+   library-specific logger names and levels.
    Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
    `python-polyfactory` (`uv add --dev polyfactory`) with every automated-test
    bundle; do not ask about either separately. Each remains its own core ID, not folded into
@@ -105,7 +106,7 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `harnesses/rules/python-libs/` (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
    `project/infrastructure/base/http_client.py`; never merge both implementations.
    If `di-linter` is approved, after copying it, follow that skill's
-   companion-rule patch so installed `python-architecture` / `python-di` /
+   companion-rule patch so installed `python-architecture` /
    `python-tests` name it next to the other linters. Skip the patch when
    `di-linter` was not approved.
    For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
@@ -191,7 +192,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `python-tooling`, `python-workflow`, `python-development-rules`, `python-libs`, `python-architecture`, `python-exceptions`, `python-settings`, `python-logging`, `python-di`, `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (six sibling rule files: structure, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |

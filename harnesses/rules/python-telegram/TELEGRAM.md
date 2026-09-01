@@ -4,7 +4,7 @@ Copy this module to `project/infrastructure/base/telegram.py` when the package d
 define `processing_errors` / `timeout_with_retry`. Handlers import these decorators; they do not
 catch-and-reply errors themselves.
 
-`AuthError` comes from `project/exceptions.py` (`python-exceptions`). Add `check_auth` only when the
+`AuthError` comes from `project/exceptions.py` (`python-architecture/python-exceptions.mdc`). Add `check_auth` only when the
 repo already has an auth collaborator — do not add one here.
 
 ```python

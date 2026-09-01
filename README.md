@@ -84,7 +84,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          python-tooling · python-workflow · python-development-rules · python-libs · python-architecture · python-exceptions · python-settings · python-logging · python-di · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
+Core          python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
@@ -120,13 +120,9 @@ pairs with any project layout.
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; preserve reusable researched solutions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
-| `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
-| `python-exceptions` | Python exceptions | installable | `AppError` hierarchy, where to put error types | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-exceptions/` → `.cursor/rules/python-exceptions/` |
-| `python-settings` | Python settings | installable | pydantic-settings env contract, `Settings().PARAM` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-settings/` → `.cursor/rules/python-settings/` |
-| `python-logging` | Python logging | installable | Technology-neutral `setup_logging()` / dictConfig, root level from Settings | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-logging/` → `.cursor/rules/python-logging/` |
-| `python-di` | Python DI | installable | LazyInit, Container, LazyService — no process globals | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-di/` → `.cursor/rules/python-di/` |
-| `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fsm/` → `.cursor/rules/python-fsm/`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |
-| `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-retry/` → `.cursor/rules/python-retry/`; render `python-libs/RETRY.md` to `project/libs/retry.py` if missing |
+| `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml`; sibling rule files: `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`, `python-development-rules.mdc` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
+| `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-fsm.mdc` → `.cursor/rules/python-libs/python-fsm.mdc`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |
+| `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-retry.mdc` → `.cursor/rules/python-libs/python-retry.mdc`; render `python-libs/RETRY.md` to `project/libs/retry.py` if missing |
 | `python-tests` | Python tests | installable | pytest layout, modular vs e2e, HTTP mocks, no patch | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-tests/` → `.cursor/rules/python-tests/` |
 | `python-freezegun` | Frozen time | installable | freezegun `freeze_time` — stopped UTC clock in tests, not `patch(datetime)` | https://github.com/spulec/freezegun | `harnesses/rules/python-freezegun/` → `.cursor/rules/python-freezegun/`. Package: `uv add --dev freezegun` |
 | `python-polyfactory` | Polyfactory | installable | All generated test data through Polyfactory; ORM guidance disclosed in `FACTORIES_ORM.md` | https://github.com/litestar-org/polyfactory | `harnesses/rules/python-polyfactory/` → `.cursor/rules/python-polyfactory/`. Package: `uv add --dev polyfactory`; install with every automated-test bundle. Add `FACTORIES_ORM.md` only with `python-sqlalchemy` + `python-db-sessions` |
@@ -136,10 +132,8 @@ Templates: `python-tooling` → merge selected Ruff / Black / isort tables from
 `PYPROJECT.toml` into repo-root `pyproject.toml`, and render `PRE_COMMIT.yaml` into
 repo-root `.pre-commit-config.yaml` with package/test paths and optional hooks adapted;
 copy the remaining templates only if missing: `python-architecture` → `BASE_SCHEMAS.md` into
-`project/base/schemas.py`;
-`python-settings` → `SETTINGS.md` into `project/settings.py`;
-`python-logging` → `LOGGER.md` into `project/logger.py`;
-`python-di` → `STRUCTURES.md` into `project/libs/structures.py`;
+`project/base/schemas.py`, `SETTINGS.md` into `project/settings.py`, `LOGGER.md` into
+`project/logger.py`, and `STRUCTURES.md` into `project/libs/structures.py`;
 `python-fsm` → render `harnesses/rules/python-libs/FSM.md` into `project/libs/fsm.py`;
 `python-retry` → render `harnesses/rules/python-libs/RETRY.md` into `project/libs/retry.py`;
 `python-tests` → `CONFTEST.md` into `tests/conftest.py` (HTTP core only);
@@ -156,7 +150,7 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `python-fastapi` | FastAPI HTTP | installable | FastAPI, SSE, ORJSON, URL versioning, AppError handlers, httpx, uvloop | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fastapi/` → `.cursor/rules/python-fastapi/` |
-| `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-base-client/` → `.cursor/rules/python-base-client/`; render only the selected `python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md` to `project/infrastructure/base/http_client.py` |
+| `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-base-client.mdc` → `.cursor/rules/python-libs/python-base-client.mdc`; render only the selected `python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md` to `project/infrastructure/base/http_client.py` |
 | `python-sqlalchemy` | SQLAlchemy ORM | installable | ORM models, `Base` / `TimeMixin`, generic `ORMRepository` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
 | `sqlalchemy` | SQLAlchemy 2.x practices (skill) | installable | Low-level, architecture-neutral ORM models, 2.0 query API, loader strategies, session semantics, dialect rules (PostgreSQL, MySQL/MariaDB, SQLite, SQL Server, Oracle) | https://docs.sqlalchemy.org/ | Skill: `harnesses/skills/sqlalchemy/` → `.cursor/skills/sqlalchemy/` (copy the whole dir: `SKILL.md` + `references/`). Content follows the official SQLAlchemy documentation; skill from this repo. Pairs with `python-sqlalchemy` (structure) and `python-db-sessions` (sessions) but forces no architecture |
 | `python-db-sessions` | Database sessions | installable | Async engine, `asession` / `atransaction`, DSN and optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-db-sessions/` → `.cursor/rules/python-db-sessions/` |

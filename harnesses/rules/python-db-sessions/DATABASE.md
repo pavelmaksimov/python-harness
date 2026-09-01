@@ -110,7 +110,7 @@ async def current_atransaction():
 
 ## Settings contract
 
-Add these fields and methods to `SettingsValidator` if missing (`python-settings`).
+Add these fields and methods to `SettingsValidator` if missing (`python-architecture/python-settings.mdc`).
 `SQLALCHEMY_DATABASE_DSN` wins; otherwise assemble from `DB_*`.
 
 ```python

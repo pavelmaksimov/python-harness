@@ -5,7 +5,7 @@ share the same model lookup behavior. Skip it when a generic base would have onl
 Requires `python-db-sessions` for `asession` / `atransaction`.
 
 Before copying, ensure `NotFoundError` exists in `project/exceptions.py`. If it is missing, create
-the shared `NotFoundError(AppError)` defined by `python-exceptions`; its constructor takes
+the shared `NotFoundError(AppError)` defined by `python-architecture/python-exceptions.mdc`; its constructor takes
 `object_name` and `id`. Do not define it in `repositories.py`.
 
 ```python

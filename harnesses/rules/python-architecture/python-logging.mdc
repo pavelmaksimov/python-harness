@@ -12,7 +12,7 @@ If that module is missing, copy sibling `LOGGER.md` into `project/logger.py`.
 Call it once at process start.
 Call-site hygiene (`logger.exception`, no `extra=`) is `python-tooling`.
 
-Levels come from `Settings()` (`python-settings`). Always `LOG_LEVEL` for root and the console handler.
+Levels come from `Settings()` (`python-settings.mdc`). Always `LOG_LEVEL` for root and the console handler.
 `disable_existing_loggers: False`. Console is `StreamHandler` to stdout.
 Formatter: `Constants.LOG_FORMAT` when present, else `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
 
@@ -20,4 +20,4 @@ Formatter: `Constants.LOG_FORMAT` when present, else `%(asctime)s - %(name)s - %
 
 The base setup does not name frameworks, clients, databases, brokers, or other integrations.
 Technology-specific rules own their logger names and optional `*_LOG_LEVEL` Settings fields.
-Follow `python-development-rules` when a selected module needs its own configurable level.
+Follow `python-development-rules.mdc` when a selected module needs its own configurable level.

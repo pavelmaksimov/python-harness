@@ -56,7 +56,7 @@ uv run pytest tests/test_e2e/ -n0
 Do not use `unittest.mock.patch` — if a patch is required, invert the dependency and inject a stub.
 Pair with `patch-linter` (PATCH001).
 Autouse: `Container.reset()` before and after each test.
-Settings overrides: `Settings.local` / `Settings.override` (`python-settings`).
+Settings overrides: `Settings.local` / `Settings.override` (`python-architecture/python-settings.mdc`).
 
 ## HTTP mocks
 

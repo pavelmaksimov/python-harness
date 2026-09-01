@@ -74,7 +74,8 @@ Rules:
 
 This catalog is one language stack, split into layered IDs:
 
-- **core** — tooling, `python-workflow`, `python-development-rules`, `python-libs`, structure, exceptions, settings, logging, DI, FSM, retry,
+- **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech),
+  `python-architecture` (structure, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech (only if
@@ -84,9 +85,14 @@ This catalog is one language stack, split into layered IDs:
   offer `python-coverage` as an optional gate with tests, and use `di-linter`
   for optional strict DI enforcement
 
-Do not collapse the stack into one catch-all rule ID or a comma-separated
-library list after the table. Shared helper implementation guides (`FSM.md`, `RETRY.md`,
-`ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`) live together in `harnesses/rules/python-libs/`;
+Do not collapse concerns into one catch-all `.mdc` or a comma-separated
+library list after the table. Multi-file core IDs are the pattern: `python-libs`
+(`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`) and
+`python-architecture` (`python-architecture.mdc`, `python-exceptions.mdc`,
+`python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
+`python-development-rules.mdc`), one concern per `.mdc`. Shared helper implementation
+guides (`FSM.md`, `RETRY.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`) live together
+in `harnesses/rules/python-libs/`;
 their design guidance stays in the owning rule ID. Other templates (`PYPROJECT.toml`,
 `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
 `STRUCTURES.md`, `BASE_MODELS.md`, `BASE_REPOSITORIES.md`, `BASE_SCHEMAS.md`,
@@ -139,9 +145,11 @@ After a successful installable copy, the setup skill also writes
 - `python-tooling/PRE_COMMIT.yaml` renders to repo-root
   `.pre-commit-config.yaml`; adapt package/test paths and keep only hooks
   selected by the target workflow.
-- Env config (`pydantic-settings`, `Settings().PARAM`) is its own core ID
-  (`python-settings`). `python-di` owns Container and LazyService. Do not fold
-  Settings into DI.
+- `python-architecture` carries the folded core rule files: `python-settings.mdc` owns
+  the pydantic-settings env contract, `python-di.mdc` owns Container and LazyService,
+  `python-logging.mdc` owns `setup_logging()`, `python-exceptions.mdc` owns `AppError`,
+  `python-development-rules.mdc` owns general conventions. One concern per file;
+  do not split them back into separate catalog IDs.
 - DI examples call a single-use dependency through `Container()` inline; bind
   the dependency only when it is reused.
 - Clock in tests (`freezegun` `freeze_time`) is its own core ID

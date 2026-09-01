@@ -12,7 +12,7 @@ alwaysApply: false
 Runtime: `redis.asyncio`, orjson.
 
 When Redis needs a level different from root, add `REDIS_LOG_LEVEL` to `SettingsValidator` and
-configure `redis` with it (`python-development-rules`).
+configure `redis` with it (`python-architecture/python-development-rules.mdc`).
 
 One adapter module owns the client. If it is missing, copy the adapter section from sibling
 `CACHE.md` into `project/infrastructure/adapters/acache.py`. Merge its base repository section

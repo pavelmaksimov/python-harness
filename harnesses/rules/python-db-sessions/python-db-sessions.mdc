@@ -11,7 +11,7 @@ alwaysApply: false
 Runtime: SQLAlchemy 2 async (`asyncpg`). One adapter module owns the engine and session lifecycle.
 If it is missing, copy sibling `DATABASE.md` into
 `project/infrastructure/adapters/database.py` and merge its Settings contract into `settings.py`
-(`python-settings`).
+(`python-architecture/python-settings.mdc`).
 
 | Need | Call |
 |---|---|

@@ -12,7 +12,7 @@ Implementation: `project/libs/structures.py`.
 If those types are missing, copy sibling `STRUCTURES.md` into `project/libs/structures.py`
 before introducing new singletons.
 
-Env config is `Settings = LazyInit(SettingsValidator)` in `project/settings.py` — see `python-settings`.
+Env config is `Settings = LazyInit(SettingsValidator)` in `project/settings.py` — see `python-settings.mdc`.
 
 ## Call through the proxy
 
