@@ -53,7 +53,12 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    message when a changed task did not create its commit. Offer `keep-a-changelog` as optional;
    when installed, the workflow records notable completed changes and updates the current entry
    when a task is refined. Libraries use versioned release sections; projects without library
-   versions use ISO-date sections. Core also includes `python-libs` for the always-on
+   versions use ISO-date sections. Offer `ubiquitous-language` as an independent optional skill;
+   when installed, it consults the project's single `CONTEXT.md` before durable domain names
+   are added or renamed and updates the glossary when domain meaning changes. It keeps exactly one root
+   `CONTEXT.md` for the project and requires distinct canonical names when meanings would
+   otherwise intersect. Installation copies the skill only; it does not create an empty
+   glossary or context-specific documents. Core also includes `python-libs` for the always-on
    helper index and disclosed implementations. Core `python-architecture` is one rule dir with six
    sibling rule files: `python-architecture.mdc` (module layout), `python-exceptions.mdc`
    (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
@@ -189,13 +194,14 @@ wording and skip any question with one unambiguous repository-derived answer.
 | 10 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
 | 11 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
 | 12 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
-| 13 | Changelog | Maintain notable post-task changes with `keep-a-changelog`? **yes / no** |
+| 13 | DDD language | Maintain a living DDD ubiquitous language with `ubiquitous-language`? **yes / no** |
+| 14 | Changelog | Maintain notable post-task changes with `keep-a-changelog`? **yes / no** |
 
-Ask stages 2–9 and 13 explicitly unless the user's request already contains
+Ask stages 2–9, 13, and 14 explicitly unless the user's request already contains
 the answer. Repository evidence supplies a recommended answer, not a reason to
 hide these product decisions. Stage 5 is asked only after stage 4 = yes; its
-"no" answer installs nothing coverage-related. Stage 13 is an independent
-optional choice and never auto-installs a skill.
+"no" answer installs nothing coverage-related. Stages 13 and 14 are independent
+optional choices and never auto-install a skill.
 
 Derive the install set mechanically from the answers:
 
@@ -214,7 +220,8 @@ Derive the install set mechanically from the answers:
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |
-| Changelog approved (stage 13) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |
+| DDD language approved (stage 13) | `ubiquitous-language`; install the skill only, create one root `CONTEXT.md` after the first term is resolved, and create no context-specific glossaries |
+| Changelog approved (stage 14) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |
 
 Do not ask whether to install an automatically derived harness. Show the
 derivation (for example, `automated tests → python-polyfactory`)
