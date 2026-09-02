@@ -1,6 +1,6 @@
 ---
 name: setup-python-harness
-description: Recommends and installs the opinionated Python backend harness from pavelmaksimov/python-harness. Use when bootstrapping Python agent rules, linter skills, or stack bands in a new repository.
+description: MUST USE for bootstrapping Python agent rules, linter skills, or stack bands in a repository. Recommends and installs the opinionated Python backend harness from pavelmaksimov/python-harness.
 ---
 
 # Set up Python harness
@@ -43,7 +43,7 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    and apply the companion patches from the catalog `COMPANION.md`
    (`python-tests` pointer row + `python-workflow` "Coverage gate after a
    task" section). Without approval, install nothing and patch nothing.
-   Offer `di-linter` as optional (Container/LazyInit, DI001/DI002). Recommend
+   Offer `di-linter` as optional (Container/LazyInit, DI001/DI002).
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
    `llm_common`, not `pycommons`). Core includes the `conventional-commits` skill by default and
@@ -59,7 +59,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
    `python-logging.mdc` (`dictConfig` / `setup_logging()`), `python-di.mdc` (Container,
    LazyInit), and `python-development-rules.mdc` (general conventions, configurable module
-   log levels). Call-site hygiene stays in `python-tooling`, and adapter rules own
+   log levels). Domain annotations follow the `domain-types-linter` skill. Call-site hygiene stays
+   in `python-tooling`, and adapter rules own
    library-specific logger names and levels.
    Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
    `python-polyfactory` (`uv add --dev polyfactory`) with every automated-test

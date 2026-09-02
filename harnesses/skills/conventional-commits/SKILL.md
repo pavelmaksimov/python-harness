@@ -1,6 +1,6 @@
 ---
 name: conventional-commits
-description: Draft and validate commit messages using Conventional Commits 1.0.0. Use when writing commits, fixing commit message format, choosing type/scope, or marking breaking changes.
+description: MUST USE for make commit message.
 ---
 
 # Conventional Commits 1.0.0

@@ -1,6 +1,6 @@
 ---
 name: layers-linter
-description: Enforces Python layered architecture with the layers-linter CLI (LA001/LA002/LA020). Authors or updates layers.toml, runs the linter, and fixes illegal imports between layers or restricted libraries. Use when adding architecture linting, editing layers.toml, changing cross-layer imports, or when the user mentions layers-linter, la-linter, clean architecture layers, or forbidden library usage.
+description: MUST USE for editing layers.toml, changing cross-layer imports, or handling clean architecture layers, or forbidden library usage. Enforces Python layered architecture with the layers-linter CLI and fixes illegal imports or restricted libraries.
 ---
 
 # layers-linter

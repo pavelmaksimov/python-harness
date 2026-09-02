@@ -1,6 +1,6 @@
 ---
 name: python-coverage
-description: Runs the pytest coverage gate (coverage.py via pytest-cov) in full mode (fail_under 95% branch coverage) or diff mode (diff-cover over changed lines for legacy repos), reads term-missing output, and closes uncovered lines and branches with modular tests. Use when finishing a task that changed project code, measuring test coverage, introducing the coverage gate, or diagnosing a failing coverage run.
+description: Runs the pytest coverage gate (coverage.py via pytest-cov) in full mode or diff mode (diff-cover over changed lines for legacy repos), reads term-missing output, and closes uncovered lines and branches with modular tests. Use when measuring test coverage, introducing the coverage gate, or diagnosing a failing coverage run.
 ---
 
 # python-coverage

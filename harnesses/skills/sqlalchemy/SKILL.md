@@ -1,6 +1,6 @@
 ---
 name: sqlalchemy
-description: SQLAlchemy 2.x best practices — modern Declarative ORM models, the 2.0 statement query API, loader strategies, session/transaction semantics, and dialect-specific rules for PostgreSQL, MySQL/MariaDB, SQLite, SQL Server, and Oracle. Use when writing or reviewing SQLAlchemy models, relationships, queries, sessions, transactions, or database-specific SQL.
+description: MUST USE for writing or reviewing SQLAlchemy models, relationships, queries, sessions, transactions, or database-specific SQL. Applies SQLAlchemy 2.x best practices for Declarative ORM, the statement query API, loader strategies, and supported dialects.
 ---
 
 # sqlalchemy

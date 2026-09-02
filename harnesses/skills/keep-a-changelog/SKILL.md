@@ -1,6 +1,6 @@
 ---
 name: keep-a-changelog
-description: Create and maintain CHANGELOG.md using Keep a Changelog 1.1.0. Use versioned releases for libraries and date-keyed sections for unversioned projects; update the current entry when a task is refined.
+description: MUST USE for creating or maintaining CHANGELOG.md.
 ---
 
 # Keep a Changelog 1.1.0

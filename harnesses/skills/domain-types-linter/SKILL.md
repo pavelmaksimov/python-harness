@@ -1,6 +1,6 @@
 ---
 name: domain-types-linter
-description: Enforces domain-specific types in Python business-logic annotations with the dt-linter CLI (DT001, DT003–DT011, DT100–DT125). Runs the linter on domain packages and replaces primitive/generic annotations with NewType or domain classes. Use when adding domain typing, editing use-case/service annotations, diagnosing DT codes, or when the user mentions domain-types-linter, dt-linter, NewType, or primitive types in domain code.
+description: MUST USE for adding domain/tiny typing, diagnosing DT codes. Enforces domain-specific types with the dt-linter CLI and replaces primitive/generic annotations with NewType or domain classes.
 ---
 
 # domain-types-linter
