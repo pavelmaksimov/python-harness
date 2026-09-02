@@ -60,8 +60,6 @@ description = "I/O orchestration; no SQLAlchemy, AsyncSession, or Redis client"
 contains_modules = [
     "project.components.*.use_cases",
     "project.components.*.use_cases.*",
-    "project.components.*.validation",
-    "project.components.*.validation.*",
 ]
 depends_on = ["dicontainer", "services", "libs", "usecases"]
 
@@ -75,8 +73,6 @@ description = "HTTP, CLI, and bot I/O: endpoints, handlers, app factory, framewo
 contains_modules = [
     "project.infrastructure.apps",
     "project.infrastructure.apps.*",
-    "project.infrastructure.utils",
-    "project.infrastructure.utils.*",
     "project.infrastructure.base.telegram",
     "project.infrastructure.base.telegram.*",
     "project.components.*.endpoints",
