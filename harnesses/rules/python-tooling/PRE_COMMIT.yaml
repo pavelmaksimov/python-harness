@@ -25,6 +25,13 @@ repos:
         args: [project, --no-check-no-layer]
         pass_filenames: false
 
+      - id: dddlint
+        stages: [pre-commit, pre-push]
+        name: check symbol name uniqueness (duplicate)
+        entry: uvx dddlint lint
+        language: system
+        pass_filenames: false
+
       - id: update-deps
         stages: [pre-commit, pre-push]
         name: update requirements.txt

@@ -87,6 +87,9 @@ the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, the
 `di-linter` is optional — add it when the repo uses Container/LazyInit and you
 want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
+`dddlint` is optional — add it to keep symbol names unique: one name, one
+definition in the codebase (`duplicate` rule only; vocabulary features stay
+off). If it is added, copy the sibling `dddlint.yaml` to the repository root.
 
 ```text
 Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
@@ -98,8 +101,8 @@ Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter` and `domain-types-linter`; add
 `patch-linter` when automated tests are selected.
 Add `python-freezegun` and `python-polyfactory` with every automated-test
-bundle. Offer `keep-a-changelog` for post-task release notes and `di-linter`
-as strict enforcement. Add `python-semver` when
+bundle. Offer `keep-a-changelog` for post-task release notes, `di-linter`
+as strict enforcement, and `dddlint` as optional unique-name enforcement. Add `python-semver` when
 the repo is (or will be) a publishable Python library with a public API; skip
 it for internal apps/services.
 For a FastAPI API, add `python-fastapi`; ask separately whether Prometheus
@@ -197,10 +200,12 @@ Hybrid: tool from upstream, skill from this repo.
 | `domain-types-linter` | domain-types-linter | installable | Domain types in business-logic annotations | https://github.com/pavelmaksimov/domain-types-linter | Tool: `uvx --from domain-types-linter dt-linter`. Skill: `harnesses/skills/domain-types-linter/SKILL.md` → `.cursor/skills/domain-types-linter/SKILL.md` |
 | `patch-linter` | patch-linter | installable | Forbid `unittest.mock.patch` and pytest `monkeypatch` in tests | https://github.com/pavelmaksimov/patch-linter | Tool: `uvx patch-linter`. Skill: `harnesses/skills/patch-linter/SKILL.md` → `.cursor/skills/patch-linter/SKILL.md` |
 | `di-linter` | di-linter | installable | Optional. In-process construction and test patches | https://github.com/pavelmaksimov/di-linter | Tool: `uvx di-linter`. Skill: `harnesses/skills/di-linter/` → `.cursor/skills/di-linter/`. Template: sibling `di.toml` → repo-root `di.toml` (copy only if missing; substitute package name if not `project/`). If added, patch companion rules so they pair it with the other linters |
+| `dddlint` | dddlint | installable | Optional. Unique symbol names — one name, one definition in the codebase | https://github.com/benomahony/dddlint | Tool: `uvx dddlint lint` (`uv add --dev dddlint`). Skill: `harnesses/skills/dddlint/` → `.cursor/skills/dddlint/`. Template: sibling `dddlint.yaml` → repo-root `dddlint.yaml` (copy only if missing). Name-uniqueness (`duplicate`) only: keep `forbidden` / `synonyms` empty and `enforce_canonical: false`; do not configure vocabulary features |
 | `python-coverage` | Coverage gate (pytest-cov) | installable | Optional. Enforce branch coverage ≥ `fail_under` (default 95%), or diff mode: changed lines vs base branch at 100% (`diff-cover`) for legacy baselines; skill closes reported gaps with tests | https://github.com/pavelmaksimov/python-harness | Skill: `harnesses/skills/python-coverage/` → `.cursor/skills/python-coverage/`. Merge `[tool.coverage.*]` tables from sibling `PYPROJECT.md` into repo-root `pyproject.toml` (copy only missing tables/keys). Packages: `uv add --dev pytest-cov`; diff mode adds `uv add --dev diff-cover`. Offer when automated tests are selected; never auto-install |
 
 Templates (copy only if missing): `layers-linter` → `layers.toml` into repo-root
-`layers.toml`; `di-linter` → `di.toml` into repo-root `di.toml`. Substitute
+`layers.toml`; `di-linter` → `di.toml` into repo-root `di.toml`; `dddlint` →
+`dddlint.yaml` into repo-root `dddlint.yaml`. Substitute
 `project` if the package name differs. `python-coverage` merges sibling
 `PYPROJECT.md` `[tool.coverage.*]` into repo-root `pyproject.toml` (no
 standalone file; substitute `project` if the package name differs).

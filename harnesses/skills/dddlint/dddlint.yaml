@@ -1,0 +1,14 @@
+# dddlint — https://benomahony.github.io/dddlint/reference/config/
+# This harness uses one rule: `duplicate` (name_uniqueness) — one name,
+# one definition in the codebase. Vocabulary features stay off: keep
+# `forbidden` and `synonyms` empty and `enforce_canonical` false.
+enforce_canonical: false
+name_uniqueness: true
+
+forbidden: []
+synonyms: []
+
+# Generated or vendored trees only (gitignore syntax, relative to this file).
+# .git, .venv, node_modules, __pycache__, dist, build, target, vendor are
+# always skipped; .gitignore is honored.
+exclude: []

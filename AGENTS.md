@@ -67,7 +67,7 @@ Rules:
 - Never vendor upstream/reference skills, rules, hooks, or agents into
   `harnesses/`.
 - Hybrid case (e.g. `layers-linter`, `domain-types-linter`, `patch-linter`,
-  `di-linter`, `python-monitoring`): tool from upstream; skill or rule from this
+  `di-linter`, `dddlint`, `python-monitoring`): tool from upstream; skill or rule from this
   repo under the matching typed dir. State both in the README Notes column.
 
 ## Language stack bands
@@ -75,26 +75,28 @@ Rules:
 This catalog is one language stack, split into layered IDs:
 
 - **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech;
-  its index also routes the admin-panel and rate-limiting rules in the same dir),
+  its index also routes the admin-panel, rate-limiting, and JWT auth rules in the same dir),
   `python-architecture` (structure, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, admin UI
   (`python-sqladmin`), rate limiting
-  (`python-fastapi-limiter`) (only if the repo uses them)
+  (`python-fastapi-limiter`), user JWT auth (`python-jwt`) (only if the repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter` and
   `domain-types-linter` with the stack, add `patch-linter` with automated tests,
-  offer `python-coverage` as an optional gate with tests, and use `di-linter`
-  for optional strict DI enforcement
+  offer `python-coverage` as an optional gate with tests, use `di-linter`
+  for optional strict DI enforcement, and `dddlint` for optional unique-name
+  enforcement (`duplicate` rule only; vocabulary features off)
 
 Do not collapse concerns into one catch-all `.mdc` or a comma-separated
 library list after the table. Multi-file core IDs are the pattern: `python-libs`
 (`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`,
-`python-sqladmin.mdc`, `python-fastapi-limiter.mdc`) and
+`python-sqladmin.mdc`, `python-fastapi-limiter.mdc`, `python-jwt.mdc`) and
 `python-architecture` (`python-architecture.mdc`, `python-exceptions.mdc`,
 `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
 `python-development-rules.mdc`), one concern per `.mdc`. Shared helper implementation
-guides (`FSM.md`, `RETRY.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`) live together
+guides (`FSM.md`, `RETRY.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`,
+`SECURITY.md`) live together
 in `harnesses/rules/python-libs/`;
 their design guidance stays in the owning rule ID. Other templates (`PYPROJECT.toml`,
 `PRE_COMMIT.yaml`, `SETTINGS.md`, `LOGGER.md`,
@@ -104,7 +106,7 @@ their design guidance stays in the owning rule ID. Other templates (`PYPROJECT.t
 belong to; mention the copy path on that band. Disclosed agent reference next
 to a rule (e.g. Polyfactory `FIELDS.md`, `CUSTOM_TYPES.md`) is not an install
 template unless the README copy list names it. Linter configs (`layers.toml`,
-`di.toml`) live next to their skills and copy to the target repo root.
+`di.toml`, `dddlint.yaml`) live next to their skills and copy to the target repo root.
 
 ## Adding or changing catalog entries
 
@@ -216,13 +218,18 @@ When running or editing the setup skill:
    `python-polyfactory` with every automated-test bundle instead of asking about
    either separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
    Offer `di-linter`
-   as strict enforcement. Ask whether the target is a publishable library and
+   as strict enforcement. Offer `dddlint` as optional unique-name enforcement
+   (`duplicate` rule only; vocabulary features off); on approval copy its
+   sibling `dddlint.yaml` to the target repo root when missing. Ask whether the target is a publishable library and
    add `python-semver` when it is. Ask whether the application is a FastAPI API,
    Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.
    Ask separately whether Prometheus monitoring is needed and select
    `python-monitoring` only when yes. Ask one yes/no question for a database and select
    `python-sqlalchemy`, the `sqlalchemy` best-practices skill, `python-db-sessions`, and `python-alembic` together when
-   yes. Ask separately whether Redis caching is used. For `python-base-client`,
+   yes. Ask separately whether Redis caching is used. Ask whether users
+   authenticate with JWT; a yes selects `python-jwt` with `python-fastapi`
+   (render `python-libs/SECURITY.md` into `project/libs/security.py`; static
+   operator token gates stay in `python-fastapi`). For `python-base-client`,
    ask the developer to choose
    `harnesses/rules/python-libs/ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md`
    (httpx sync), then render only that implementation to `http_client.py`.

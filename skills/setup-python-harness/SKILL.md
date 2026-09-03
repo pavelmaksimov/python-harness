@@ -47,6 +47,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    (`python-tests` pointer row + `python-workflow` "Coverage gate after a
    task" section). Without approval, install nothing and patch nothing.
    Offer `di-linter` as optional (Container/LazyInit, DI001/DI002).
+   Offer `dddlint` as optional unique-name enforcement (one name, one
+   definition; `duplicate` rule only — keep `forbidden` / `synonyms` empty
+   and `enforce_canonical: false`; copy sibling `dddlint.yaml` to the repo
+   root when missing).
    Ask whether Prometheus monitoring is needed; when yes, add
    `python-monitoring` (`uv add llm_common prometheus_client` — PyPI
    `llm_common`, not `pycommons`). Core includes the `conventional-commits` skill by default and
@@ -123,7 +127,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    companion-rule patch so installed `python-architecture` /
    `python-tests` name it next to the other linters. Skip the patch when
    `di-linter` was not approved.
-   For `layers-linter` / `di-linter`, copy the sibling toml to the target repo
+   For `layers-linter` / `di-linter` / `dddlint`, copy the sibling config
+   (`layers.toml` / `di.toml` / `dddlint.yaml`) to the target repo
    root when missing (substitute `project` if the package name differs).
    When `python-tooling` is approved and Ruff, Black, or isort is being installed,
    read sibling `PYPROJECT.toml` and merge only the selected tools' `[tool.*]`
@@ -135,7 +140,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    Also render sibling `PRE_COMMIT.yaml` into repo-root
    `.pre-commit-config.yaml`: adapt package and test paths, omit test paths when
    automated tests are not selected, omit the layers hook unless `layers-linter`
-   is selected, and keep each `uv export` hook only when the target maintains
+   is selected, omit the `dddlint` hook unless `dddlint` is selected, and keep
+   each `uv export` hook only when the target maintains
    that requirements file or the user approves creating it. Treat an existing
    pre-commit config as a merge / replace / skip conflict.
 10. For hybrid rows, print the upstream URL and tool install notes; still copy
@@ -227,7 +233,8 @@ Derive the install set mechanically from the answers:
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |
-| Changelog approved (stage 13) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |
+| Unique-name enforcement (stage 14) | `dddlint`; copy sibling `dddlint.yaml` to repo-root `dddlint.yaml` when missing |
+| Changelog approved (stage 16) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |
 
 Do not ask whether to install an automatically derived harness. Show the
 derivation (for example, `automated tests → python-polyfactory`)
