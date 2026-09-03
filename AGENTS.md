@@ -74,12 +74,14 @@ Rules:
 
 This catalog is one language stack, split into layered IDs:
 
-- **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech),
+- **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech;
+  its index also routes the admin-panel and rate-limiting rules in the same dir),
   `python-architecture` (structure, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
-- **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech (only if
-  the repo uses them)
+- **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, admin UI
+  (`python-sqladmin`), rate limiting
+  (`python-fastapi-limiter`) (only if the repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter` and
   `domain-types-linter` with the stack, add `patch-linter` with automated tests,
   offer `python-coverage` as an optional gate with tests, and use `di-linter`
@@ -87,7 +89,8 @@ This catalog is one language stack, split into layered IDs:
 
 Do not collapse concerns into one catch-all `.mdc` or a comma-separated
 library list after the table. Multi-file core IDs are the pattern: `python-libs`
-(`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`) and
+(`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`,
+`python-sqladmin.mdc`, `python-fastapi-limiter.mdc`) and
 `python-architecture` (`python-architecture.mdc`, `python-exceptions.mdc`,
 `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
 `python-development-rules.mdc`), one concern per `.mdc`. Shared helper implementation

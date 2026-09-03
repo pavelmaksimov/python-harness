@@ -68,6 +68,14 @@ description = "LazyInit composition root (LazyService paths are strings, not imp
 contains_modules = ["project.container"]
 depends_on = ["libs"]
 
+[layers.admin]
+description = "Admin panel over ORM models (sqladmin); empty unless an admin panel is installed"
+contains_modules = [
+    "project.infrastructure.apps.admin",
+    "project.infrastructure.apps.admin.*",
+]
+depends_on = ["libs", "adapters", "repositories"]
+
 [layers.presentation]
 description = "HTTP, CLI, and bot I/O: endpoints, handlers, app factory, framework helpers"
 contains_modules = [
@@ -84,7 +92,7 @@ contains_modules = [
     "project.components.*.cli",
     "project.components.*.cli.*",
 ]
-depends_on = ["dicontainer", "usecases", "services", "libs", "presentation"]
+depends_on = ["dicontainer", "usecases", "services", "libs", "presentation", "admin"]
 
 [libs]
 
@@ -105,6 +113,12 @@ allowed_in = ["presentation"]
 
 [libs.redis]
 allowed_in = ["adapters", "repositories"]
+
+[libs.sqladmin]
+allowed_in = ["admin"]
+
+[libs.fastapi_limiter]
+allowed_in = ["presentation", "adapters"]
 
 [libs.httpx]
 allowed_in = ["adapters"]

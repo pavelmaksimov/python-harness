@@ -1,0 +1,112 @@
+---
+description: sqladmin — admin panel over SQLAlchemy models mounted on the FastAPI app
+globs:
+  - "**/apps/admin.py"
+alwaysApply: false
+---
+
+# sqladmin admin panel
+
+Runtime: sqladmin (`uv add sqladmin[auth]`). Install only with the database bundle
+(`python-sqlalchemy` + `python-db-sessions`).
+
+Views live in `project/infrastructure/apps/admin.py` and are mounted from
+`project/infrastructure/apps/api.py`. Reuse the async engine from
+`aengine_factory()` (`python-db-sessions`); sqladmin opens its own sessions. Admin is the
+one presentation-side module allowed to import ORM models: it never goes through
+repositories or use cases, and domain code never imports the admin module.
+
+```python
+from fastapi import FastAPI
+from sqladmin import Admin, ModelView
+
+from project.components.orders.models import Order
+from project.components.users.models import User
+from project.infrastructure.adapters.database import aengine_factory
+
+
+class UserAdmin(ModelView, model=User):
+    name_plural = "Users"
+    category = "Accounts"
+    column_list = [User.id, User.email, User.created_at]
+    column_details_list = [User.id, User.email, User.created_at]
+    form_excluded_columns = [User.password_hash]
+
+
+def mount_admin(app: FastAPI) -> None:
+    admin = Admin(
+        app,
+        aengine_factory(),
+        authentication_backend=AdminAuth(secret_key=Settings().SECRET_KEY),
+    )
+    admin.add_view(UserAdmin)
+    admin.add_view(ModelView(Order))
+```
+
+Set `column_list` and form columns explicitly on every view: the defaults expose every
+model column in the list and make every column editable. Exclude secrets and server-side
+columns (`password_hash`, `created_at`) from forms.
+
+## Authentication
+
+Always authenticate the panel (`sqladmin[auth]`). Subclass
+`sqladmin.authentication.AuthenticationBackend` (`login` / `logout` / `authenticate`) and add
+`SessionMiddleware` with the same `secret_key` as the backend. Operator credentials come
+from Settings (`ADMIN_USER` / `ADMIN_PASSWORD`), never from code.
+
+```python
+import secrets
+
+from sqladmin.authentication import AuthenticationBackend
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request
+
+from project.settings import Settings
+
+
+class AdminAuth(AuthenticationBackend):
+    async def login(self, request: Request) -> bool:
+        form = await request.form()
+        granted = secrets.compare_digest(str(form["username"]), Settings().ADMIN_USER) and (
+            secrets.compare_digest(str(form["password"]), Settings().ADMIN_PASSWORD)
+        )
+        if granted:
+            request.session.update({"admin": True})
+        return granted
+
+    async def logout(self, request: Request) -> bool:
+        request.session.clear()
+        return True
+
+    async def authenticate(self, request: Request) -> bool:
+        return bool(request.session.get("admin"))
+
+
+app.add_middleware(SessionMiddleware, secret_key=Settings().SECRET_KEY)
+```
+
+Merge `SECRET_KEY`, `ADMIN_USER`, `ADMIN_PASSWORD` into `settings.py`
+(`python-architecture/python-settings.mdc`).
+
+## layers.toml
+
+```toml
+[layers.admin]
+description = "Admin panel over ORM models; the only presentation-side module importing models"
+contains_modules = [
+    "project.infrastructure.apps.admin",
+    "project.infrastructure.apps.admin.*",
+]
+depends_on = ["libs", "adapters", "repositories"]
+
+[libs.sqladmin]
+allowed_in = ["admin"]
+```
+
+Add `"admin"` to `[layers.presentation]` `depends_on`. Add `"admin"` to
+`[libs.sqlalchemy]` `allowed_in` only when the admin module imports `sqlalchemy` directly.
+
+## Tests
+
+Cover the panel in e2e (`python-tests`): login rejects wrong credentials, list and detail
+render for an authenticated operator. Do not unit-test sqladmin itself.

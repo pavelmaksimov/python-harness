@@ -90,7 +90,7 @@ pair the other linters so they mention it too.
 
 ```text
 Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
+Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-sqladmin · python-redis · python-fastapi-limiter · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
 
@@ -108,7 +108,11 @@ Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. A selected database installs
 `python-sqlalchemy`, the `sqlalchemy` skill, `python-db-sessions`, and
-`python-alembic` together. Skip
+`python-alembic` together. Ask whether the service needs an operator admin panel;
+a yes selects `python-sqladmin` (SQLAlchemy models only), only with the database
+bundle. Ask whether inbound FastAPI
+routes need rate limiting; a yes selects `python-fastapi-limiter` together with
+`python-redis` (shared Redis client and Settings). Skip
 `python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
 when Prometheus monitoring is not selected. Render the speech adapter from
 `python-libs` (`SPEECH.md`) when the project uses speech-to-text,
@@ -127,7 +131,7 @@ pairs with any project layout.
 | `keep-a-changelog` | Keep a Changelog | installable | Optional post-task changelog: SemVer release sections for libraries, ISO-date sections for projects without library versions; refinements update the current entry | https://keepachangelog.com/en/1.1.0/ | `harnesses/skills/keep-a-changelog/` → `.cursor/skills/keep-a-changelog/`; offer during onboarding, never auto-install |
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; verify tasks through subagents; preserve reusable research; propose uncreated commits | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
-| `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
+| `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers; indexes the admin-panel and rate-limiting rules that live in the same dir |
 | `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml`; sibling rule files: `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`, `python-development-rules.mdc` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-fsm.mdc` → `.cursor/rules/python-libs/python-fsm.mdc`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-retry.mdc` → `.cursor/rules/python-libs/python-retry.mdc`; render `python-libs/RETRY.md` to `project/libs/retry.py` if missing |
@@ -163,7 +167,9 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `sqlalchemy` | SQLAlchemy 2.x practices (skill) | installable | Low-level, architecture-neutral ORM models, 2.0 query API, loader strategies, session semantics, dialect rules (PostgreSQL, MySQL/MariaDB, SQLite, SQL Server, Oracle) | https://docs.sqlalchemy.org/ | Skill: `harnesses/skills/sqlalchemy/` → `.cursor/skills/sqlalchemy/` (copy the whole dir: `SKILL.md` + `references/`). Content follows the official SQLAlchemy documentation; skill from this repo. Pairs with `python-sqlalchemy` (structure) and `python-db-sessions` (sessions) but forces no architecture |
 | `python-db-sessions` | Database sessions | installable | Async engine, `asession` / `atransaction`, DSN and optional Postgres | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-db-sessions/` → `.cursor/rules/python-db-sessions/` |
 | `python-alembic` | Alembic migrations | installable | Async Alembic env, autogenerate from ORM models, versions outside `project/` | https://alembic.sqlalchemy.org/ | `harnesses/rules/python-alembic/` → `.cursor/rules/python-alembic/` |
+| `python-sqladmin` | sqladmin panel | installable | Admin UI over SQLAlchemy models mounted on the FastAPI app; authenticated operators, explicit column lists | https://github.com/smithyhq/sqladmin | `harnesses/rules/python-libs/python-sqladmin.mdc` → `.cursor/rules/python-libs/python-sqladmin.mdc`. Package: `uv add sqladmin[auth]`. Only with the database bundle |
 | `python-redis` | Redis cache | installable | Prefixed keys, `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
+| `python-fastapi-limiter` | Route rate limiting | installable | fastapi-limiter `RateLimiter` dependencies on routers/endpoints; Redis counters, 429 + `Retry-After` | https://github.com/long2ice/fastapi-limiter | `harnesses/rules/python-libs/python-fastapi-limiter.mdc` → `.cursor/rules/python-libs/python-fastapi-limiter.mdc`. Package: `uv add fastapi-limiter`. Install with `python-redis` (shared Redis client and Settings); FastAPI APIs only |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
 

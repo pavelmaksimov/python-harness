@@ -1,0 +1,87 @@
+---
+description: fastapi-limiter — Redis-backed route rate limits as FastAPI dependencies
+globs:
+  - "**/adapters/rate_limit.py"
+  - "**/endpoints.py"
+  - "**/apps/api.py"
+alwaysApply: false
+---
+
+# Rate limiting
+
+Runtime: fastapi-limiter on the released 0.1.x API (`uv add fastapi-limiter`):
+`await FastAPILimiter.init(redis)` once per process, then
+`Depends(RateLimiter(times=, seconds=))` on routers or endpoints. Endpoints need no extra
+`Request` parameter. The 0.0.x decorator API (`@limiter.limit`) and the unreleased
+pyrate-limiter rewrite do not apply.
+
+Install with `python-redis`: the Redis client stays in
+`project/infrastructure/adapters/acache.py` (`redis_client()`) — one client, one `REDIS_*`
+Settings contract — and the limiter lifecycle lives in
+`project/infrastructure/adapters/rate_limit.py`. Counters share the app key prefix.
+
+```python
+from fastapi_limiter import FastAPILimiter
+
+from project.infrastructure.adapters.acache import redis_client
+from project.settings import Constants
+
+
+async def init_rate_limiter() -> None:
+    await FastAPILimiter.init(redis_client(), prefix=f"{Constants.REDIS_KEY_PREFIX}:rl")
+
+
+async def close_rate_limiter() -> None:
+    await FastAPILimiter.close()
+```
+
+Expose both as `LazyService` entries in `project/container.py`
+(`python-architecture/python-di.mdc`) and await them in the app lifespan in
+`project/infrastructure/apps/api.py`. Presentation never imports `redis` or the adapter
+module.
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    setup_logging()
+    await Container().init_rate_limiter()
+    yield
+    await Container().close_rate_limiter()
+```
+
+## Applying limits
+
+```python
+router = APIRouter(dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+
+
+@router.post("/orders/v1", dependencies=[Depends(RateLimiter(times=2, seconds=1))])
+async def create_order(...) -> ...:
+```
+
+- Several `RateLimiter`s on one route evaluate in order — strictest (smallest window and
+  count) first.
+- The default identifier is client IP + path (honors `X-Forwarded-For`); override
+  `identifier=` in `FastAPILimiter.init` to key by API token or user id on authenticated
+  APIs.
+- Keep the default callback (raises `HTTPException` 429 with `Retry-After`) so the app
+  exception handlers shape the body (`python-fastapi`).
+- WebSockets: `WebSocketRateLimiter` as the dependency, `WebSocketRateLimitException` on
+  breach.
+- When limits differ per environment, read them from `Settings` and build the dependency
+  when constructing the router instead of repeating literals.
+
+## layers.toml
+
+```toml
+[libs.fastapi_limiter]
+allowed_in = ["presentation", "adapters"]
+```
+
+`redis` stays adapters/repositories only (`python-redis`).
+
+## Tests
+
+Assert limits in e2e (`python-tests`) with the Redis testcontainer fixture
+(`python-redis`): N allowed calls, then 429 with `Retry-After`; `flushdb` between tests. Do
+not disable the limiter or `patch` `RateLimiter`.

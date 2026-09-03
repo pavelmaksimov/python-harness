@@ -31,7 +31,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    bot; `python-base-client` when the repo has outbound HTTP adapters under
    `infrastructure/adapters/` — skip it when there are none; the `python-libs`
    speech adapter (`SPEECH.md`) when the repo uses transcription or speech
-   synthesis), and
+   synthesis; an admin panel when `project/infrastructure/apps/admin.py` or
+   sqladmin imports exist (`python-sqladmin`, SQLAlchemy models only);
+   `python-fastapi-limiter` when
+   routes declare `RateLimiter` dependencies — FastAPI APIs only), and
    `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
    when automated tests are selected. Offer `python-coverage` as **optional**
    when automated tests are selected (never auto-derive it): full mode gates
@@ -108,7 +111,11 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
      `FACTORIES_ORM.md` beside the rule and merge its template into `tests/factories.py`;
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;
-   - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`.
+   - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`;
+   - `python-sqladmin` / `python-fastapi-limiter` → no
+     templates; ensure repo-root `layers.toml` carries the `admin` layer (sqladmin
+     only) and the matching `sqladmin` / `fastapi_limiter` lib entries
+     (substitute `project` if the package name differs).
    For `python-base-client`, render only the implementation selected by the user from
    `harnesses/rules/python-libs/` (`ASYNC_CLIENT.md` or `SYNC_CLIENT.md`) into
    `project/infrastructure/base/http_client.py`; never merge both implementations.
@@ -184,17 +191,21 @@ wording and skip any question with one unambiguous repository-derived answer.
 | 5 | Coverage gate | Only when stage 4 = yes: enforce a coverage gate with `python-coverage`? **full mode (branch ≥95%) / diff mode — changed lines only, for a legacy baseline / no** |
 | 6 | Database | Will this project need a database? **yes / no** |
 | 7 | Redis cache | Will this project use Redis as a cache? **yes / no** |
-| 8 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
-| 9 | Speech I/O | Does this project need speech processing? **none / STT / TTS / both** |
-| 10 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
-| 11 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
-| 12 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
-| 13 | Changelog | Maintain notable post-task changes with `keep-a-changelog`? **yes / no** |
+| 8 | Admin panel | Only when stage 3 selects a FastAPI API and stage 6 = yes: does the service need an operator admin panel (`python-sqladmin`, SQLAlchemy models only)? **yes / no** |
+| 9 | Rate limiting | Only when stage 3 selects a FastAPI API: rate-limit inbound routes with `python-fastapi-limiter`? **yes / no** — yes installs it with `python-redis` even when the cache itself is not used |
+| 10 | Prometheus monitoring | Does this project need Prometheus monitoring? **yes / no** |
+| 11 | Speech I/O | Does this project need speech processing? **none / STT / TTS / both** |
+| 12 | Outbound HTTP | Will it call external HTTP APIs? **no / async `httpx.AsyncClient` / sync `httpx.Client`** |
+| 13 | Enforcement | Use **standard enforcement** (`layers-linter`, `domain-types-linter`, and `patch-linter` when tests are selected) or **strict DI enforcement** (standard + `di-linter`)? |
+| 14 | Tooling | If intent is ambiguous: add **detected tool tables only / Ruff + Black + isort / none**; ask for Ruff's minimum Python target only when it cannot be inferred. |
+| 15 | Changelog | Maintain notable post-task changes with `keep-a-changelog`? **yes / no** |
 
-Ask stages 2–9 and 13 explicitly unless the user's request already contains
+Ask stages 2–11 and 15 explicitly unless the user's request already contains
 the answer. Repository evidence supplies a recommended answer, not a reason to
 hide these product decisions. Stage 5 is asked only after stage 4 = yes; its
-"no" answer installs nothing coverage-related. Stage 13 is an independent
+"no" answer installs nothing coverage-related. Stages 8 and 9 are asked only
+when stage 3 selects a FastAPI API; stage 8 additionally requires stage 6 = yes.
+Stage 15 is an independent
 optional choice and never auto-installs a skill.
 
 Derive the install set mechanically from the answers:
@@ -207,7 +218,9 @@ Derive the install set mechanically from the answers:
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
 | Database | `python-sqlalchemy` + `sqlalchemy` skill (whole dir incl. `references/`) + `python-db-sessions` + `python-alembic` |
 | Database + automated tests | Add and merge `FACTORIES_ORM.md`; merge database fixtures from `CONFTEST_DATABASE.md` |
+| Admin panel approved (stage 8) | `python-sqladmin`; requires the Database bundle; no templates |
 | Redis cache | `python-redis`; when automated tests are selected, also merge Redis fixtures |
+| Rate limiting (stage 9) | `python-fastapi-limiter` + `python-redis` (shared Redis client and `REDIS_*` Settings), even when the cache itself is not used; no templates |
 | FastAPI API | `python-fastapi` |
 | Prometheus monitoring | `python-monitoring` and its upstream package notes |
 | STT, TTS, or both | `python-libs` speech template `python-libs/SPEECH.md`; install only the selected provider/media dependencies |

@@ -1,5 +1,5 @@
 ---
-description: Discover existing FSM, retry, outbound HTTP, and speech helper libraries before reimplementing them
+description: Discover existing FSM, retry, outbound HTTP, speech, admin-panel, and rate-limiting libraries before reimplementing them
 alwaysApply: true
 ---
 
@@ -16,6 +16,8 @@ repository.
 | Smallest independently repeatable transient adapter operation; idempotent writes and per-attempt timeout | `retry_on_exception` / `retry_unless_exception` | [`python-retry.mdc`](../python-retry/python-retry.mdc) | [`RETRY.md`](RETRY.md) |
 | Outbound HTTP adapter using the developer-selected async or sync client | `AsyncApi` / `SyncApi` | [`python-base-client.mdc`](../python-base-client/python-base-client.mdc) | [`ASYNC_CLIENT.md`](ASYNC_CLIENT.md) or [`SYNC_CLIENT.md`](SYNC_CLIENT.md) |
 | OpenAI speech-to-text or text-to-speech through the existing LLM client | `stt` / `tts` | this rule | [`SPEECH.md`](SPEECH.md) |
+| Operator CRUD UI over SQLAlchemy ORM models | sqladmin `Admin` / `ModelView` | [`python-sqladmin.mdc`](python-sqladmin.mdc) | upstream package `sqladmin[auth]` |
+| Rate limiting inbound FastAPI routes (Redis-backed) | fastapi-limiter `RateLimiter` | [`python-fastapi-limiter.mdc`](python-fastapi-limiter.mdc) | upstream package `fastapi-limiter` |
 
 Use ordinary conditionals for independent flags or lifecycles without a meaningful transition
 graph.
