@@ -74,7 +74,7 @@ Rules:
 
 This catalog is one language stack, split into layered IDs:
 
-- **core** — tooling, `python-workflow`, optional `ubiquitous-language`, `python-libs` (FSM, retry, outbound HTTP, speech),
+- **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech),
   `python-architecture` (structure, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
@@ -195,11 +195,6 @@ After a successful installable copy, the setup skill also writes
 - Linter config templates (`layers.toml`, `di.toml`) and skill examples use
   package root `project/` and `components/`, matching `python-architecture`. Do not
   keep a parallel `domains/` layout.
-- `ubiquitous-language` keeps exactly one root `CONTEXT.md`, creates it only after the first
-  term is resolved, and replaces intersecting meanings with distinct canonical names.
-  Never create `CONTEXT-MAP.md` or context-specific glossaries. Installation copies no empty
-  glossary. Its research basis is
-  [docs/research/ddd-ubiquitous-language-harnesses.md](docs/research/ddd-ubiquitous-language-harnesses.md).
 
 ## Bootstrap behaviour
 
@@ -217,8 +212,6 @@ When running or editing the setup skill:
    `uv add --dev pytest-cov`, and apply the companion workflow patch. Add `python-freezegun` and
    `python-polyfactory` with every automated-test bundle instead of asking about
    either separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
-   Offer `ubiquitous-language` as an independent optional skill; copy only the skill and
-   let it create `CONTEXT.md` lazily when the first domain term is resolved.
    Offer `di-linter`
    as strict enforcement. Ask whether the target is a publishable library and
    add `python-semver` when it is. Ask whether the application is a FastAPI API,

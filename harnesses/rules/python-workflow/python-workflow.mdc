@@ -53,12 +53,3 @@ When the `keep-a-changelog` skill is installed, use it after each task with a no
 contributor-facing change. Record the completed change before the final response. If the task
 refines work already represented by the current unreleased or same-date entry, update that
 entry to describe the final result instead of adding a duplicate.
-
-
-## Optional ubiquitous-language handoff
-
-When the `ubiquitous-language` skill is installed, use it before introducing or renaming a
-durable domain concept and after resolving a change in domain meaning. Reuse the single project
-`CONTEXT.md` term in code, tests, APIs, and documentation; update the glossary in the same task
-when the model changes. Generic Python, framework, and infrastructure names do not trigger this
-handoff.

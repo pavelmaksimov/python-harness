@@ -79,9 +79,7 @@ are selected. Install `conventional-commits` with every core bundle; when a
 task changes tracked files without creating a commit, `python-workflow` ends
 the response with a proposed Conventional Commit message. `keep-a-changelog`
 is optional; when selected, the workflow records notable completed changes and
-updates the current entry when a task is refined. `ubiquitous-language` is optional;
-when selected, domain-bearing names are checked against a living `CONTEXT.md` before
-use and resolved changes in meaning update it in the same task. `python-coverage` is optional —
+updates the current entry when a task is refined. `python-coverage` is optional —
 offer it when automated tests
 are selected; on approval it also appends the post-task coverage-gate step to
 the installed `python-workflow` rule (catalog `COMPANION.md`). Without it, the
@@ -91,7 +89,7 @@ want DI001/DI002 enforced. If it is added, patch companion rules that already
 pair the other linters so they mention it too.
 
 ```text
-Core          conventional-commits · keep-a-changelog (optional) · ubiquitous-language (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
+Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
 Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-redis · python-telegram · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
 ```
@@ -100,8 +98,7 @@ Recommended set for a FastAPI + Postgres service: every core and adapter row
 that the repo uses, plus `layers-linter` and `domain-types-linter`; add
 `patch-linter` when automated tests are selected.
 Add `python-freezegun` and `python-polyfactory` with every automated-test
-bundle. Offer `keep-a-changelog` for post-task release notes, `ubiquitous-language`
-for projects whose domain vocabulary should stay aligned with code, and `di-linter`
+bundle. Offer `keep-a-changelog` for post-task release notes and `di-linter`
 as strict enforcement. Add `python-semver` when
 the repo is (or will be) a publishable Python library with a public API; skip
 it for internal apps/services.
@@ -128,7 +125,6 @@ pairs with any project layout.
 |---|---|---|---|---|---|
 | `conventional-commits` | Conventional Commits | installable | Default commit-message drafting and validation; `python-workflow` proposes a message after changed tasks that did not create a commit | https://www.conventionalcommits.org/en/v1.0.0/ | `harnesses/skills/conventional-commits/` → `.cursor/skills/conventional-commits/`; install with every core bundle |
 | `keep-a-changelog` | Keep a Changelog | installable | Optional post-task changelog: SemVer release sections for libraries, ISO-date sections for projects without library versions; refinements update the current entry | https://keepachangelog.com/en/1.1.0/ | `harnesses/skills/keep-a-changelog/` → `.cursor/skills/keep-a-changelog/`; offer during onboarding, never auto-install |
-| `ubiquitous-language` | DDD ubiquitous language | installable | Optional single project glossary: consult before durable domain names, update when meanings change, and replace intersecting names with unique terms | https://github.com/CodeAlive-AI/ai-driven-development/tree/main/skills/ubiquitous-language | `harnesses/skills/ubiquitous-language/` → `.cursor/skills/ubiquitous-language/`; offer during onboarding, never auto-install; create one root `CONTEXT.md` lazily after the first term is agreed |
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; verify tasks through subagents; preserve reusable research; propose uncreated commits | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/` → `.cursor/rules/python-libs/` |
