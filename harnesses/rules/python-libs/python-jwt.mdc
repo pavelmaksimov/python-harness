@@ -1,0 +1,262 @@
+---
+description: PyJWT access tokens and pwdlib Argon2 password hashing for FastAPI auth
+globs:
+  - "**/security.py"
+  - "**/endpoints.py"
+alwaysApply: false
+---
+
+# JWT authentication
+
+Runtime: PyJWT + pwdlib (`uv add pyjwt "pwdlib[argon2]"`). Default is symmetric HS256; add
+`pyjwt[crypto]` only when another service must verify tokens with RS256/ES256 public keys.
+FastAPI APIs only; static operator token gates stay in `python-fastapi`. Install with the
+database bundle: authentication needs the `users` ORM model and repository.
+
+## Layout
+
+| Module | Layer | Owns |
+|---|---|---|
+| `project/libs/security.py` | libs | Pure helpers — hash/verify passwords, create/decode tokens — and the `TokenExpiredError` / `TokenInvalidError` exceptions they raise (render [`SECURITY.md`](SECURITY.md) here, copy only if missing) |
+| `project/components/users/models.py` | repositories | `User` ORM model (below) |
+| `project/components/users/repositories.py` | repositories | `UserRepository` (below) |
+| `project/components/users/schemas.py` | libs | `Token` / `CurrentUser` schemas |
+| `project/components/users/endpoints.py` | presentation | Login endpoint, `get_current_user` / `get_current_active_user` |
+
+`security.py` imports no FastAPI and no ORM — every component may use it. Merge into
+`SettingsValidator` (`python-architecture/python-settings.mdc`): `SECRET_KEY: SecretStr`
+(required, no default — generate with `openssl rand -hex 32`; reuse the sqladmin panel's
+`SECRET_KEY` when it is installed), `JWT_ALGORITHM: str = "HS256"`,
+`ACCESS_TOKEN_EXPIRE_MINUTES: int = 30`.
+
+Helpers contract:
+
+- `create_access_token(subject, expires_delta)` encodes `sub` (string) and `exp` (UTC). Keep
+  `sub` a unique stable string per subject app-wide — `str(user.id)`; prefix it (`"user:1"`)
+  when several subject kinds exist. PyJWT checks `exp` on decode.
+- `verify_password` returns `(valid, new_hash)`: new hashes are Argon2, stored bcrypt hashes
+  still verify and return `new_hash` — persist the rehash on login instead of migrating
+  passwords out of band. Verify against `DUMMY_HASH` when the user is missing so response
+  timing does not reveal valid usernames.
+- `decode_token(token)` returns the `sub` string and raises `TokenExpiredError` when `exp`
+  has passed or `TokenInvalidError` for any other invalid or tampered token — both `AuthError`
+  subclasses living in `security.py` (`python-architecture/python-exceptions.mdc`), so callers
+  import no third-party types and PyJWT's expired-vs-invalid distinction survives the wrap.
+
+## User model
+
+`project/components/users/models.py` follows `python-sqlalchemy` (`Base` / `TimeMixin`,
+BigInteger primary keys, domain id types). Authentication requires these fields:
+
+```python
+from sqlalchemy import BigInteger, Boolean, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from project.base.models import Base, TimeMixin
+from project.datatypes import UserIdT
+
+
+class User(Base, TimeMixin):
+    __tablename__ = "users"
+
+    id: Mapped[UserIdT] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+```
+
+`BigInteger` is passed explicitly: `Mapped[UserIdT]` resolves no Core type on its own — a
+NewType over `int` degrades to `Integer`, and over `Annotated` fails at mapping. Registering
+your id types once in `Base.type_annotation_map` (`{UserIdT: BigInteger}`) is the
+once-per-repo alternative (`python-sqlalchemy`).
+
+| Field | Contract | Used by |
+|---|---|---|
+| `id` | BigInteger PK, domain type `UserIdT` | token `sub`, user loading |
+| `email` | unique + indexed, `String(320)`; substitute `username` with the same constraints when the repo logs in by name | login lookup |
+| `password_hash` | `String(255)` (Argon2 ≈ 97 chars, bcrypt 60); never in admin forms (`python-sqladmin`), never logged | `verify_password` |
+| `is_active` | `default=True` | `get_current_active_user` |
+
+When the repo already has a `User` model, require these fields on it instead of adding a
+second identity model. Register the model with a `SQLAlchemyFactory` in `tests/factories.py`
+(`python-polyfactory`) and generate an Alembic revision after adding fields
+(`python-alembic`).
+
+## Repository
+
+`UserRepository` extends the generic base (`BASE_REPOSITORIES.md` →
+`project/base/repositories.py`); it needs only the login lookup — `get_or_none`,
+`update_fields_and_save`, `new`, and `save` come from `ORMRepository`.
+
+```python
+from sqlalchemy import select
+
+from project.base.repositories import ORMRepository
+from project.components.users.models import User
+
+
+class UserRepository(ORMRepository[User]):
+    _model = User
+
+    @classmethod
+    async def get_by_email(cls, email: str) -> User | None:
+        async with cls.get_session() as session:
+            return (await session.scalars(select(User).where(User.email == email))).first()
+```
+
+Register once in `project/container.py`
+(`python-architecture/python-di.mdc`):
+
+```python
+user_repository = LazyService("project.components.users.repositories:UserRepository")
+```
+
+## Endpoints
+
+Schemas first — `project/components/users/schemas.py`:
+
+```python
+from pydantic import BaseModel
+
+from project.datatypes import UserIdT
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class CurrentUser(BaseModel):
+    id: UserIdT
+    email: str
+    is_active: bool
+```
+
+Dependencies return the `CurrentUser` schema, never the ORM `User`: presentation imports no
+models, the admin panel stays the only presentation-side model importer (`python-sqladmin`).
+
+`tokenUrl` must equal the versioned login path (`python-fastapi` URL versioning). Raise
+`HTTPException` only in `endpoints.py`; the app exception handlers shape the body.
+
+```python
+from datetime import timedelta
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from project.libs.security import (
+    DUMMY_HASH,
+    TokenExpiredError,
+    TokenInvalidError,
+    create_access_token,
+    decode_token,
+    verify_password,
+)
+from project.components.users.schemas import CurrentUser, Token
+from project.container import Container
+from project.settings import Settings
+
+router = APIRouter(prefix="/users")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/v1/token")
+
+
+@router.post("/v1/token")
+async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    user = await Container().user_repository.get_by_email(form.username)
+    valid, new_hash = verify_password(form.password, user.password_hash if user else DUMMY_HASH)
+    if user is None or not valid:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if new_hash:
+        await Container().user_repository.update_fields_and_save(user, password_hash=new_hash)
+    return Token(
+        access_token=create_access_token(
+            user.id,
+            timedelta(minutes=Settings().ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
+    )
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> CurrentUser:
+    try:
+        user_id = int(decode_token(token))
+    except TokenExpiredError as e:
+        raise HTTPException(
+            status_code=401,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+    except (TokenInvalidError, ValueError) as e:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+    user = await Container().user_repository.get_or_none(user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return CurrentUser(id=user.id, email=user.email, is_active=user.is_active)
+
+
+async def get_current_active_user(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> CurrentUser:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+```
+
+Protect routes with the dependency — per route or the whole router. Wrap protected responses
+in the shared envelope when the repo uses one (`ApiResponseSchema[T]` from
+`project/base/schemas.py`, `python-fastapi`); `Token` stays bare — the OAuth2 password flow
+and Swagger UI's Authorize button read `access_token` from the top level, an envelope breaks
+the authorize flow:
+
+```python
+from project.base.schemas import ApiResponseSchema
+
+
+@router.get("/v1/me")
+async def me(
+    current_user: Annotated[CurrentUser, Depends(get_current_active_user)],
+) -> ApiResponseSchema[CurrentUser]:
+    return ApiResponseSchema(data=current_user)
+
+
+orders = APIRouter(dependencies=[Depends(get_current_user)])
+```
+
+Other components import the dependencies from the users endpoints (presentation may import
+presentation). Write paths store `get_password_hash(...)` in `password_hash`; never log
+tokens or password hashes.
+
+## layers.toml
+
+```toml
+[libs.jwt]
+allowed_in = ["libs"]
+
+[libs.pwdlib]
+allowed_in = ["libs"]
+```
+
+`jwt` and `pwdlib` stay inside `project/libs/security.py`; components import the helpers, not
+the libraries.
+
+## Tests
+
+Cover the flow in e2e (`python-tests`) with a factory-built user (`password_hash` =
+`get_password_hash(...)`): login rejects a wrong password and an unknown user (401), a valid
+token reaches a protected route, tampered tokens are rejected with "Could not validate
+credentials" while an expired one answers "Token has expired", `is_active=False` gets 400
+through `get_current_active_user`. Expired tokens: create one with
+`create_access_token(user.id, timedelta(seconds=-1))` instead of waiting or freezing the
+clock. Do not `patch` `jwt` or pwdlib (`patch-linter`).

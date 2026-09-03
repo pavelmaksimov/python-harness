@@ -93,8 +93,8 @@ off). If it is added, copy the sibling `dddlint.yaml` to the repository root.
 
 ```text
 Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-sqladmin · python-redis · python-fastapi-limiter · python-telegram · python-monitoring
-Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · python-coverage (optional)
+Adapters      python-fastapi · python-jwt · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-sqladmin · python-redis · python-fastapi-limiter · python-telegram · python-monitoring
+Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · dddlint (optional) · python-coverage (optional)
 ```
 
 Recommended set for a FastAPI + Postgres service: every core and adapter row
@@ -106,7 +106,12 @@ as strict enforcement, and `dddlint` as optional unique-name enforcement. Add `p
 the repo is (or will be) a publishable Python library with a public API; skip
 it for internal apps/services.
 For a FastAPI API, add `python-fastapi`; ask separately whether Prometheus
-monitoring is needed and add `python-monitoring` only when selected.
+monitoring is needed and add `python-monitoring` only when selected. Ask whether
+users authenticate with JWT access tokens; a yes selects `python-jwt` (PyJWT +
+pwdlib Argon2; token endpoint and `get_current_user` dependency; render
+`SECURITY.md` into `project/libs/security.py`) — only with the database
+bundle, whose `User` model fields the rule designs. Static operator token gates
+stay in `python-fastapi`.
 Skip `python-fastapi` when the repo has no inbound HTTP API.
 Skip `python-base-client` when the repo has no outbound HTTP adapters. Skip an adapter
 when the repo has no database or no Redis cache. A selected database installs
@@ -135,6 +140,7 @@ pairs with any project layout.
 | `python-tooling` | Python tooling | installable | uv, Ruff, Black, isort, pre-commit, log call sites | https://github.com/pavelmaksimov/python-harness | Rule: `harnesses/rules/python-tooling/` → `.cursor/rules/python-tooling/`. Merge selected Ruff / Black / isort tables from sibling `PYPROJECT.toml` into repo-root `pyproject.toml`; render sibling `PRE_COMMIT.yaml` into repo-root `.pre-commit-config.yaml`. Adapt package/test paths and selected hooks; preserve existing files unless the user approves a merge or replacement |
 | `python-workflow` | Python workflow | installable | Navigate from `project/container.py` and Python modules; verify tasks through subagents; preserve reusable research; propose uncreated commits | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-workflow/` → `.cursor/rules/python-workflow/` |
 | `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers; indexes the admin-panel and rate-limiting rules that live in the same dir |
+| `python-libs` | Python helper libraries | installable | Always-on index and disclosed implementations for FSM, retry, outbound HTTP, and speech helpers; indexes the admin-panel, rate-limiting, and JWT rules that live in the same dir |
 | `python-architecture` | Python structure | installable | Module layout, layers, adapters, domain types, `layers.toml`; sibling rule files: `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`, `python-development-rules.mdc` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-architecture/` → `.cursor/rules/python-architecture/` |
 | `python-fsm` | Python FSM | installable | StateMachine / AsyncStateMachine, validated transitions | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-fsm.mdc` → `.cursor/rules/python-libs/python-fsm.mdc`; render `python-libs/FSM.md` to `project/libs/fsm.py` if missing |
 | `python-retry` | Python retry | installable | `retry_on_exception` / `retry_unless_exception` for transient I/O | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-retry.mdc` → `.cursor/rules/python-libs/python-retry.mdc`; render `python-libs/RETRY.md` to `project/libs/retry.py` if missing |
@@ -165,6 +171,7 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | ID | Name | Kind | Summary | Upstream | Install from |
 |---|---|---|---|---|---|
 | `python-fastapi` | FastAPI HTTP | installable | FastAPI, SSE, ORJSON, URL versioning, AppError handlers, httpx, uvloop | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-fastapi/` → `.cursor/rules/python-fastapi/` |
+| `python-jwt` | JWT auth | installable | PyJWT HS256 access tokens (token endpoint, `get_current_user` dependency) + pwdlib Argon2 password hashing with bcrypt rehash on login; designs the `User` model fields | https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/ | `harnesses/rules/python-libs/python-jwt.mdc` → `.cursor/rules/python-libs/python-jwt.mdc`; render `python-libs/SECURITY.md` to `project/libs/security.py` if missing. Packages: `uv add pyjwt "pwdlib[argon2]"`. With the database bundle; FastAPI APIs only |
 | `python-base-client` | HTTP adapter helper | installable | Choose httpx `AsyncApi` or `SyncApi`; AppError mapping, retries, Session reuse | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-libs/python-base-client.mdc` → `.cursor/rules/python-libs/python-base-client.mdc`; render only the selected `python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md` to `project/infrastructure/base/http_client.py` |
 | `python-sqlalchemy` | SQLAlchemy ORM | installable | ORM models, `Base` / `TimeMixin`, generic `ORMRepository` | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-sqlalchemy/` → `.cursor/rules/python-sqlalchemy/` |
 | `sqlalchemy` | SQLAlchemy 2.x practices (skill) | installable | Low-level, architecture-neutral ORM models, 2.0 query API, loader strategies, session semantics, dialect rules (PostgreSQL, MySQL/MariaDB, SQLite, SQL Server, Oracle) | https://docs.sqlalchemy.org/ | Skill: `harnesses/skills/sqlalchemy/` → `.cursor/skills/sqlalchemy/` (copy the whole dir: `SKILL.md` + `references/`). Content follows the official SQLAlchemy documentation; skill from this repo. Pairs with `python-sqlalchemy` (structure) and `python-db-sessions` (sessions) but forces no architecture |
@@ -179,6 +186,7 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 Templates (copy only if missing): `python-base-client` → developer chooses
 `harnesses/rules/python-libs/ASYNC_CLIENT.md` or `SYNC_CLIENT.md`; render only that
 implementation into `project/infrastructure/base/http_client.py` (never combine them);
+`python-jwt` → `SECURITY.md` into `project/libs/security.py`;
 `python-sqlalchemy` → `BASE_MODELS.md` into `project/base/models.py` and, when multiple
 repositories share the base, `BASE_REPOSITORIES.md` into `project/base/repositories.py`;
 `python-db-sessions` → `DATABASE.md` into `project/infrastructure/adapters/database.py`;

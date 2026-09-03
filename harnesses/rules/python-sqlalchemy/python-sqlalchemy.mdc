@@ -25,7 +25,11 @@ change and apply it. Do not add a migrator to a repo that creates tables from me
 
 Models inherit `Base` / `TimeMixin` from `project.base.models`.
 Foreign keys set `ondelete` when cascade/restrict matters. Identity and other entity keys use
-domain types from `project/datatypes.py`, not bare `int` / `str`. Primary keys: `BigInteger`.
+domain types from `project/datatypes.py`, not bare `int` / `str`. Primary keys: `BigInteger`,
+passed explicitly — a domain `NewType` over `int` resolves to `Integer`, and over
+`Annotated[...]` fails to resolve at all, so `Mapped[UserIdT]` alone never yields `BigInteger`.
+Alternatively register your id NewTypes once in `Base.type_annotation_map`
+(`{UserIdT: BigInteger}`).
 Postgres enums: `class Role(str, enum.Enum)` + `mapped_column(Enum(Role, name="role_enum"))`.
 Many-to-many: `ARRAY` of ids (`Mapped[list[TagIdT]]`), not an association table.
 Index columns used for filter, sort, or FK lookup.

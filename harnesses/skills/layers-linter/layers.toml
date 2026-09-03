@@ -120,6 +120,12 @@ allowed_in = ["admin"]
 [libs.fastapi_limiter]
 allowed_in = ["presentation", "adapters"]
 
+[libs.jwt]
+allowed_in = ["libs"]
+
+[libs.pwdlib]
+allowed_in = ["libs"]
+
 [libs.httpx]
 allowed_in = ["adapters"]
 

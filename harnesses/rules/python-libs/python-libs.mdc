@@ -1,5 +1,5 @@
 ---
-description: Discover existing FSM, retry, outbound HTTP, speech, admin-panel, and rate-limiting libraries before reimplementing them
+description: Discover existing FSM, retry, outbound HTTP, speech, admin-panel, rate-limiting, and JWT libraries before reimplementing them
 alwaysApply: true
 ---
 
@@ -18,6 +18,7 @@ repository.
 | OpenAI speech-to-text or text-to-speech through the existing LLM client | `stt` / `tts` | this rule | [`SPEECH.md`](SPEECH.md) |
 | Operator CRUD UI over SQLAlchemy ORM models | sqladmin `Admin` / `ModelView` | [`python-sqladmin.mdc`](python-sqladmin.mdc) | upstream package `sqladmin[auth]` |
 | Rate limiting inbound FastAPI routes (Redis-backed) | fastapi-limiter `RateLimiter` | [`python-fastapi-limiter.mdc`](python-fastapi-limiter.mdc) | upstream package `fastapi-limiter` |
+| User JWT authentication on FastAPI routes | PyJWT + pwdlib in `libs/security.py` | [`python-jwt.mdc`](python-jwt.mdc) | [`SECURITY.md`](SECURITY.md) |
 
 Use ordinary conditionals for independent flags or lifecycles without a meaningful transition
 graph.

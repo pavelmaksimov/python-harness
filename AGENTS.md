@@ -227,9 +227,10 @@ When running or editing the setup skill:
    `python-monitoring` only when yes. Ask one yes/no question for a database and select
    `python-sqlalchemy`, the `sqlalchemy` best-practices skill, `python-db-sessions`, and `python-alembic` together when
    yes. Ask separately whether Redis caching is used. Ask whether users
-   authenticate with JWT; a yes selects `python-jwt` with `python-fastapi`
-   (render `python-libs/SECURITY.md` into `project/libs/security.py`; static
-   operator token gates stay in `python-fastapi`). For `python-base-client`,
+   authenticate with JWT; a yes selects `python-jwt` with `python-fastapi` and
+   the database bundle (render `python-libs/SECURITY.md` into
+   `project/libs/security.py`; static operator token gates stay in
+   `python-fastapi`). For `python-base-client`,
    ask the developer to choose
    `harnesses/rules/python-libs/ASYNC_CLIENT.md` (httpx async) or `SYNC_CLIENT.md`
    (httpx sync), then render only that implementation to `http_client.py`.
@@ -274,3 +275,7 @@ Goal: the next agent session should not repeat the same disagreement.
 - Prefer the smallest change that keeps README, layout, and setup skill aligned.
 - Do not turn this repo into an app, CLI installer binary, or package registry
   unless the user explicitly asks.
+
+
+## Versioning
+The version is only uploaded by the developer. 
