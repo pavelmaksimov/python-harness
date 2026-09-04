@@ -66,7 +66,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    when installed, the workflow records notable completed changes and updates the current entry
    when a task is refined. Libraries use versioned release sections; projects without library
    versions use ISO-date sections. Core also includes `python-libs` for the always-on
-   helper index and disclosed implementations. Core `python-architecture` is one rule dir with seven
+   helper index and disclosed implementations. Core also includes `python-stdlib-first-review`
+   (copy the whole skill dir): on-demand Suggest-mode review that replaces
+   hand-rolled loops and caches with itertools, functools, cachetools,
+   collections, heapq, bisect, and operator. Core `python-architecture` is one rule dir with seven
    sibling rule files: `python-architecture.mdc` (module layout),
    `python-entity.mdc` (rich Entity domain model — identity, invariants, behavior; the
    `domain` layer replaces the former Service layer and `service.py`),
@@ -237,7 +240,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `conventional-commits`, `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (seven sibling rule files: structure, entity, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `conventional-commits`, `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (seven sibling rule files: structure, entity, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`, `python-stdlib-first-review` (whole skill dir); plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |
