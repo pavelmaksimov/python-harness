@@ -37,9 +37,12 @@ Map in `error_handling` so domain code never sees httpx exceptions (`python-arch
 Per-adapter subclasses of those types are optional. Override `error_handling` / `process_response` /
 `response_to_native` when the API needs extra mapping. HTTP status is `response.status_code`.
 
-## Session and JSON
+## Connection and JSON
 
-Reuse connections with `async with client.api.Session():` (or `with` for `SyncApi`). Decode JSON with
+Each `call_endpoint` opens its own `Session` (`httpx.Client` / `httpx.AsyncClient`) unless a
+`session` is passed. A passed session is borrowed: it is reused for connection pooling and never
+closed inside — open it outside (e.g. `with` / `async with` around a batch of calls, lifespan, or
+DI) and close it there. Decode JSON with
 orjson. Do not call `raise_for_status` — status mapping lives in `error_handling`.
 
 ```python

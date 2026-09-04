@@ -8,7 +8,7 @@ synchronous outbound HTTP. Requires `httpx`, `orjson`, `llm_common`, and the exc
 import logging
 import time
 import typing as t
-from contextlib import contextmanager
+from contextlib import nullcontext
 
 import httpx
 import orjson
@@ -189,7 +189,7 @@ class SyncApi:
     ServerError = ServerError
     ClientError = ClientError
     ConnectionError = ExternalHTTPConnectionError
-    ClientSession = httpx.Client
+    Session = httpx.Client
     name_for_monitoring: str
 
     def __init__(
@@ -210,7 +210,6 @@ class SyncApi:
             LoggingCallback(log_level=log_level, logging_extra_data=logging_extra_data),
             TelemetryCallback(name_for_monitoring=name_for_monitoring),
         ]
-        self.session = None
 
     def request_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
         for callback in self.callbacks:
@@ -227,18 +226,6 @@ class SyncApi:
     def response_data_callback(self, *args: t.Any, **kwargs: t.Any) -> None:
         for callback in self.callbacks:
             callback.response_data_callback(*args, **kwargs)
-
-    @contextmanager
-    def Session(self, **session_settings):  # noqa: N802
-        if self.session:
-            yield self.session
-        else:
-            try:
-                with self.ClientSession(**session_settings) as session:
-                    self.session = session
-                    yield session
-            finally:
-                self.session = None
 
     def call_endpoint(
         self,
@@ -261,7 +248,7 @@ class SyncApi:
         headers = self.headers | (headers or {})
         request_settings = self.request_settings | (request_settings or {})
 
-        with session or self.session or self.Session() as sess:
+        with nullcontext(session) if session is not None else self.Session() as sess:
             self.request_callback(
                 method, url, headers=headers, params=params, data=data, json=json
             )
