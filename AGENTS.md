@@ -164,7 +164,9 @@ After a successful installable copy, the setup skill also writes
 
 - One catalog ID per directory: `harnesses/rules/<id>/` with one or more `.mdc`
   files. That ID is one layer, not the whole stack.
-- Frontmatter: `description`, and either `alwaysApply: true` or `globs`.
+- Frontmatter: `description`, and either `alwaysApply: true` or `globs`. Start
+  `description` with the `MUST USE for` prefix and state when the rule applies
+  (e.g. `MUST USE for editing layers.toml or cross-layer imports`).
 - Guidance needed outside its `globs` must have a trigger pointer in an
   `alwaysApply: true` base rule.
 - English bodies. Default package root is `project/`; note in the README if the
@@ -223,7 +225,9 @@ After a successful installable copy, the setup skill also writes
 ## Authoring installable skills
 
 - One directory per skill: `harnesses/skills/<id>/SKILL.md`.
-- Frontmatter: `name`, `description` (third person, what + when).
+- Frontmatter: `name`, `description` — start it with the `MUST USE for` prefix
+  naming when the skill applies, then keep it third person, what + when
+  (e.g. `MUST USE for creating or maintaining CHANGELOG.md.`).
 - Keep `SKILL.md` concise; put long reference in sibling files if needed.
 - Prefer English skill bodies in this public repo.
 - Linter config templates (`layers.toml`, `di.toml`) and skill examples use
