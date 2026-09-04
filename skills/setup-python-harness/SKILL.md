@@ -36,7 +36,10 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    `python-fastapi-limiter` when
    routes declare `RateLimiter` dependencies; `python-jwt` when routes
    authenticate users (`OAuth2PasswordBearer`, `Depends(get_current_user)`, or
-   `project/libs/security.py`) — FastAPI APIs with a database only), and
+   `project/libs/security.py`) — FastAPI APIs with a database only; a Typer CLI
+   (`python-typer`, with the `cli-design` skill) when
+   `project/infrastructure/apps/cli.py`, `components/*/cli.py`, a `typer`
+   dependency, or a `[project.scripts]` entry exists), and
    `layers-linter` and `domain-types-linter` with the stack; add `patch-linter`
    when automated tests are selected. Offer `python-coverage` as **optional**
    when automated tests are selected (never auto-derive it): full mode gates
@@ -124,6 +127,9 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    - `python-db-sessions` with `python-sqlalchemy` → `CONFTEST_DATABASE.md` into
      `tests/conftest.py`;
    - `python-redis` → Redis fixtures from `CACHE.md` into `tests/conftest.py`;
+   - `python-typer` → render `harnesses/rules/python-typer/CLI_HELPERS.md` into
+     `project/infrastructure/base/cli.py` and `CLI_APP.md` into
+     `project/infrastructure/apps/cli.py` (copy only if missing);
    - `python-sqladmin` / `python-fastapi-limiter` → no
      templates; ensure repo-root `layers.toml` carries the `admin` layer (sqladmin
      only) and the matching `sqladmin` / `fastapi_limiter` lib entries
@@ -203,7 +209,7 @@ wording and skip any question with one unambiguous repository-derived answer.
 |---:|---|---|
 | 1 | Install scope | Install into this repository (`.cursor/`, recommended) or personally (`~/.cursor/`)? |
 | 2 | Library | Is this project a publishable library? **yes / no** |
-| 3 | Application type | What kind of application is it? **FastAPI API / Telegram bot / both / neither (worker, CLI, or library only)** |
+| 3 | Application type | What kind of application is it? **FastAPI API / Telegram bot / CLI (Typer) / a combination / neither (worker or library only)** |
 | 4 | Test strategy | Will this project have automated tests? **yes / no** |
 | 5 | Coverage gate | Only when stage 4 = yes: enforce a coverage gate with `python-coverage`? **full mode (branch ≥95%) / diff mode — changed lines only, for a legacy baseline / no** |
 | 6 | Database | Will this project need a database? **yes / no** |
@@ -246,6 +252,7 @@ Derive the install set mechanically from the answers:
 | STT, TTS, or both | `python-libs` speech template `python-libs/SPEECH.md`; install only the selected provider/media dependencies |
 | Outbound HTTP | `python-base-client` with exactly the chosen async or sync template |
 | Telegram bot | `python-telegram` |
+| CLI (stage 3) | `python-typer`; render `python-typer/CLI_HELPERS.md` into `project/infrastructure/base/cli.py` and `CLI_APP.md` into `project/infrastructure/apps/cli.py`; add the `cli-design` skill for on-demand interface design and review |
 | Strict DI enforcement | `di-linter` and its companion-rule patches |
 | Unique-name enforcement (stage 14) | `dddlint`; copy sibling `dddlint.yaml` to repo-root `dddlint.yaml` when missing |
 | Changelog approved (stage 16) | `keep-a-changelog`; use versioned-library mode when stage 2 = yes, otherwise dated-project mode |

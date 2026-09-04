@@ -12,7 +12,7 @@ It is both:
 Default package root is `project/` (substitute globs if the repo differs).
 Async entrypoints use uvloop: FastAPI via uvicorn `--loop uvloop`; other
 processes via `asyncio.Runner(loop_factory=uvloop.new_event_loop)`
-(`python-telegram` for the bot).
+(`python-telegram` for the bot, `python-typer` for the CLI).
 
 For non-Python agent harnesses, standards, and reference tooling, see
 [agent-setup](https://github.com/pavelmaksimov/agent-setup).
@@ -93,7 +93,7 @@ off). If it is added, copy the sibling `dddlint.yaml` to the repository root.
 
 ```text
 Core          conventional-commits · keep-a-changelog (optional) · python-tooling · python-workflow · python-libs · python-architecture · python-fsm · python-retry · python-tests · python-freezegun · python-polyfactory · python-semver (libraries)
-Adapters      python-fastapi · python-jwt · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-sqladmin · python-redis · python-fastapi-limiter · python-telegram · python-monitoring
+Adapters      python-fastapi · python-jwt · python-base-client · python-sqlalchemy · sqlalchemy · python-db-sessions · python-alembic · python-sqladmin · python-redis · python-fastapi-limiter · python-telegram · python-typer · python-monitoring
 Enforcement   layers-linter · domain-types-linter · patch-linter · di-linter (optional) · dddlint (optional) · python-coverage (optional)
 ```
 
@@ -120,7 +120,11 @@ when the repo has no database or no Redis cache. A selected database installs
 a yes selects `python-sqladmin` (SQLAlchemy models only), only with the database
 bundle. Ask whether inbound FastAPI
 routes need rate limiting; a yes selects `python-fastapi-limiter` together with
-`python-redis` (shared Redis client and Settings). Skip
+`python-redis` (shared Redis client and Settings). Ask whether the project also ships a
+command-line interface; a yes selects `python-typer` together with the `cli-design` skill
+and renders `python-typer/CLI_HELPERS.md` into `project/infrastructure/base/cli.py` and
+`python-typer/CLI_APP.md` into `project/infrastructure/apps/cli.py`. Skip `python-typer`
+when the repo has no CLI. Skip
 `python-telegram` when the repo has no Telegram bot. Skip `python-monitoring`
 when Prometheus monitoring is not selected. Render the speech adapter from
 `python-libs` (`SPEECH.md`) when the project uses speech-to-text,
@@ -180,6 +184,8 @@ approved optional harness (do not copy `COMPANION.md` to the target).
 | `python-redis` | Redis cache | installable | Prefixed keys, `CacheRepository`, `redis_atransaction`, orjson | https://github.com/pavelmaksimov/python-harness | `harnesses/rules/python-redis/` → `.cursor/rules/python-redis/` |
 | `python-fastapi-limiter` | Route rate limiting | installable | fastapi-limiter `RateLimiter` dependencies on routers/endpoints; Redis counters, 429 + `Retry-After` | https://github.com/long2ice/fastapi-limiter | `harnesses/rules/python-libs/python-fastapi-limiter.mdc` → `.cursor/rules/python-libs/python-fastapi-limiter.mdc`. Package: `uv add fastapi-limiter`. Install with `python-redis` (shared Redis client and Settings); FastAPI APIs only |
 | `python-telegram` | Telegram bot | installable | python-telegram-bot polling, handlers, error decorators | https://docs.python-telegram-bot.org/ | `harnesses/rules/python-telegram/` → `.cursor/rules/python-telegram/` |
+| `python-typer` | CLI (Typer) | installable | Typer command modules, root app assembly, `run_async` / `cli_errors`, exit codes 0/1/2, CliRunner tests | https://typer.tiangolo.com/ | Rule: `harnesses/rules/python-typer/` → `.cursor/rules/python-typer/`. Render sibling `CLI_HELPERS.md` into `project/infrastructure/base/cli.py` and `CLI_APP.md` into `project/infrastructure/apps/cli.py` (copy only if missing). Package: `uv add typer`. Install with the `cli-design` skill |
+| `cli-design` | CLI design (skill) | installable | On-demand CLI interface design and review: command tree, flags vs prompts, stdout/stderr contract, exit codes, config layering, compatibility, distribution, anti-patterns | https://github.com/microsoft/amplifier-bundle-systems-design | Skill: `harnesses/skills/cli-design/` → `.cursor/skills/cli-design/`. Patterns adapted from amplifier `system-type-cli-tool`, not vendored. Install together with `python-typer` |
 | `python-monitoring` | Prometheus metrics | installable | FastAPI `/prometheus`, action tracking, monitored httpx | https://pypi.org/project/llm_common/ | Rule: `harnesses/rules/python-monitoring/` → `.cursor/rules/python-monitoring/`. Tool from PyPI `llm_common` (`uv add llm_common prometheus_client`); skill/rule from this repo. Do not confuse with PyPI `pycommons`. |
 
 Templates (copy only if missing): `python-base-client` → developer chooses
@@ -192,7 +198,9 @@ repositories share the base, `BASE_REPOSITORIES.md` into `project/base/repositor
 `python-alembic` → `ENV.md` into
 `alembic/env.py`; `python-redis` → adapter from `CACHE.md` into
 `project/infrastructure/adapters/acache.py` and `CacheRepository` into
-`project/base/repositories.py`; `python-telegram` → `TELEGRAM.md`
+`project/base/repositories.py`; `python-typer` → `CLI_HELPERS.md` into
+`project/infrastructure/base/cli.py` and `CLI_APP.md` into
+`project/infrastructure/apps/cli.py`; `python-telegram` → `TELEGRAM.md`
 into `project/infrastructure/base/telegram.py` and `BOT.md` into
 `project/infrastructure/apps/bot.py`; speech (`python-libs`) → `SPEECH.md` into
 `project/infrastructure/adapters/speech.py` (only when the repo uses speech I/O).

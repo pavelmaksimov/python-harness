@@ -86,7 +86,8 @@ This catalog is one language stack, split into layered IDs:
   `python-architecture` (structure, entity, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
-- **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, admin UI
+- **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, CLI
+  (`python-typer` with the `cli-design` skill), admin UI
   (`python-sqladmin`), rate limiting
   (`python-fastapi-limiter`), user JWT auth (`python-jwt`) (only if the repo uses them)
 - **enforcement** — matching linter skills; take `layers-linter` and
@@ -260,7 +261,9 @@ When running or editing the setup skill:
    (`duplicate` rule only; vocabulary features off); on approval copy its
    sibling `dddlint.yaml` to the target repo root when missing. Ask whether the target is a publishable library and
    add `python-semver` when it is. Ask whether the application is a FastAPI API,
-   Telegram bot, both, or neither; a FastAPI API selects `python-fastapi`.
+   Telegram bot, CLI, a combination, or neither; a FastAPI API selects
+   `python-fastapi`; a CLI selects `python-typer` with the `cli-design` skill
+   and renders `harnesses/rules/python-typer/CLI_HELPERS.md` and `CLI_APP.md`.
    Ask separately whether Prometheus monitoring is needed and select
    `python-monitoring` only when yes. Ask one yes/no question for a database and select
    `python-sqlalchemy`, the `sqlalchemy` best-practices skill, `python-db-sessions`, and `python-alembic` together when

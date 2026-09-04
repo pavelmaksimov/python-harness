@@ -1,0 +1,97 @@
+---
+description: MUST USE for editing CLI command modules (`**/cli.py`) or the Typer app — commands, options, output, exit codes, CliRunner tests
+globs:
+  - "**/cli.py"
+alwaysApply: false
+---
+
+# CLI adapter (Typer)
+
+Runtime: [Typer](https://typer.tiangolo.com/) (Click + bundled Rich). Not `argparse`, not raw
+`click`, not `fire`. Package: `uv add typer`.
+
+Typer runs commands synchronously and starts no event loop. Keep command functions `def`; call
+async collaborators through `run_async()` from `project.infrastructure.base.cli`
+(`asyncio.Runner(loop_factory=uvloop.new_event_loop)`).
+
+## Layout
+
+Command modules are presentation (CLI I/O), like endpoints and handlers: take collaborators via
+`Container()`, call use cases. Do not import SQLAlchemy, `AsyncSession`, or Redis in `cli.py`.
+
+```text
+project/components/{name}/cli.py    component commands: app = typer.Typer() + @app.command()
+project/infrastructure/apps/cli.py  root app: callback, add_typer, main() entry
+project/infrastructure/base/cli.py  run_async, cli_errors, stderr console
+```
+
+Register each component app from `project.infrastructure.apps.cli` with `app.add_typer(...)`:
+without a `name` the component's commands join the top level, with `name="users"` they nest
+(`users create`). When two components would define the same top-level command name, nest one
+of them under a group name. If the modules are missing, copy sibling `CLI_HELPERS.md` into
+`project/infrastructure/base/cli.py` and `CLI_APP.md` into
+`project/infrastructure/apps/cli.py`.
+
+Entry point in `pyproject.toml`:
+`[project.scripts]` `tool-name = "project.infrastructure.apps.cli:main"`. Shell completion
+(`--install-completion`) works for the installed command, not for `python -m`.
+
+## Declaring commands
+
+Declare CLI parameters with `Annotated` (`Annotated[str, typer.Option(help="…")]`), not
+default-value `typer.Option(...)` calls. Document every command and the root callback with a
+docstring — it becomes the `--help` text — and put `help=` on every non-obvious parameter.
+
+- `typer.Argument` for the primary noun the command operates on; more than two positionals
+  means the command needs options or splitting. Everything else is `typer.Option`.
+- Closed value sets: `Enum` or `Literal` — choices render in `--help`.
+- `bool` flags get automatic `--x / --no-x`; never require `--x=true`.
+- Filesystem values: `Path` with `exists=` / `file_okay=` / `dir_okay=` validation; file or
+  stdin input: `typer.FileText` (accepts `-` for stdin).
+- Prompts (`prompt=`, `confirmation_prompt=`, `typer.confirm`) only for first-run and
+  destructive operations, always with a flag equivalent (`--yes`, `--name`) so scripts can
+  bypass them. When stdin is not a TTY, do not prompt — fail and name the flag.
+- Global flags (`--verbose`, `--config`, `--yes`) live on the root `@app.callback()` and stay
+  few; command flags stay on the command; secondary groups go to a `rich_help_panel`.
+
+Config precedence: explicit option → `Settings()`. Give an overridable option a `None` default
+and fall back to `Settings().PARAM` (`python-architecture/python-settings.mdc`). Do not declare
+`envvar=` on CLI parameters — env vars are the Settings contract, not a second one. Secrets stay
+`SecretStr` in `Settings`.
+
+## Output and logs
+
+stdout is data, stderr is messages — `tool list | wc -l` must be exact. Print result data with
+`print` or Rich; progress, warnings, and everything non-data go through the `Console(stderr=True)`
+from `project.infrastructure.base.cli`. Respect `NO_COLOR`; Rich drops styling on non-terminals
+itself. `setup_logging()` configures a stdout console handler
+(`python-architecture/python-logging.mdc`); the CLI entry routes it to stderr so logs never mix
+with piped data (`CLI_APP.md`).
+
+## Errors and exit codes
+
+Commands do not catch. Decorate each command with `cli_errors` from
+`project.infrastructure.base.cli` (outermost, like `processing_errors` in `python-telegram`):
+`AppError` → message on stderr + `typer.Exit(1)`. Unexpected exceptions propagate — Typer prints
+a Rich traceback; keep `pretty_exceptions_show_locals=False` (the default) so locals with secrets
+never land in CI logs.
+
+| Exit | Meaning |
+|---|---|
+| `0` | success |
+| `1` | `AppError` — the operation failed |
+| `2` | usage error — bad flag or argument (Click default) |
+
+Do not invent more codes until a caller must branch on them; document them when that happens.
+Use `typer.Exit()` to stop early on a success path and `typer.Abort()` after a declined
+confirmation.
+
+## Testing
+
+Drive commands with `typer.testing.CliRunner` in `tests/test_modules/` (`python-tests`):
+`result = runner.invoke(app, ["create", "Camila"])`; assert `result.exit_code` and
+`result.stdout`. Feed prompts with `input="…\n"`. Stub collaborators through
+`Container.local(...)`.
+
+For the interface itself — command tree, flag design, output contract, distribution — read the
+`cli-design` skill before writing commands.

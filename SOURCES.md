@@ -42,6 +42,8 @@ line inside the cell or comma-separated. No secrets, tokens, or private URLs.
 | `python-redis` | Cache design of this repo | https://github.com/pavelmaksimov/python-harness |
 | `python-fastapi-limiter` | fastapi-limiter `RateLimiter` usage | https://github.com/long2ice/fastapi-limiter |
 | `python-telegram` | python-telegram-bot polling / handlers | https://docs.python-telegram-bot.org/ |
+| `python-typer` | Typer explicit app, commands, options/arguments, callbacks, parameter types, testing (`CliRunner`), package scripts; sync commands only — async bridge via `asyncio.Runner`; usage exit code 2 | https://typer.tiangolo.com/, https://github.com/fastapi/typer, https://click.palletsprojects.com/ |
+| `cli-design` | CLI system-type patterns adapted (not vendored): command trees, flag discipline, stdout/stderr contract, exit codes, config layering, output-as-API semver, anti-patterns | https://github.com/microsoft/amplifier-bundle-systems-design, https://github.com/microsoft/amplifier-bundle-systems-design/blob/main/skills/system-type-cli-tool/SKILL.md |
 | `python-monitoring` | `llm_common` Prometheus helpers (not PyPI `pycommons`) | https://pypi.org/project/llm_common/ |
 | `python-memory` | _Add rows here when the ID is catalogued in README_ |  |
 
