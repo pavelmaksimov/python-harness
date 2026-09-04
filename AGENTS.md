@@ -171,6 +171,9 @@ After a successful installable copy, the setup skill also writes
   installer should substitute.
 - One concern per `.mdc`. Name the layer (tooling, HTTP, persistence); leave
   version pins and Ruff selects to the target `pyproject.toml`.
+- Keep installable rules focused on the target state. Put phased migration
+  workflows in a sibling `MIGRATION.md` or task-specific prompt reached only
+  for an explicit migration; keep those steps out of the main `.mdc` rules.
 - Shared helper implementations live in `harnesses/rules/python-libs/`. Keep design guidance
   in its owning rule ID and link each implementation from `python-libs.mdc`.
 - `python-tooling/PRE_COMMIT.yaml` renders to repo-root
