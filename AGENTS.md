@@ -13,6 +13,9 @@ entries live in [agent-setup](https://github.com/pavelmaksimov/agent-setup).
   README **Catalog version** line. Do not invent a second version format.
 - **Bootstrap skill:** `skills/setup-python-harness/SKILL.md`.
 - **Installable artifacts:** only under typed dirs in `harnesses/`.
+- **Harness analysis:** root `HARNESS_ANALYSIS_TEMPLATE.md`. Use it before
+  adding or materially changing a catalog ID, artifact ownership, or install
+  semantics.
 - **Materials log:** root `SOURCES.md` — single index of every external
   material the harness is built from (see section **Sources log**).
 
@@ -25,6 +28,7 @@ copy. Do not invent a second catalog format.
 VERSION                           catalog semver (source of truth for version)
 README.md                         human + agent catalog (+ mirrored version line)
 AGENTS.md                         rules for working in this repo
+HARNESS_ANALYSIS_TEMPLATE.md      workflow for analysing catalog changes
 SOURCES.md                        materials log: ID → what was taken + links
 skills/setup-python-harness/      bootstrap / recommend / install skill
 .cursor/rules/<id>/               always-on rules for editing this repo (not catalog)
