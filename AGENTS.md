@@ -47,6 +47,24 @@ Always-on Cursor rules for agents editing this catalog live in `.cursor/rules/`
 here. Do not copy them into `harnesses/` unless the user asks to add that ID
 to the Python catalog.
 
+## Agent development workflow
+
+Agents never edit the main checkout (`dev`). One task = one worktree + one
+branch:
+
+1. Create: `git worktree add /home/user/my/python-harness/memory/workflow/-<topic> -b agent/<topic> dev`.
+   Do not reuse another task's worktree or branch.
+2. Work and **commit** there in small Conventional-Commits steps. Uncommitted
+   changes are invisible to review; Author reviews through git
+   (`git diff dev...agent/<topic>`), so the branch must carry the work.
+3. End the reply with the branch name, the worktree path, and review commands.
+   Keep the worktree in place until the merge.
+4. Only author merges (`git merge agent/<topic>` from the main checkout) and
+   cleans up (`git worktree remove <path>`). Never force-remove a worktree with
+   uncommitted changes.
+5. Create a template plan before implementation /home/user/my/python-harness/HARNESS_ANALYSIS_TEMPLATE.md in the dev 
+   branch, not commit.
+
 ## Catalog version
 
 One shared version for the whole installable set (not per ID).
