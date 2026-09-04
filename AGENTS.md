@@ -13,6 +13,8 @@ entries live in [agent-setup](https://github.com/pavelmaksimov/agent-setup).
   README **Catalog version** line. Do not invent a second version format.
 - **Bootstrap skill:** `skills/setup-python-harness/SKILL.md`.
 - **Installable artifacts:** only under typed dirs in `harnesses/`.
+- **Materials log:** root `SOURCES.md` — single index of every external
+  material the harness is built from (see section **Sources log**).
 
 When the catalog and a local copy disagree, fix the README and remove the stale
 copy. Do not invent a second catalog format.
@@ -23,6 +25,7 @@ copy. Do not invent a second catalog format.
 VERSION                           catalog semver (source of truth for version)
 README.md                         human + agent catalog (+ mirrored version line)
 AGENTS.md                         rules for working in this repo
+SOURCES.md                        materials log: ID → what was taken + links
 skills/setup-python-harness/      bootstrap / recommend / install skill
 .cursor/rules/<id>/               always-on rules for editing this repo (not catalog)
 harnesses/
@@ -108,6 +111,23 @@ to a rule (e.g. Polyfactory `FIELDS.md`, `CUSTOM_TYPES.md`) is not an install
 template unless the README copy list names it. Linter configs (`layers.toml`,
 `di.toml`, `dddlint.yaml`) live next to their skills and copy to the target repo root.
 
+## Sources log
+
+- Canonical materials index is root `SOURCES.md`: one row per catalog ID →
+  what was taken + links.
+- Save everything the harness is assembled from: official docs, repos, PyPI
+  pages, plus articles, blog posts, examples, and chats that shaped the content.
+- Update `SOURCES.md` in the same turn when adding or refreshing an installable
+  ID, the setup skill, or install semantics: add the row if missing, append new
+  links, keep `What was taken` short.
+- Detail refresh maps (`harnesses/<type>/<id>/UPSTREAM.md`, local file →
+  upstream URL) stay optional detail; when one exists, link it from the
+  `SOURCES.md` row. Do not mention `UPSTREAM.md` from `.mdc` bodies or other
+  agent-facing siblings.
+- No secrets, tokens, private URLs, or machine-local absolute paths in `SOURCES.md`.
+- Check: every installable ID in the README Catalog has a matching row in
+  `SOURCES.md` with at least one link.
+
 ## Adding or changing catalog entries
 
 1. Edit the matching band table in `README.md` (core / adapters / enforcement).
@@ -122,6 +142,8 @@ template unless the README copy list names it. Linter configs (`layers.toml`,
 6. When the change affects installable content, the setup skill, or install
    semantics, bump root `VERSION` and the README **Catalog version** line
    together (semver).
+7. Update `SOURCES.md` in the same turn (see **Sources log**): add the row if
+   missing, append new links, keep `What was taken` short.
 
 Default Cursor install targets:
 
