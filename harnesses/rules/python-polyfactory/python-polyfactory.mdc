@@ -1,5 +1,5 @@
 ---
-description: Polyfactory test factories — generated typed model data through class-level build and batch
+description: MUST USE for creating typed test data or factories — Polyfactory build, batch, fields, and ORM companions
 globs:
   - tests/**
 alwaysApply: false
@@ -13,7 +13,9 @@ If `tests/factories.py` is missing, copy sibling `FACTORIES.md` into `tests/fact
 When `python-sqlalchemy` and `python-db-sessions` are installed, read sibling
 `FACTORIES_ORM.md` before creating or changing ORM factories and merge its template.
 
-Generate all test data through Polyfactory classes. Call factories directly in the test body.
+Generate complex typed test data through Polyfactory classes. Call factories directly in the test
+body and pass outcome-relevant overrides there. Keep simple scalar values and direct payload
+fragments inline in the test.
 Fixtures provide environment and resources, not generated payloads or model instances.
 Do not generate data in fixtures or arbitrary helper functions, wrap factories in `make_*`
 helpers, or use `@register_fixture` / `register_fixture(...)`.

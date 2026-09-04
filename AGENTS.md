@@ -101,8 +101,8 @@ This catalog is one language stack, split into layered IDs:
 - **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech;
   its index also routes the admin-panel, rate-limiting, and JWT auth rules in the same dir),
   `python-architecture` (structure, entity, exceptions, settings, logging, DI, development rules),
-  tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
-  repo is a publishable library
+  tests, frozen clock, Polyfactory (language-wide);
+  `python-semver` when the repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, CLI
   (`python-typer` with the `cli-design` skill), admin UI
   (`python-sqladmin`), rate limiting
@@ -173,7 +173,7 @@ Default Cursor install targets:
 harnesses/skills/<id>/  → .cursor/skills/<id>/
 harnesses/rules/<id>/   → .cursor/rules/<id>/
 harnesses/hooks/<id>/   → .cursor/hooks/<id>/
-harnesses/agents/<id>/  → .cursor/agents/<id>/
+harnesses/agents/<id>/<id>.md → .cursor/agents/<id>.md
 ```
 
 After a successful installable copy, the setup skill also writes
@@ -219,11 +219,14 @@ After a successful installable copy, the setup skill also writes
 - Clock in tests (`freezegun` `freeze_time`) is its own core ID
   (`python-freezegun`). Do not fold it into `python-tests`.
 - Test data factories (Polyfactory `build` / `create_async`) is its own core ID
-  (`python-polyfactory`) and installs with every automated-test bundle. Generate test data
-  through factory classes, not fixtures or arbitrary helper functions. Do not fold it into
+  (`python-polyfactory`) and installs with every automated-test bundle. Use factory classes
+  for complex typed data; keep outcome-relevant overrides in the test, never fixtures or
+  arbitrary helper functions. Do not fold it into
   `python-tests`. Keep one rule file; collect all ORM-specific guidance in
   `FACTORIES_ORM.md` and add it only with `python-sqlalchemy` + `python-db-sessions`.
   Persist ORM rows through `asession` / `atransaction`, not a private sessionmaker.
+- `python-tests` owns both test-writing policy and its workflow. Keep them in that rule;
+  do not create a separate test-writer agent.
 - `python-sqlalchemy` owns ORM models, shared ORM bases, and generic repositories.
   `python-db-sessions` owns the engine, session/transaction lifecycle, and database
   Settings contract. Keep both concerns out of `python-architecture`.
@@ -262,6 +265,19 @@ After a successful installable copy, the setup skill also writes
   package root `project/` and `components/`, matching `python-architecture`. Do not
   keep a parallel `domains/` layout.
 
+## Authoring installable agents
+
+- One catalog ID per directory: `harnesses/agents/<id>/` with the agent
+  definition in `<id>.md`.
+- Frontmatter: `name` (the ID) and `description` — start it with the `MUST USE for`
+  prefix naming when the agent applies, then keep it third person.
+- The body is the agent's operating workflow: numbered steps in English, ending
+  with a verifiable report (commands run and their results). Target-state
+  conventions stay in the matching rules; the agent owns the workflow, not
+  duplicate policy.
+- Default copy target is the flat file `.cursor/agents/<id>.md`; state the exact
+  `source → target` in the README Install-from column.
+
 ## Bootstrap behaviour
 
 When running or editing the setup skill:
@@ -275,9 +291,9 @@ When running or editing the setup skill:
    `patch-linter` when tests are selected. Offer `python-coverage` as optional
    when tests are selected; only on approval merge its `PYPROJECT.md`
    `[tool.coverage.*]` into the target `pyproject.toml`, add
-   `uv add --dev pytest-cov`, and apply the companion workflow patch. Add `python-freezegun` and
-   `python-polyfactory` with every automated-test bundle instead of asking about
-   either separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
+   `uv add --dev pytest-cov`, and apply the companion workflow patch. Add `python-freezegun`
+   and `python-polyfactory` with every automated-test bundle instead of asking about
+   them separately. With ORM and tests, also add and merge `FACTORIES_ORM.md`.
    Offer `di-linter`
    as strict enforcement. Offer `dddlint` as optional unique-name enforcement
    (`duplicate` rule only; vocabulary features off); on approval copy its

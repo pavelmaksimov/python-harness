@@ -86,8 +86,8 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    library-specific logger names and levels.
    Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
    `python-polyfactory` (`uv add --dev polyfactory`) with every automated-test
-   bundle; do not ask about either separately. Each remains its own core ID, not folded into
-   `python-tests`. Add `python-semver` when the repo is (or will be)
+   bundle; do not ask about them separately. Each remains its own
+   core ID, not folded into `python-tests`. Add `python-semver` when the repo is (or will be)
    a publishable Python library with a declared public API (PyPI package, reusable SDK, shared
    lib); skip it for internal apps/services that are not versioned for external consumers.
    A database answer selects `python-sqlalchemy`, the `sqlalchemy` best-practices
@@ -302,13 +302,19 @@ Installable artifacts are grouped by type under `harnesses/`:
 harnesses/skills/<id>/   → .cursor/skills/<id>/
 harnesses/rules/<id>/    → .cursor/rules/<id>/
 harnesses/hooks/<id>/    → .cursor/hooks/<id>/   # or project hooks layout
-harnesses/agents/<id>/   → .cursor/agents/<id>/  # sub-agents
+harnesses/agents/<id>/<id>.md → .cursor/agents/<id>.md  # sub-agents
 ```
 
 Default for an installable **skill** with id `<id>`:
 
 ```text
 harnesses/skills/<id>/SKILL.md → .cursor/skills/<id>/SKILL.md
+```
+
+Default for an installable **agent** with id `<id>`:
+
+```text
+harnesses/agents/<id>/<id>.md → .cursor/agents/<id>.md
 ```
 
 If the table shows an explicit `source → target`, use that. For personal

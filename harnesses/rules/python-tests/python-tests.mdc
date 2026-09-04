@@ -1,5 +1,5 @@
 ---
-description: Pytest — fixtures vs factories, HTTP mocks, no patch, behavior through use cases
+description: MUST USE for writing or editing pytest tests — functional-first behavior checks, test layout, boundary substitution, and test data
 globs:
   - tests/**
 alwaysApply: false
@@ -11,6 +11,16 @@ Read `tests/conftest.py` before adding helpers.
 If `conftest.py` is missing the HTTP fixtures, copy sibling `CONFTEST.md` into `tests/conftest.py`
 (merge; do not overwrite without asking).
 
+## Workflow
+
+1. Read the public entry point, neighboring tests, and `tests/conftest.py`.
+2. List the behavior and cases in the test docstring; choose the public API or use case that
+   exercises them.
+3. Put outcome-relevant values in the test, use factories for complex structures, and substitute
+   external boundaries through the container.
+4. Run the public flow and assert its observable result.
+5. Run the affected test file, then the modular test suite.
+
 ## What belongs where
 
 | Place | Holds |
@@ -19,11 +29,34 @@ If `conftest.py` is missing the HTTP fixtures, copy sibling `CONFTEST.md` into `
 | `tests/conftest.py` | Session setup, HTTP mock routers, `TestClient`, `Container.reset()` |
 
 Keep data out of fixtures: fixtures that only supply payloads make tests harder to read and change.
-Duplicate literals in tests are fine.
+Duplicate literals and magic numbers are fine: inline the value where it is read.
+Every variable that affects the outcome lives inside the test function.
 
-Avoid test-only abstractions. Everything needed to understand a test should be in that test.
+Keep tests simple and flat, with no multi-level nesting or test-only abstraction layers.
+Factories for complex structures and shared stateless boundary doubles are explicit exceptions;
+they must not hide outcome-relevant values or calls to the system under test.
+Everything needed to understand a test should be in that test. Test code may repeat when that
+keeps the scenario local; DRY is secondary to readability.
+Open each test with a short docstring listing the cases it checks.
 One test checks one behavior; a pile of asserts usually means several cases.
 Assert observable outcomes (status, payload, persisted row), not object internals.
+
+## Functional tests first
+
+Prefer a functional test over a unit test: drive the public entry point (endpoint,
+use case, CLI command) and run the whole flow instead of checking one class in
+isolation. Do not test private functions or object internals directly. Substitute
+boundary dependencies with your own implementations through `Container.local(...)` /
+`Container.override(...)` (`python-architecture/python-di.mdc`), never by patching.
+
+## Stubs and mocks
+
+A **stub** imitates state or an object: it returns canned data for the scenario.
+A **mock** records interaction: assert it was called, and with which arguments.
+Keep both next to the test — inside the test function, or at module level when tests
+in the file share them. A stateless fake or shared adapter may live one level up
+(`conftest.py`, `factories.py`) when many tests reuse it. Complex structures and ORM
+objects come from factories (`python-polyfactory`); ORM objects only through factories.
 
 ## Layout
 
