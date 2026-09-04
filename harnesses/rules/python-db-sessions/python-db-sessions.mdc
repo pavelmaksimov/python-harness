@@ -35,7 +35,7 @@ Get the DSN from `Settings().SQLALCHEMY_DATABASE_DSN` (explicit or assembled fro
 Optional `DB_SCHEMA` becomes `search_path`; pass the SQLAlchemy pool settings to the engine. If
 persistence is optional, check `database_is_configured()` instead of failing at import time.
 
-Repositories import session helpers. Services and use cases do not open sessions. A use case that
+Repositories import session helpers. Entities and use cases do not open sessions. A use case that
 must write through several repositories wraps the calls in one `atransaction()`.
 
 Tests use Testcontainers Postgres, schema creation through ORM metadata, and one nested transaction

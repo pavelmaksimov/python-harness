@@ -24,10 +24,10 @@ Entry point: `dt-linter`.
 ## When to use
 
 - Introduce domain-type linting to a Python repo
-- Add or change annotations on use cases, domain services, or domain models
+- Add or change annotations on entities, use cases, or domain models
 - Diagnose CI / local `DT001`, `DT003`–`DT011`, `DT100`–`DT125`
 
-Run it on **domain / use-case / service** packages. Adapters, ORM, Pydantic HTTP schemas, and CLI parsers legitimately use primitives — do not scan the whole repo by default.
+Run it on **entity / use-case** paths (`entities.py`, `use_cases.py`). Adapters, ORM, Pydantic HTTP schemas, and CLI parsers legitimately use primitives — do not scan the whole repo by default.
 
 After annotation changes in those packages, re-run before finishing.
 
@@ -41,15 +41,15 @@ uvx --from domain-types-linter dt-linter path/to/file.py
 PATH is a file or a directory (recursive `*.py`). No config file. Exit code 1 if any finding; success prints `All checks have been successful!`.
 
 ```text
-mypackage/domains/orders/service.py:
-mypackage/domains/orders/service.py:12: DT003 forbidden to use universal type 'str'
-mypackage/domains/orders/service.py:18: DT001 forbidden to use alias with universal type 'UserName'
-mypackage/domains/orders/service.py:24: DT100 forbidden to use parameterized type without domain type 'list'
+mypackage/components/orders/entities.py:
+mypackage/components/orders/entities.py:12: DT003 forbidden to use universal type 'str'
+mypackage/components/orders/entities.py:18: DT001 forbidden to use alias with universal type 'UserName'
+mypackage/components/orders/entities.py:24: DT100 forbidden to use parameterized type without domain type 'list'
 ```
 
 ## Workflow
 
-1. Identify domain packages (use cases, domain services, domain types). Match existing layout; do not invent a parallel domain layer.
+1. Identify domain packages (entities, use cases, domain types). Match existing layout; do not invent a parallel domain layer.
 2. If introducing the linter: agree the scan paths, **ask before** adding CI / Flake8 `select = DT`.
 3. Run `dt-linter` on those paths only.
 4. Fix every finding (see below). Prefer `NewType` or a domain class over silencing the check.

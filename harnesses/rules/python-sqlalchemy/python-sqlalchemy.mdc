@@ -38,7 +38,20 @@ Application rules stay in Python — no new triggers or stored procedures.
 A new model also gets a `SQLAlchemyFactory` in `tests/factories.py` (`python-polyfactory`).
 Follow existing `__tablename__` style in the repo.
 
-Services and use cases never import SQLAlchemy or write SQL; only repositories do.
+Entities, domain functions, and use cases never import SQLAlchemy or write SQL; only
+repositories do. Repositories own the ORM ↔ Entity mapping (`python-entity.mdc`); a
+SQLAlchemy object never crosses the repository boundary. The domain name belongs to the
+Entity (`Order` in `entities.py`); the persistence type takes the `ORM` suffix (`OrderORM`
+in `models.py`):
+
+```python
+def _to_entity(row: OrderORM) -> Order:
+    return Order(id=OrderIdT(row.id), status=OrderStatus(row.status))
+
+
+def _update_row(row: OrderORM, entity: Order) -> None:
+    row.status = entity.status.value
+```
 Design repository queries to avoid N+1 access: do not query or lazy-load related data inside
 loops. Fetch related rows with a set-based query or explicit eager loading (`selectinload` /
 `joinedload`), and account for the total query count on list operations.

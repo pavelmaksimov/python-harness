@@ -2,7 +2,7 @@
 
 Copy this module to `project/infrastructure/adapters/acache.py` when the package does not
 already define `redis_client` / `redis_atransaction`. Cache repositories import these helpers;
-services and use cases do not open Redis clients.
+entities and use cases do not open Redis clients.
 
 `Constants` must expose a non-empty `REDIS_KEY_PREFIX`. `Settings` must expose
 `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, and `redis_is_configured()` (see below).

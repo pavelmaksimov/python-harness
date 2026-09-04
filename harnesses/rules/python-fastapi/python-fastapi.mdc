@@ -15,7 +15,7 @@ Install uvloop (`uv add uvloop`) and run uvicorn with `--loop uvloop`. Do not ru
 the default asyncio loop in production or entry scripts.
 
 Endpoints live in `project.components.{name}.endpoints`. Register routers on the app in
-`project.infrastructure.apps.api`. Take services from `Container()`, not from FastAPI `Depends`
+`project.infrastructure.apps.api`. Take dependencies from `Container()`, not from FastAPI `Depends`
 for domain objects.
 
 ```bash

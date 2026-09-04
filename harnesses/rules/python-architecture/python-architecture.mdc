@@ -9,12 +9,15 @@ Lower layers do not import higher ones. Domain modules do not import adapters or
 annotate expected collaborators with `Protocol` in `interfaces.py`.
 
 - **Container** — `LazyInit(Services)`; take dependencies with `Container().…` inside methods.
-- **Use case** — I/O entry (HTTP, CLI, bot, job). Coordinates services; no persistence client or
-  query language. Other components do not call use cases. Keep it short; names are business verbs.
-  Input checks live here; shared check functions go in `validation.py`.
-- **Service** — stateless; hides a business process. Put work that other components will reuse here.
-- **Repository** — the only data-access type; stateless. Inherit from `project.base` when a
-  shared base exists. Add one only when it has a real consumer.
+- **Use case** — I/O entry (HTTP, CLI, bot, job). Loads Entities through repositories, calls
+  their methods, and saves the result; owns transactions and application policy. No persistence
+  client or query language. Other components do not call use cases. Keep it short; names are
+  business verbs. Input checks live here; shared check functions go in `validation.py`.
+- **Entity** — rich domain object: identity, state, invariants, natural behavior. Pure rules
+  without a natural owner are named module-level domain functions; no Service classes.
+  See [`python-entity.mdc`](python-entity.mdc).
+- **Repository** — the only data-access type; stateless. Maps ORM models ↔ Entities.
+  Inherit from `project.base` when a shared base exists. Add one only when it has a real consumer.
 - **Adapter** — facade over an external system; errors and API quirks stay here so tests can stub it.
 
 ## Domain types, Tiny types
@@ -30,7 +33,7 @@ UserIdT = t.NewType("UserIdT", t.Annotated[int, "User ID"])
 ## Module structure
 
 Group modules by component (one domain per directory). Put new code in the matching layer;
-do not mix adapters with services or use cases.
+do not mix adapters with domain modules or use cases.
 Persistence clients stay in `adapters`; persistence models and repositories stay in their
 component modules.
 
@@ -53,7 +56,7 @@ project/
     endpoints.py                      HTTP handlers
     handlers.py                       bot I/O
     use_cases.py                      orchestration
-    service.py                        stateless domain behavior
+    entities.py                       domain Entities: identity, invariants, behavior
     repositories.py                   all data access
     models.py                         persistence models, ORM models
     schemas.py                        DTO objects, API body/response schemas, Pydantic models
@@ -113,5 +116,5 @@ Architecture linter:
 uv run la-linter project
 ```
 
-Run domain-type checks only on the domain, use-case, and service paths selected according to the
+Run domain-type checks only on the `entities.py` and use-case paths selected according to the
 `domain-types-linter` skill.

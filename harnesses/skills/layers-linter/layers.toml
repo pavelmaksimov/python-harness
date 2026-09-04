@@ -42,26 +42,28 @@ contains_modules = [
     "project.base.repositories",
     "project.base.repositories.*",
 ]
-depends_on = ["adapters", "libs", "repositories"]
+depends_on = ["adapters", "domain", "libs", "repositories"]
 
-[layers.services]
-description = "Stateless domain behavior; collaborators via Container() and Protocols"
+[layers.domain]
+description = "Rich domain Entities and pure domain functions; no I/O, Container, or frameworks"
 contains_modules = [
-    "project.components.*.service",
-    "project.components.*.service.*",
+    "project.components.*.entities",
+    "project.components.*.entities.*",
+]
+exclude_modules = ["*.exceptions", "*.interfaces", "*.schemas", "*.enums"]
+depends_on = ["libs", "domain"]
+
+[layers.usecases]
+description = "I/O orchestration and AI agents; no SQLAlchemy, AsyncSession, or Redis client"
+contains_modules = [
+    "project.components.*.use_cases",
+    "project.components.*.use_cases.*",
+    "project.components.*.validation",
     "project.components.*.ai",
     "project.components.*.ai.*",
 ]
 exclude_modules = ["*.exceptions", "*.interfaces", "*.schemas", "*.enums"]
-depends_on = ["dicontainer", "libs", "services"]
-
-[layers.usecases]
-description = "I/O orchestration; no SQLAlchemy, AsyncSession, or Redis client"
-contains_modules = [
-    "project.components.*.use_cases",
-    "project.components.*.use_cases.*",
-]
-depends_on = ["dicontainer", "services", "libs", "usecases"]
+depends_on = ["dicontainer", "domain", "libs", "usecases"]
 
 [layers.dicontainer]
 description = "LazyInit composition root (LazyService paths are strings, not imports)"
@@ -92,7 +94,7 @@ contains_modules = [
     "project.components.*.cli",
     "project.components.*.cli.*",
 ]
-depends_on = ["dicontainer", "usecases", "services", "libs", "presentation", "admin"]
+depends_on = ["dicontainer", "usecases", "libs", "presentation", "admin"]
 
 [libs]
 

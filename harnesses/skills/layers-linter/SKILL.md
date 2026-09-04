@@ -47,7 +47,7 @@ Exit code is the number of problems; messages go to stderr:
 ```text
 mypackage/presentation/api.py:12: Invalid layer dependency: 'presentation' -> 'infrastructure'
 mypackage/utils/helpers.py: Module 'mypackage.utils.helpers' does not belong to any layer
-mypackage/domain/service.py:3: Layers [domain] cannot use restricted library 'sqlalchemy'
+mypackage/components/orders/entities.py:3: Layers [domain] cannot use restricted library 'sqlalchemy'
 ```
 
 ## Workflow
@@ -65,7 +65,8 @@ mypackage/domain/service.py:3: Layers [domain] cannot use restricted library 'sq
 
 Canonical template: sibling `layers.toml` (`project/` + `components/`, matching
 `python-architecture`). Copy to the repository root; substitute the package name if
-needed. Do not keep a parallel `domains/` layout.
+needed. Template layers: `libs`, `adapters`, `repositories`, `domain` (entities and pure domain functions),
+`usecases`, `dicontainer`, `admin`, `presentation`.
 
 ### Layers
 

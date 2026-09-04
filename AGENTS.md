@@ -83,7 +83,7 @@ This catalog is one language stack, split into layered IDs:
 
 - **core** — tooling, `python-workflow`, `python-libs` (FSM, retry, outbound HTTP, speech;
   its index also routes the admin-panel, rate-limiting, and JWT auth rules in the same dir),
-  `python-architecture` (structure, exceptions, settings, logging, DI, development rules),
+  `python-architecture` (structure, entity, exceptions, settings, logging, DI, development rules),
   tests, frozen clock, Polyfactory (language-wide); `python-semver` when the
   repo is a publishable library
 - **adapters** — HTTP, persistence, cache, monitoring, Telegram, speech, admin UI
@@ -99,8 +99,8 @@ Do not collapse concerns into one catch-all `.mdc` or a comma-separated
 library list after the table. Multi-file core IDs are the pattern: `python-libs`
 (`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`,
 `python-sqladmin.mdc`, `python-fastapi-limiter.mdc`, `python-jwt.mdc`) and
-`python-architecture` (`python-architecture.mdc`, `python-exceptions.mdc`,
-`python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
+`python-architecture` (`python-architecture.mdc`, `python-entity.mdc`,
+`python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
 `python-development-rules.mdc`), one concern per `.mdc`. Shared helper implementation
 guides (`FSM.md`, `RETRY.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`,
 `SECURITY.md`) live together
@@ -176,12 +176,17 @@ After a successful installable copy, the setup skill also writes
 - Keep installable rules focused on the target state. Put phased migration
   workflows in a sibling `MIGRATION.md` or task-specific prompt reached only
   for an explicit migration; keep those steps out of the main `.mdc` rules.
+  Catalog `MIGRATION.md` files are never copied to the target or read during a
+  normal install — the setup skill points to them only on an explicit migration
+  request.
 - Shared helper implementations live in `harnesses/rules/python-libs/`. Keep design guidance
   in its owning rule ID and link each implementation from `python-libs.mdc`.
 - `python-tooling/PRE_COMMIT.yaml` renders to repo-root
   `.pre-commit-config.yaml`; adapt package/test paths and keep only hooks
   selected by the target workflow.
-- `python-architecture` carries the folded core rule files: `python-settings.mdc` owns
+- `python-architecture` carries the folded core rule files: `python-entity.mdc` owns
+  the rich Entity domain model (identity, invariants, behavior; the `domain` layer and
+  `entities.py` replace the former Service layer and `service.py`), `python-settings.mdc` owns
   the pydantic-settings env contract, `python-di.mdc` owns Container and LazyService,
   `python-logging.mdc` owns `setup_logging()`, `python-exceptions.mdc` owns `AppError`,
   `python-development-rules.mdc` owns general conventions. One concern per file;

@@ -28,7 +28,9 @@ user = await Container().user_repository.get_by_id(user_id)
 
 Introduce a local dependency variable only when the same dependency is used more than once.
 Keep `Container()` at the **point of use** rather than binding the proxy or storing it on `self`.
-Take infrastructure clients from `Container()` instead of constructing them inside a service.
+Take infrastructure clients from `Container()` instead of constructing them inside a use case.
+Entities and domain functions never call `Container()` — dependencies reach them as method
+arguments from the Use Case.
 Request schemas and other value objects may be created locally.
 
 ```python

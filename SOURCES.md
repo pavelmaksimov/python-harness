@@ -19,7 +19,7 @@ line inside the cell or comma-separated. No secrets, tokens, or private URLs.
 | `python-tooling` | uv, Ruff, Black, isort, pre-commit conventions | https://github.com/pavelmaksimov/python-harness |
 | `python-workflow` | Navigation / verification conventions of this repo | https://github.com/pavelmaksimov/python-harness |
 | `python-libs` | FSM / retry / HTTP / speech helper design | https://github.com/pavelmaksimov/python-harness |
-| `python-architecture` | Module layout, layers, DI, settings, logging | https://github.com/pavelmaksimov/python-harness |
+| `python-architecture` | Module layout, layers, DI, settings, logging, Entity domain model (identity, invariants, domain functions, ORM ↔ Entity mapping) | https://github.com/pavelmaksimov/python-harness, https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html, https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf, https://martinfowler.com/bliki/AnemicDomainModel.html, https://martinfowler.com/eaaCatalog/dataMapper.html, https://docs.python.org/3/library/dataclasses.html |
 | `python-fsm` | StateMachine design of this repo | https://github.com/pavelmaksimov/python-harness |
 | `python-retry` | Retry-helper design of this repo | https://github.com/pavelmaksimov/python-harness |
 | `python-tests` | pytest layout, no-patch conventions of this repo | https://github.com/pavelmaksimov/python-harness |

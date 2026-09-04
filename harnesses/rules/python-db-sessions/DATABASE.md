@@ -1,7 +1,7 @@
 # Database session adapter
 
 Copy this module to `project/infrastructure/adapters/database.py` when the package does not
-already define `asession` / `atransaction`. Repositories import these helpers; services and use
+already define `asession` / `atransaction`. Repositories import these helpers; entities and use
 cases do not open sessions.
 
 `Settings` must expose `SQLALCHEMY_DATABASE_DSN`, `DB_SCHEMA`, and the SQLAlchemy pool settings

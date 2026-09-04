@@ -1,0 +1,84 @@
+---
+description: MUST USE for writing or reviewing entities.py — rich domain Entities, invariants, domain functions, and the Entity / Use Case / Repository boundary
+globs:
+  - "**/entities.py"
+alwaysApply: false
+---
+
+# Entity domain model
+
+Business logic lives on Entities, not in Service classes. `entities.py` holds the
+component's domain Entities and pure domain functions; `use_cases.py` holds I/O and
+application policy. There is no Service layer and no `service.py`.
+
+## Entity
+
+An Entity:
+
+1. Is identified by a stable domain identity, not by equality of all attributes.
+2. Holds state and protects its invariants at construction and on every public mutation.
+3. Exposes intention-revealing methods: `order.cancel()`, `subscription.renew()`.
+4. Never opens a session or transaction and never calls a Repository, `Container()`,
+   HTTP, Kafka, Redis, or the filesystem.
+5. Never accepts ORM models, framework request/response objects, or a persistence
+   session as arguments.
+6. May own child Entities; change them only through the owning Entity's methods.
+   Do not create separate `Aggregate` / `AggregateRoot` classes.
+
+Starting Python semantics for a mutable Entity:
+
+```python
+@dataclass(eq=False, slots=True)
+class Order:
+    id: OrderIdT
+    status: OrderStatus
+
+    __hash__ = None
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Order) and self.id == other.id
+
+    def cancel(self) -> None:
+        if self.status is not OrderStatus.NEW:
+            raise OrderCannotBeCancelled(self.id)
+        self.status = OrderStatus.CANCELLED
+```
+
+- Do not use `@dataclass(eq=True)` for an Entity: that is field equality, not identity.
+- A mutable Entity stays unhashable.
+- Value objects may use value equality and `frozen=True`.
+- Do not add a universal `Entity` base class.
+
+## Use Case
+
+A Use Case:
+
+- loads Entities through Repositories;
+- owns the transaction and the order of external calls;
+- holds application-specific policy: scenario authorization, idempotency, retry,
+  and process branching;
+- calls Entity methods and saves the resulting state;
+- never holds an invariant that naturally belongs to one Entity.
+
+## Domain functions
+
+A pure domain rule with no natural single owner is a named module-level function in
+`entities.py` or the component's domain module:
+
+```python
+def calculate_price(order: Order, customer: Customer) -> Money:
+    ...
+```
+
+It is stateless, works only on domain values, and performs no I/O. When loading,
+saving, a transaction, or an external client is needed, it is a Use Case, not a
+domain function. Do not create a `*Service` class for it.
+
+## Boundaries
+
+- `entities.py` imports only the standard library, its component's `datatypes.py`,
+  `enums.py`, `exceptions.py`, and its own Entities. Framework, `Container`, and
+  infrastructure imports are forbidden — the `domain` layer in `layers.toml`
+  (`layers-linter`) enforces it.
+- The Repository owns ORM ↔ Entity mapping; an ORM object never crosses the
+  repository boundary (see `python-sqlalchemy.mdc`).

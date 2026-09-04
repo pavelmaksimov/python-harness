@@ -102,7 +102,7 @@ def test_process(fake_repository):
     process_data(fake_repository)
 ```
 
-Composition root (container, settings accessor, HTTP endpoints that wire the graph) may need excludes. Keep use cases and domain services strict.
+Composition root (container, settings accessor, HTTP endpoints that wire the graph) may need excludes. Keep use cases and entities strict.
 
 ```python
 repository = UserRepository()  # di: skip
@@ -114,8 +114,8 @@ Optional. Search order: `--config-path`, else `./di.toml`, else `di.toml` next t
 
 Canonical template: sibling `di.toml` (`project/` + `components/`, matching
 `python-architecture`, which carries `python-di.mdc`). Copy to the repository root; substitute
-the package name if needed. Composition root is excluded; use cases and domain
-services stay strict.
+the package name if needed. Composition root is excluded; use cases and
+entities stay strict.
 
 `exclude-objects` and `exclude-modules` use `fnmatch` (`*` wildcards), **case-insensitive**.
 

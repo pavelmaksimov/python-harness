@@ -63,12 +63,18 @@ For non-Python harnesses (standards, agent behavior, reference tooling), use
    when installed, the workflow records notable completed changes and updates the current entry
    when a task is refined. Libraries use versioned release sections; projects without library
    versions use ISO-date sections. Core also includes `python-libs` for the always-on
-   helper index and disclosed implementations. Core `python-architecture` is one rule dir with six
-   sibling rule files: `python-architecture.mdc` (module layout), `python-exceptions.mdc`
+   helper index and disclosed implementations. Core `python-architecture` is one rule dir with seven
+   sibling rule files: `python-architecture.mdc` (module layout),
+   `python-entity.mdc` (rich Entity domain model — identity, invariants, behavior; the
+   `domain` layer replaces the former Service layer and `service.py`),
+   `python-exceptions.mdc`
    (AppError), `python-settings.mdc` (pydantic-settings, `Settings().PARAM`),
    `python-logging.mdc` (`dictConfig` / `setup_logging()`), `python-di.mdc` (Container,
    LazyInit), and `python-development-rules.mdc` (general conventions, configurable module
-   log levels). Domain annotations follow the `domain-types-linter` skill. Call-site hygiene stays
+   log levels). Copy only the `.mdc` files; catalog-only `MIGRATION.md` is never copied or
+   read during a normal install — on an explicit `Service → Entity migration` request,
+   read `harnesses/rules/python-architecture/MIGRATION.md` from the catalog and agree a
+   separate migration plan. Domain annotations follow the `domain-types-linter` skill. Call-site hygiene stays
    in `python-tooling`, and adapter rules own
    library-specific logger names and levels.
    Add `python-freezegun` (`freeze_time` in tests, `uv add --dev freezegun`) and
@@ -225,7 +231,7 @@ Derive the install set mechanically from the answers:
 
 | Requirement | Automatically selected harnesses and companions |
 |---|---|
-| Python project | Base core: `conventional-commits`, `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (six sibling rule files: structure, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
+| Python project | Base core: `conventional-commits`, `python-tooling`, `python-workflow`, `python-libs`, `python-architecture` (seven sibling rule files: structure, entity, exceptions, settings, logging, DI, development rules), `python-fsm`, `python-retry`; plus `layers-linter` and `domain-types-linter` |
 | Publishable library | `python-semver` |
 | Automated tests | `python-tests` + `python-freezegun` + `python-polyfactory` + `patch-linter`; merge `FACTORIES.md` into `tests/factories.py` |
 | Coverage gate approved (stage 5) | `python-coverage`; merge `[tool.coverage.*]` from `python-coverage/PYPROJECT.md` into repo-root `pyproject.toml`; package notes `uv add --dev pytest-cov`, plus `uv add --dev diff-cover` in diff mode; companion patches per catalog `COMPANION.md` (pointer row in `python-tests.mdc` + "Coverage gate after a task" in `.cursor/rules/python-workflow/`) |

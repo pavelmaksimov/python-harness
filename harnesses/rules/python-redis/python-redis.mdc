@@ -32,7 +32,7 @@ Connect with `Settings().REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`.
 If the product can run without Redis, skip cache when `redis_is_configured()` is false;
 do not fail at import.
 
-Services and use cases never import `redis` — only cache repositories do.
+Entities and use cases never import `redis` — only cache repositories do.
 
 Every Redis key starts with the non-empty `Constants.REDIS_KEY_PREFIX`. Keep
 `key_template` domain-specific and build the complete key through `CacheRepository.key()`;
