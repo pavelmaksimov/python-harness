@@ -51,14 +51,11 @@ class Order:
 
 ## Use Case
 
-A Use Case:
-
-- loads Entities through Repositories;
-- owns the transaction and the order of external calls;
-- holds application-specific policy: scenario authorization, idempotency, retry,
-  and process branching;
-- calls Entity methods and saves the resulting state;
-- never holds an invariant that naturally belongs to one Entity.
+From the Entity side: a Use Case loads Entities through Repositories, calls their
+methods, saves the resulting state, and never holds an invariant that naturally
+belongs to one Entity. Its authoring contract — thin, readable orchestration with
+the implementation delegated to the called objects — is
+[`python-usecase.mdc`](python-usecase.mdc).
 
 ## Domain functions
 

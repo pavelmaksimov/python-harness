@@ -13,6 +13,7 @@ annotate expected collaborators with `Protocol` in `interfaces.py`.
   their methods, and saves the result; owns transactions and application policy. No persistence
   client or query language. Other components do not call use cases. Keep it short; names are
   business verbs. Input checks live here; shared check functions go in `validation.py`.
+  See [`python-usecase.mdc`](python-usecase.mdc).
 - **Entity** — rich domain object: identity, state, invariants, natural behavior. Pure rules
   without a natural owner are named module-level domain functions; no Service classes.
   See [`python-entity.mdc`](python-entity.mdc).

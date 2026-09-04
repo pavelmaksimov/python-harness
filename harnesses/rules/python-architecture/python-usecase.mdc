@@ -1,0 +1,51 @@
+---
+description: MUST USE for writing or reviewing use_cases.py — thin, readable use cases that delegate implementation to domain objects and collaborators
+globs:
+  - "**/use_cases.py"
+alwaysApply: false
+---
+
+# Use Case
+
+`use_cases.py` holds the component's Use Cases — I/O entries (HTTP, CLI, bot, job)
+written as readable scenarios. A Use Case is thin: it calls objects whose
+implementation is already hidden — Entities, Repositories, adapters, and shared
+helpers — and the detailed low-level implementation itself never lives at this
+layer.
+
+## Shape
+
+A Use Case reads top-to-bottom like the scenario it implements: load Entities,
+call their methods, call collaborators, save, return. Names are business verbs; the
+body fits on one screen.
+
+Resolve dependencies at the point of use. Bind one to a local variable only when
+the scenario uses it more than once.
+Endpoints, handlers, and CLI commands call use cases; other components do not.
+
+## What a Use Case owns
+
+- application policy: scenario authorization, idempotency, retry policy,
+  branching, and the order of external calls;
+- the transaction boundary around writes that must commit atomically;
+- input checks — inline, or in a shared validator;
+- application-level outcomes the caller must distinguish.
+
+## What never lives here
+
+Low-level implementation here is a misplacement, not a style choice. Move it into
+the object that owns it and keep only the call:
+
+| Written inside a Use Case | Belongs to |
+|---|---|
+| SQL / ORM queries, filters, joins, session mechanics | a Repository method |
+| URLs, headers, tokens, status-code branching, response parsing | an outbound adapter |
+| raw payload / JSON shaping, wire-format mapping | a boundary schema or the owning adapter |
+| hand-rolled retry loops, sleeps, backoff arithmetic | a shared retry helper |
+| invariant checks, state transitions, domain calculations | Entity methods or domain functions |
+| parsing, normalizing, encoding external values | an adapter or domain value type |
+| constructing infrastructure clients | the composition root or dependency provider |
+
+Rule of thumb: when a reader has to reconstruct mechanics instead of following the
+scenario, the line is in the wrong layer. The fix is a method on the called object —
+not a comment explaining the mechanics.

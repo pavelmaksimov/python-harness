@@ -118,7 +118,7 @@ library list after the table. Multi-file core IDs are the pattern: `python-libs`
 (`python-fsm.mdc`, `python-retry.mdc`, `python-base-client.mdc`,
 `python-sqladmin.mdc`, `python-fastapi-limiter.mdc`, `python-jwt.mdc`) and
 `python-architecture` (`python-architecture.mdc`, `python-entity.mdc`,
-`python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
+`python-usecase.mdc`, `python-exceptions.mdc`, `python-settings.mdc`, `python-logging.mdc`, `python-di.mdc`,
 `python-development-rules.mdc`), one concern per `.mdc`. Shared helper implementation
 guides (`FSM.md`, `RETRY.md`, `ASYNC_CLIENT.md`, `SYNC_CLIENT.md`, `SPEECH.md`,
 `SECURITY.md`) live together
@@ -204,7 +204,9 @@ After a successful installable copy, the setup skill also writes
   selected by the target workflow.
 - `python-architecture` carries the folded core rule files: `python-entity.mdc` owns
   the rich Entity domain model (identity, invariants, behavior; the `domain` layer and
-  `entities.py` replace the former Service layer and `service.py`), `python-settings.mdc` owns
+  `entities.py` replace the former Service layer and `service.py`), `python-usecase.mdc` owns
+  thin, readable use cases (orchestration only; implementation delegated to Entities,
+  Repositories, adapters), `python-settings.mdc` owns
   the pydantic-settings env contract, `python-di.mdc` owns Container and LazyService,
   `python-logging.mdc` owns `setup_logging()`, `python-exceptions.mdc` owns `AppError`,
   `python-development-rules.mdc` owns general conventions. One concern per file;
