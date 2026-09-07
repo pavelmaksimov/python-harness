@@ -191,6 +191,9 @@ After a successful installable copy, the setup skill also writes
   installer should substitute.
 - One concern per `.mdc`. Name the layer (tooling, HTTP, persistence); leave
   version pins and Ruff selects to the target `pyproject.toml`.
+- Keep leaf rules self-contained: describe stable architectural roles instead of
+  naming sibling `.mdc` files or optional helper APIs. Keep cross-rule routing in
+  the owning `alwaysApply: true` index.
 - Keep installable rules focused on the target state. Put phased migration
   workflows in a sibling `MIGRATION.md` or task-specific prompt reached only
   for an explicit migration; keep those steps out of the main `.mdc` rules.
