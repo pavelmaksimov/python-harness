@@ -28,3 +28,10 @@ async def start(self) -> None:
 
 `from_states` may be one enum member or a list. The decorator reads state, runs the method,
 then writes `to_state`. Catch `TransitionError` at the use-case boundary.
+
+## When not to use an FSM
+
+A record without a lifecycle does not need a state machine: a plain field or `Enum`
+column on the model is enough. Add `StateMachine` only when invalid transitions are a
+real failure mode and behavior genuinely varies by state — an FSM over a CRUD record is
+ceremony, not safety.

@@ -32,3 +32,11 @@ A subclass may also inherit the library exception so the decorator can still mat
 
 The helper logs a warning per retry and an error on final failure (`python-tooling`;
 no `extra=`). Callers do not log the same failure again.
+
+## When not to retry
+
+Retry only transient failures of idempotent operations, with a bounded `max_attempts`.
+Do not wrap permanent failures — invalid input, permission errors, business-rule
+violations: a retry cannot fix them and only multiplies load on the failing dependency.
+When an operation is not idempotent, make it idempotent before retrying, or accept
+single-attempt semantics.

@@ -71,4 +71,4 @@ _Articles, posts, and examples that influenced several IDs at once. Add rows her
 
 | Topic | Links |
 |---|---|
-| _none yet_ |  |
+| amplifier systems-design bundle — sections in `python-retry` / `python-fsm` / `python-redis` (never vendored) | https://github.com/microsoft/amplifier-bundle-systems-design |
