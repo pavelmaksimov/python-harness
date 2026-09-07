@@ -62,8 +62,7 @@ branch:
 4. Only author merges (`git merge agent/<topic>` from the main checkout) and
    cleans up (`git worktree remove <path>`). Never force-remove a worktree with
    uncommitted changes.
-5. Create a template plan before implementation /home/user/my/python-harness/HARNESS_ANALYSIS_TEMPLATE.md in the dev 
-   branch, not commit.
+5. Create a template plan before implementation /home/user/my/python-harness/HARNESS_ANALYSIS_TEMPLATE.md, not commit.
 
 ## Catalog version
 
