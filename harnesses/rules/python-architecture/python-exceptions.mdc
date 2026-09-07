@@ -1,5 +1,5 @@
 ---
-description: AppError hierarchy — where to put exceptions and how to subclass them
+description: MUST USE for application exceptions — AppError hierarchy, ownership, and HTTP boundary
 alwaysApply: true
 ---
 
@@ -50,5 +50,5 @@ class NotFoundError(AppError):
 
 Adapters catch library/API errors and raise an `AppError` subclass so domain code does not import third-party exception types. The subclass may also inherit the library type when a retry decorator must still match it (`python-retry`); do not retry `NotFoundError`, `AuthError`, or 4xx `ClientError` unless listed. Outbound HTTP adapters (`python-base-client`) map 4xx → `ClientError`, 5xx → `ServerError`, other HTTP failures → `ExternalApiError`, transport/timeout → `ExternalHTTPConnectionError`.
 
-Domain and adapters raise `AppError`. `fastapi.HTTPException` stays in `endpoints.py`.
-Map these types to HTTP status codes on the app (`python-fastapi`).
+Domain, use cases, and adapters raise `AppError`; endpoints let it propagate unchanged.
+The FastAPI app logs and maps these types to HTTP responses (`python-fastapi`).

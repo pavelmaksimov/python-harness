@@ -1,5 +1,5 @@
 ---
-description: FastAPI HTTP adapter — routers, ORJSON, URL versioning, SSE disconnects
+description: MUST USE for FastAPI endpoints and app setup — HTTP error boundary, routers, ORJSON, URL versioning, SSE disconnects
 globs:
   - "**/endpoints.py"
   - "**/apps/api.py"
@@ -36,14 +36,21 @@ on large payloads.
 Version **each path**, not the whole router: `/user/v1/list`. Breaking changes get a new path;
 keep the old one with `deprecated=True`.
 
-Raise `fastapi.HTTPException` only in `endpoints.py`. Domain code raises `AppError` (or a subclass).
+Endpoints are success-path adapters: accept validated input, call a use case, and return its successful
+result. Application failures propagate as `AppError` (or a subclass) through the endpoint.
 
 Token-gated APIs: one `Depends` on the app (or router) that reads `Header(alias="Api-Token")` and
 compares it to `Settings().API_TOKEN`.
 
-## Exception handlers
+## HTTP error boundary
 
-Register handlers on the app. Log there. Endpoints do not catch-and-return error dicts.
+Register exception handlers on the app in `project.infrastructure.apps.api`. They are the single place
+that logs failures and maps exceptions to HTTP responses. Endpoint code contains no exception catches,
+error-result inspection, status selection, or `HTTPException` translation.
+
+FastAPI route, dependency, and validation failures may still raise framework exceptions. Keep
+their response shape centralized by registering handlers for `fastapi.HTTPException` and
+`RequestValidationError` on the app.
 
 | Raised | HTTP |
 |---|---|

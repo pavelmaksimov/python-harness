@@ -32,7 +32,7 @@ line inside the cell or comma-separated. No secrets, tokens, or private URLs.
 
 | ID | What was taken | Links |
 |---|---|---|
-| `python-fastapi` | FastAPI / SSE / ORJSON conventions of this repo | https://github.com/pavelmaksimov/python-harness |
+| `python-fastapi` | FastAPI exception handlers, Starlette error boundary, SSE, and ORJSON conventions | https://fastapi.tiangolo.com/tutorial/handling-errors/, https://www.starlette.io/exceptions/, https://github.com/pavelmaksimov/python-harness |
 | `python-jwt` | OAuth2 JWT tutorial flow | https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/ |
 | `python-base-client` | Outbound HTTP adapter design of this repo | https://github.com/pavelmaksimov/python-harness |
 | `python-sqlalchemy` | ORM structure of this repo | https://github.com/pavelmaksimov/python-harness |
