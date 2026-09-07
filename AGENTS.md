@@ -52,7 +52,7 @@ to the Python catalog.
 Agents never edit the main checkout (`dev`). One task = one worktree + one
 branch:
 
-1. Create: `git worktree add /home/user/my/python-harness/memory/workflow/-<topic> -b agent/<topic> dev`.
+1. Create: `git worktree add ...`.
    Do not reuse another task's worktree or branch.
 2. Work and **commit** there in small Conventional-Commits steps. Uncommitted
    changes are invisible to review; Author reviews through git
