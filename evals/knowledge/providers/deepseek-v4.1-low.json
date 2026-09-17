@@ -1,0 +1,112 @@
+{
+  "capabilities": {
+    "attachment": true,
+    "input": {
+      "audio": false,
+      "image": true,
+      "pdf": false,
+      "text": true,
+      "video": false
+    },
+    "interleaved": {
+      "field": "reasoning_content"
+    },
+    "output": {
+      "audio": false,
+      "image": false,
+      "pdf": false,
+      "text": true,
+      "video": false
+    },
+    "reasoning": true,
+    "temperature": true,
+    "toolcall": true
+  },
+  "cost": {
+    "cache": {
+      "read": 0.003,
+      "write": 0
+    },
+    "input": 0.15,
+    "output": 0.6
+  },
+  "friendly_name": "DeepSeek V4.1 Flash",
+  "human_selected": true,
+  "metadata": {
+    "api": {
+      "id": "deepseek-v4.1-flash",
+      "npm": "@ai-sdk/openai-compatible",
+      "url": "https://opencode.ai/zen/go/v1"
+    },
+    "capabilities": {
+      "attachment": true,
+      "input": {
+        "audio": false,
+        "image": true,
+        "pdf": false,
+        "text": true,
+        "video": false
+      },
+      "interleaved": {
+        "field": "reasoning_content"
+      },
+      "output": {
+        "audio": false,
+        "image": false,
+        "pdf": false,
+        "text": true,
+        "video": false
+      },
+      "reasoning": true,
+      "temperature": true,
+      "toolcall": true
+    },
+    "cost": {
+      "cache": {
+        "read": 0.003,
+        "write": 0
+      },
+      "input": 0.15,
+      "output": 0.6
+    },
+    "family": "deepseek-flash",
+    "headers": {},
+    "id": "deepseek-v4.1-flash",
+    "limit": {
+      "context": 1000000,
+      "output": 384000
+    },
+    "name": "DeepSeek V4.1 Flash",
+    "options": {},
+    "providerID": "opencode-go",
+    "release_date": "2026-09-10",
+    "status": "active",
+    "variants": {
+      "high": {
+        "reasoningEffort": "high"
+      },
+      "low": {
+        "reasoningEffort": "low"
+      },
+      "max": {
+        "reasoningEffort": "max"
+      }
+    }
+  },
+  "model": "deepseek-v4.1-flash",
+  "opencode_version": "1.18.31",
+  "provider": "opencode-go",
+  "role": "subject",
+  "succeeded_at": "2026-09-17T19:05:30+00:00",
+  "variant": "low",
+  "verification": {
+    "model": "deepseek-v4.1-flash",
+    "opencode_version": "1.18.31",
+    "provider": "opencode-go",
+    "run_id": "ses_f4f3b0fe7ffeYWNKwnmoQzcej5",
+    "status": "success",
+    "succeeded_at": "2026-09-17T19:05:30+00:00",
+    "variant": "low"
+  },
+  "verification_run_id": "ses_f4f3b0fe7ffeYWNKwnmoQzcej5"
+}
