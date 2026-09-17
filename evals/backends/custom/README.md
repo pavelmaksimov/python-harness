@@ -99,6 +99,31 @@ only — durations and error dumps stay in the run history — so repeating the 
 defect increments `occurrences` and merges `failed_attempts` instead of creating
 parallel records. Nothing is recorded for a failure that was never fixed.
 
+## Weak isolation (temporary, approval-gated)
+
+This host cannot create unprivileged user/network namespaces at all (`unshare -Ur`
+and `unshare -n` fail with `Operation not permitted`), which would keep every real
+run fail-closed forever. With a **recorded human approval** —
+`evals/knowledge/backends/custom.json` → `weak_isolation` (`approved_by`,
+`approved_at`, `reason`), written through `record_backend_health` — runs use a
+degraded boundary instead:
+
+| Still enforced | Lost |
+|---|---|
+| materialized per-role OpenCode policy (`OPENCODE_CONFIG_DIR`/`OPENCODE_CONFIG_CONTENT`: permissions, sharing/auto-update/telemetry off, project-config discovery off) | pid/network/filesystem namespaces |
+| subject shell allowlist, judge read-only | capability dropping, environment clearing for checks |
+| run catalog, supervision, repair, sanitization | `/tmp` and `/workspace` mount isolation |
+
+`doctor` reports `isolation: weak` while this is active and keeps a restoration
+reminder in its notes; the manifest records `backend.ids.isolation = weak-approved`
+so history never confuses degraded runs with sandboxed ones. An explicit
+`subject_command`/`judge_command` (the core's override hook, used by tests) is
+never overridden.
+
+This module is temporary by design: the follow-up task on MY-45 removes it once
+the host runs unprivileged namespaces again. Without the approval record nothing
+changes — the core stays fail-closed.
+
 ## Doctor
 
 `doctor` (no `--repair`) checks OpenCode, isolation (`bwrap` pid and network

@@ -22,9 +22,9 @@ from evals.core.checks import run_process
 from evals.core.knowledge import generate_index, knowledge_path, sanitize
 from evals.core.profiles import load_profile
 
+from evals.backends.custom import weak_isolation
+
 _HISTORY = ('evals', 'history')
-_PROBE = ('bwrap', '--die-with-parent', '--unshare-pid', '--ro-bind', '/', '/',
-          '--proc', '/proc', '--tmpfs', '/tmp', '--', '/bin/true')
 _CONFIG_MARKERS = ('OPENCODE_CONFIG_DIR', 'OPENCODE_DISABLE_PROJECT_CONFIG', 'OPENCODE_PURE')
 
 
@@ -51,17 +51,19 @@ def _opencode(repo_root: Path) -> dict:
 
 
 def _sandbox(repo_root: Path) -> dict:
-    if shutil.which('bwrap') is None:
-        return _check('sandbox', 'fail', 'bubblewrap (bwrap) is not installed', blocking=True,
-                      remedy='install bubblewrap with the human; host execution is never a fallback')
-    for label, probe in (('pid namespaces', _PROBE),
-                         ('network namespaces', (*_PROBE[:-2], '--unshare-net', *_PROBE[-2:]))):
-        code, output = _run(list(probe), repo_root)
-        if code:
-            return _check('sandbox', 'fail', f'{label} unavailable: {sanitize(output)[:300]}', blocking=True,
-                          remedy='fix unprivileged namespaces or kernel settings on the host '
-                                 '(a host change the human must approve)')
-    return _check('sandbox', 'ok', 'bubblewrap isolates pid and network namespaces', blocking=True)
+    ok, detail = weak_isolation.namespace_probe(repo_root)
+    if ok:
+        return _check('sandbox', 'ok', detail, blocking=True)
+    approval = weak_isolation.approval(repo_root)
+    if approval:
+        return _check('sandbox', 'ok',
+                      f'weak isolation active (approved by {sanitize(approval["approved_by"])} '
+                      f'at {sanitize(approval["approved_at"])}); {detail}. OpenCode permission policy, '
+                      'the subject shell allowlist and the read-only judge still hold; OS namespaces do not',
+                      blocking=True)
+    return _check('sandbox', 'fail', detail, blocking=True,
+                  remedy='fix unprivileged namespaces or kernel settings on the host (a host change the '
+                         'human must approve), or record an explicit weak-isolation approval')
 
 
 def _uv_cache(repo_root: Path) -> dict:
@@ -162,14 +164,20 @@ def inspect(repo_root: Path, identity: dict, *, repair: bool = False) -> dict:
         if repairs:
             checks = [check if check['id'] != 'history' else _history(repo_root) for check in checks]
     blocking = [check['id'] for check in checks if check['blocking'] and check['status'] == 'fail']
+    weak = weak_isolation.active(repo_root)
+    notes = ['the runner never reads auth files or the process environment; OpenCode owns credentials',
+             'cancelled and failed attempts keep their artifacts under evals/history']
+    if weak:
+        notes.append('weak isolation is temporary: once the host runs unprivileged namespaces again, '
+                     'remove the approval record and the weak_isolation module (see the follow-up task)')
     return {
         'name': identity['name'],
         'version': identity['version'],
         'status': 'error' if blocking else 'success',
+        'isolation': 'weak' if weak else 'sandbox',
         'repair': repair,
         'checks': checks,
         'repairs': repairs,
         'needs_human': [check['remedy'] for check in checks if check['status'] == 'fail' and check['remedy']],
-        'notes': ['the runner never reads auth files or the process environment; OpenCode owns credentials',
-                  'cancelled and failed attempts keep their artifacts under evals/history'],
+        'notes': notes,
     }

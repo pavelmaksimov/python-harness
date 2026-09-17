@@ -15,16 +15,24 @@ lifecycle around it:
 - **readiness** — ``doctor [--repair]`` reports prerequisites and needs-human
   items, and the CLI refuses to run unless it says ``success`` (``doctor``).
 
+On a host that cannot run unprivileged namespaces, and only with a recorded
+human approval (``weak_isolation``), runs go through the approved degraded
+isolation instead of staying fail-closed; the manifest records it via
+``backend.ids.isolation``.
+
 The runner never selects a model, never opens credential files, never inspects
-the inherited environment and never weakens isolation.
+the inherited environment and never weakens isolation beyond that recorded
+approval.
 """
 from __future__ import annotations
 
+import contextlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from evals.backends.custom import doctor as doctor_module
-from evals.backends.custom import repair, supervisor
+from evals.backends.custom import repair, supervisor, weak_isolation
 from evals.core.backend_api import BackendResult
 from evals.core.knowledge import validate_identifier
 
@@ -49,6 +57,20 @@ class CustomBackend:
         return doctor_module.inspect(repo_root(), IDENTITY, repair=repair)
 
     def run(self, request) -> BackendResult:
+        weak = weak_isolation.active(request.repo_root)
+        if weak and request.subject_command is None:
+            # Approved degraded isolation: real OpenCode invocations with the
+            # materialized per-role policy pinned, minus OS namespaces. An explicit
+            # subject/judge command (the core's override hook) is never overridden.
+            request = replace(request,
+                              subject_command=weak_isolation.command_for(request, request.subject_profile, 'subject'),
+                              judge_command=weak_isolation.command_for(request, request.judge_profile, 'judge'))
+        identity = dict(IDENTITY, ids=dict(IDENTITY['ids'], isolation='weak-approved' if weak else 'sandbox'))
+        gate = weak_isolation.host_execution() if weak else contextlib.nullcontext()
+        with gate:
+            return self._supervised_run(request, identity)
+
+    def _supervised_run(self, request, identity: dict) -> BackendResult:
         state = repair.AttemptState(wall_seconds=supervisor.wall_budget(request),
                                     context=repair.context(request, NAME))
         journal: list[dict] = []
@@ -56,7 +78,7 @@ class CustomBackend:
         symptom, outcome, error = None, None, None
         for attempt in range(1, repair.MAX_ATTEMPTS + 1):
             supervisor.archive_previous(request.workdir)
-            outcome = supervisor.supervise(request, IDENTITY, attempt=attempt,
+            outcome = supervisor.supervise(request, identity, attempt=attempt,
                                            wall_seconds=state.wall_seconds)
             journal.append(repair.entry(f'attempt-{attempt}', outcome.status, outcome.duration_ms,
                                         incident['fingerprint'] if incident and attempt == 1 else None))
