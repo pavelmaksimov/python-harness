@@ -1,0 +1,10 @@
+{
+  "backend": "custom",
+  "recorded_at": "2026-09-17T19:07:46+00:00",
+  "weak_isolation": {
+    "approved_at": "2026-09-17T19:07:46+00:00",
+    "approved_by": "vur21 (Multica, MY-48 comment 01a0b0b2-ab1d-7f17-b5f6-51857bedd4da)",
+    "reason": "host blocks unprivileged user/network namespaces entirely; user approved degraded isolation so real runs can start, restoration tracked in MY-50",
+    "restoration_task": "MY-50"
+  }
+}
