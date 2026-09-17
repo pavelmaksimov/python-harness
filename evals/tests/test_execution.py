@@ -149,7 +149,7 @@ class SandboxTests(unittest.TestCase):
             ({'kind': 'rule', 'from': 'harnesses/rules/python-fsm/../../../../etc/passwd',
               'to': 'AGENTS.md'}, 'confined'),
             ({'kind': 'rule', 'from': 'evals/knowledge/providers/subject.json', 'to': 'AGENTS.md'}, 'knowledge'),
-            ({'kind': 'rule', 'from': 'harnesses/rules/python-fsm/python-fsm.mdc', 'to': '.git/config'}, 'VCS'),
+            ({'kind': 'rule', 'from': 'harnesses/rules/python-fsm/python-fsm.mdc', 'to': '.git/config'}, '.git'),
             ({'kind': 'skill', 'from': 'harnesses/skills/python-stdlib-first-review',
               'to': 'skills'}, 'opencode'),
         )
@@ -163,6 +163,11 @@ class SandboxTests(unittest.TestCase):
             sandbox.materialize(self.root, task(materialize=[
                 {'kind': 'rule', 'from': 'harnesses/rules/python-tooling', 'to': 'AGENTS.md',
                  'harness_id': 'python-architecture'}]), SELECTION, self.root / 'runs/link')
+        # A probe that ships its own manifest would hand the subject the rubric
+        # and the exact check commands, so the manifest is never an input.
+        with self.assertRaisesRegex(ValueError, 'task.json'):
+            sandbox.materialize(self.root, task(fixture='evals/tasks/demo'), SELECTION,
+                                self.root / 'runs/manifest')
         (self.root / 'evals/tasks/demo/fixture/AGENTS.md').write_text('hijacked\n', encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'instructions'):
             self.materialize()
