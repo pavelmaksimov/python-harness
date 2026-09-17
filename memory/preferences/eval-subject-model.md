@@ -25,3 +25,15 @@
 
 - Задача MY-45 (лаборатория экспериментов); stage 1 done (MY-46 core, MY-47 probes);
   stage 2 в работе: MY-48 (custom runner), MY-49 (OpenResearch).
+
+## Разрешённые точные ID (2026-09-17, MY-49, сверено по `opencode models --verbose`)
+
+| Роль | Alias профиля | Провайдер / модель / variant | Статус |
+|---|---|---|---|
+| subject | `deepseek-v4.1-flash-low` | `opencode-go/deepseek-v4.1-flash` + `low` | записан после успешного smoke |
+| judge | `judge-glm-5.3-flash-max` | `zai-coding-plan/glm-5.3-flash` + `max` | записан после успешного smoke |
+
+Кандидаты для judge, прошедшие smoke с variant `max`: `zai-coding-plan/glm-5.3-flash`
+(выбран как наиболее буквальное «zai»), `opencode-go/glm-5.3-flash`.
+`opencode/glm-5.3-flash` отклонён: API вернул «Insufficient balance».
+Профили лежат в `evals/knowledge/providers/`, записаны только через knowledge API.

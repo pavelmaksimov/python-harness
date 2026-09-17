@@ -1,0 +1,25 @@
+{
+  "friendly_name": "GLM 5.3 Flash (z.ai coding plan, max)",
+  "human_selected": true,
+  "metadata": {
+    "name": "GLM 5.3 Flash",
+    "note": "user-named judge: \"opencode/zai glm flash 5.3 flash max\"",
+    "route": "z.ai coding plan"
+  },
+  "model": "glm-5.3-flash",
+  "opencode_version": "1.18.31",
+  "provider": "zai-coding-plan",
+  "role": "judge",
+  "succeeded_at": "2026-09-17T19:08:22+00:00",
+  "variant": "max",
+  "verification": {
+    "model": "glm-5.3-flash",
+    "opencode_version": "1.18.31",
+    "provider": "zai-coding-plan",
+    "run_id": "smoke-20260917T190822",
+    "status": "success",
+    "succeeded_at": "2026-09-17T19:08:22+00:00",
+    "variant": "max"
+  },
+  "verification_run_id": "smoke-20260917T190822"
+}
