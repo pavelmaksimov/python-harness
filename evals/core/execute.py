@@ -24,6 +24,9 @@ from .sandbox import IsolationError, materialize, opencode_command, safe_path
 
 ARTIFACTS = {'patch': 'result.patch', 'report': 'report.md', 'status': 'status.json'}
 _TIMEOUTS = {'subject': 900.0, 'check': 300.0, 'judge': 600.0}
+# Identity recorded when the caller is the shared core rather than a repository
+# backend; a backend passes its own name/version/ids to execute_experiment.
+CORE_BACKEND = {'name': 'core', 'version': '1', 'ids': {}}
 
 
 def _now() -> str:
@@ -116,10 +119,10 @@ def _fallback_report(status: str, error: str | None, checks: list[dict]) -> str:
     return '\n'.join(lines) + '\n'
 
 
-def _base_manifest(request: RunRequest) -> dict:
+def _base_manifest(request: RunRequest, backend: dict | None = None) -> dict:
     return {
         'schema_version': '1',
-        'backend': {'name': 'core', 'version': '1', 'ids': {}},
+        'backend': dict(backend or CORE_BACKEND),
         'run_id': request.run_id,
         'task': {'id': request.task_id, 'hash': '', 'rubric_hash': ''},
         'include_numbers': list(request.include),
@@ -186,10 +189,15 @@ def _capture_patch(request: RunRequest, workspace: Path) -> str:
         return ''
 
 
-def execute_experiment(request: RunRequest, artifact_dir: Path) -> dict:
-    """Run one experiment and always write terminal artifacts before returning."""
+def execute_experiment(request: RunRequest, artifact_dir: Path, *, backend: dict | None = None) -> dict:
+    """Run one experiment and always write terminal artifacts before returning.
+
+    ``backend`` is the producing adapter's identity — ``{'name', 'version',
+    'ids'}`` — recorded in the manifest so a comparison can attribute runs to a
+    backend. It defaults to the shared core identity.
+    """
     artifact_dir = Path(artifact_dir)
-    manifest = _base_manifest(request)
+    manifest = _base_manifest(request, backend)
     manifest['started_at'] = _now()
     attempts, checks = manifest['attempts'], manifest['checks']
     metrics: dict = {}
