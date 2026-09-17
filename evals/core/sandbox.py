@@ -11,7 +11,7 @@ class IsolationError(RuntimeError):
     """The host cannot enforce the experiment's isolation requirements."""
 
 
-_FORBIDDEN = {'.git', '.cursor', '.claude', 'TODO.md', 'auth.json'}
+_FORBIDDEN = {'.git', '.cursor', '.claude', 'TODO.md', 'auth.json', 'task.json'}
 _DISCOVERY = {'AGENTS.md', 'CLAUDE.md', 'opencode.json', 'opencode.jsonc', '.opencode'}
 
 
@@ -23,7 +23,7 @@ def safe_path(root: Path, relative: str) -> Path:
     current = root
     for part in path.parts:
         if part in _FORBIDDEN or part.startswith('.env') or part == 'knowledge':
-            raise ValueError('Secret, operational knowledge, or VCS paths are not inputs')
+            raise ValueError(f'{part} is not an experiment input')
         current = current / part
         if current.is_symlink():
             raise ValueError('Symlinks are not permitted in experiment inputs')
@@ -36,7 +36,7 @@ def _copy(source: Path, destination: Path, *, fixture: bool = False) -> None:
     if source.is_symlink():
         raise ValueError('Symlinks are not permitted in experiment inputs')
     if source.name in _FORBIDDEN or source.name.startswith('.env'):
-        raise ValueError('Secret or VCS files are not experiment inputs')
+        raise ValueError(f'{source.name} is not an experiment input')
     if fixture and source.name in _DISCOVERY:
         raise ValueError('Fixtures cannot supply agent instructions or configuration')
     mode = source.stat().st_mode
