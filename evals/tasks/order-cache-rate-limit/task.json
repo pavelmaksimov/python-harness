@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "order-cache-rate-limit",
+  "title": "Redis cache repository and route rate limiting",
+  "task_md": "evals/tasks/order-cache-rate-limit/task.md",
+  "rubric_md": "evals/tasks/order-cache-rate-limit/rubric.md",
+  "covered_numbers": [3, 5, 9, 22, 23, 32],
+  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-redis", "python-fastapi", "python-fastapi-limiter", "dddlint"],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/order-cache-rate-limit/fixture",
+  "materialize": [
+    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
+    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
+    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
+    {"kind": "rule", "from": "harnesses/rules/python-redis/python-redis.mdc", "to": ".cursor/rules/python-redis.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-fastapi/python-fastapi.mdc", "to": ".cursor/rules/python-fastapi.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-fastapi-limiter.mdc", "to": ".cursor/rules/python-fastapi-limiter.mdc"},
+    {"kind": "template", "from": "harnesses/rules/python-redis/CACHE.md", "to": ".cursor/rules/CACHE.md"},
+    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+  ],
+  "checks": [
+    {"id": "components-do-not-import-redis", "kind": "shell", "cmd": "grep -RnE 'import redis|from redis' project/components/", "expect": "empty", "expect_on_fixture": "fail"},
+    {"id": "cache-repository-uses-base", "kind": "shell", "cmd": "grep -nE 'class [A-Za-z]*CacheRepository\\(' project/components/*/repositories.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "cache-repository-defines-key-template", "kind": "shell", "cmd": "grep -n 'key_template' project/components/*/repositories.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "settings-have-key-prefix", "kind": "shell", "cmd": "grep -n 'REDIS_KEY_PREFIX' project/settings.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "cache-serializes-with-orjson", "kind": "shell", "cmd": "grep -n 'orjson' project/components/*/repositories.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "limiter-initialized-once", "kind": "shell", "cmd": "grep -Rn 'FastAPILimiter.init' project/infrastructure/apps/api.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "routes-use-limiter-dependency", "kind": "shell", "cmd": "grep -Rn 'Depends(RateLimiter' project/components/", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "legacy-limiter-api-absent", "kind": "shell", "cmd": "grep -Rn '@limiter.limit' project/", "expect": "empty", "expect_on_fixture": "pass"}
+  ],
+  "judge_criteria": ["namespaced cache keys with ttl", "transaction-safe serialization", "single limiter initialization"],
+  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+}

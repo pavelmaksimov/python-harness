@@ -1,0 +1,23 @@
+[project]
+name = "telegram-order-bot"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2",
+    "pydantic-settings>=2.0",
+    "python-telegram-bot[job-queue,rate-limiter]>=21",
+    "uvloop>=0.19",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"

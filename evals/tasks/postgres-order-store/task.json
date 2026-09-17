@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "postgres-order-store",
+  "title": "Postgres ORM mapping, repositories and migrations",
+  "task_md": "evals/tasks/postgres-order-store/task.md",
+  "rubric_md": "evals/tasks/postgres-order-store/rubric.md",
+  "covered_numbers": [3, 5, 9, 17, 18, 19, 20, 32],
+  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-sqlalchemy", "sqlalchemy", "python-db-sessions", "python-alembic", "dddlint"],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/postgres-order-store/fixture",
+  "materialize": [
+    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
+    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
+    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
+    {"kind": "rule", "from": "harnesses/rules/python-sqlalchemy/python-sqlalchemy.mdc", "to": ".cursor/rules/python-sqlalchemy.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-db-sessions/python-db-sessions.mdc", "to": ".cursor/rules/python-db-sessions.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-alembic/python-alembic.mdc", "to": ".cursor/rules/python-alembic.mdc"},
+    {"kind": "skill", "from": "harnesses/skills/sqlalchemy/", "to": ".opencode/skills/sqlalchemy/"},
+    {"kind": "template", "from": "harnesses/rules/python-sqlalchemy/BASE_MODELS.md", "to": ".cursor/rules/BASE_MODELS.md"},
+    {"kind": "template", "from": "harnesses/rules/python-sqlalchemy/BASE_REPOSITORIES.md", "to": ".cursor/rules/BASE_REPOSITORIES.md"},
+    {"kind": "template", "from": "harnesses/rules/python-db-sessions/DATABASE.md", "to": ".cursor/rules/DATABASE.md"},
+    {"kind": "template", "from": "harnesses/rules/python-alembic/ENV.md", "to": ".cursor/rules/ENV.md"},
+    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+  ],
+  "checks": [
+    {"id": "order-has-orm-type", "kind": "shell", "cmd": "grep -n 'class OrderORM' project/components/orders/models.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "order-uses-typed-columns", "kind": "shell", "cmd": "grep -nE 'mapped_column|Mapped\\[' project/components/orders/models.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "order-payload-is-jsonb", "kind": "shell", "cmd": "grep -n 'JSONB' project/components/orders/models.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "repository-maps-rows", "kind": "shell", "cmd": "grep -n '_to_entity' project/components/orders/repositories.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "entities-stay-framework-free", "kind": "shell", "cmd": "grep -RnE 'from sqlalchemy|import sqlalchemy' project/components/orders/entities.py", "expect": "empty", "expect_on_fixture": "fail"},
+    {"id": "migration-directory-is-present", "kind": "shell", "cmd": "test -d alembic/versions", "expect": "exit0", "expect_on_fixture": "fail"},
+    {"id": "repositories-use-shared-session", "kind": "shell", "cmd": "grep -nE 'asession|atransaction' project/components/orders/repositories.py", "expect": "nonempty", "expect_on_fixture": "fail"}
+  ],
+  "judge_criteria": ["domain and ORM separation", "transaction-safe repository mapping", "reviewed async migrations"],
+  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+}
