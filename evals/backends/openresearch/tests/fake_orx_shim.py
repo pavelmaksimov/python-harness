@@ -169,11 +169,14 @@ def do_run():
     run_id = f"{ARGV[2]}_run_{index}"
     artifact_dir = pathlib.Path(STATE["artifact_root"]) / f"{ARGV[2]}-run-{index}"
     log_lines = ["subject output line"]
-    if STATE.get("run_fails"):
+    failing = STATE.get("run_fails")
+    writes_artifacts = not failing or STATE.get("fail_with_artifacts")
+    if failing:
         status = "failed"
         log_lines.append("simulated integration failure")
     else:
         status = "done"
+    if writes_artifacts:
         selection = re.search(r"--selection (\S+)", node.get("run_command", ""))
         fingerprint = selection.group(1) if selection else ""
         artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -182,6 +185,7 @@ def do_run():
                 content.replace("__FINGERPRINT__", fingerprint), encoding="utf-8")
         if not STATE.get("omit_marker"):
             log_lines.append(f"HARNESS_EVAL_ARTIFACT={artifact_dir}")
+    if not failing:
         log_lines.append("run completed successfully")
     STATE.setdefault("logs", {})[run_id] = "\n".join(log_lines) + "\n"
     node["node_state"] = "idle"

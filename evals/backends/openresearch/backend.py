@@ -591,12 +591,11 @@ class OpenResearchBackend:
                 orx_run['id'], 'error', Path(request.workdir), None, attempts,
                 f'run {orx_run["id"]} is {orx_run["status"]} but its normalized '
                 'artifacts could not be retrieved from the log or orx worktrees')
-        if orx_run['status'] not in ('done', 'success'):
-            return BackendResult(
-                orx_run['id'], 'error', Path(request.workdir),
-                Path(request.workdir) / 'manifest.json', attempts,
-                f'orx run {orx_run["id"]} finished as {orx_run["status"]}')
-        if retrieval == 'worktree scan' and orx_run['status'] == 'done':
+        # The entrypoint's manifest is authoritative: orx reports a non-zero exit
+        # as a failed run, which also covers legitimately failed deterministic
+        # checks. Artifacts are exported whenever they exist, as diagnostic
+        # history, and the manifest records the orx run status in attempts.
+        if retrieval == 'worktree scan':
             self._record_retrieval_incident(repo_root, orx_run['id'])
         manifest = self._export(source, request, fingerprint, project, node_id,
                                 orx_run['id'], attempts)

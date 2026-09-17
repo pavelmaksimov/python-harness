@@ -19,6 +19,7 @@ DEFAULT_STATE = {
     'artifact_files': {},
     'omit_marker': False,
     'run_fails': False,
+    'fail_with_artifacts': False,
 }
 
 

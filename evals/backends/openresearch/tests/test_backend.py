@@ -196,6 +196,22 @@ class BackendTests(unittest.TestCase):
         self.assertIn('failed', outcome.error)
         self.assertIsNone(outcome.manifest_path)
 
+    def test_failed_run_keeps_its_artifacts_as_diagnostic_history(self):
+        """orx marks a non-zero exit failed; the manifest status stays authoritative."""
+        with fake_orx.install(Path(self.temp.name), projects=[self.project],
+                              artifact_root=self.artifacts, run_fails=True,
+                              fail_with_artifacts=True,
+                              artifact_files=fixtures.artifact_payloads(
+                                  '__FINGERPRINT__', status='failed')):
+            outcome, request = self.run_backend()
+        self.assertEqual(outcome.status, 'failed')
+        self.assertIsNone(outcome.error)
+        manifest = json.loads((request.workdir / 'manifest.json').read_text())
+        self.assertEqual(manifest['status'], 'failed')
+        self.assertEqual(validate_manifest(manifest, self.root), [])
+        self.assertIn('failed', [attempt['result'] for attempt in outcome.attempts
+                                 if attempt['action'] == 'orx runs'][0])
+
     def test_status_maps_the_journal_to_orx_state(self):
         with fake_orx.install(Path(self.temp.name), projects=[self.project],
                               artifact_root=self.artifacts,

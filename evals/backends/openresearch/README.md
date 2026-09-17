@@ -131,7 +131,10 @@ Export rewrites nothing but identity: the four files are copied into
 `evals/history/<task>/<run-id>/`, `run_id` becomes the orx run id, and
 `backend.ids` gains `project`, `experiment`, `run` and `fingerprint` before the
 manifest is validated against `evals/schema/run-manifest.schema.json`. Failed or
-timed-out runs keep their artifacts as diagnostic history.
+timed-out runs keep their artifacts as diagnostic history: orx reports any
+non-zero exit as a failed run, which also covers a legitimately failed
+deterministic check, so the entrypoint manifest's status — not the orx run
+status — decides the reported outcome.
 
 ## Doctor
 
