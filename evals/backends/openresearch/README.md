@@ -29,8 +29,14 @@ worktrees, recorded commits, local execution supervision and run logs.
 - Only `--backend local` compute is used. OpenResearch managed compute, `ssh`,
   `slurm`, `k8s`, `ray`, `modal`, `hf`, `tinker` and the autoresearch loop are
   out of scope for this version.
-- Deterministic shell checks need working bubblewrap, exactly as the core
-  requires; without it a run fails closed (`IsolationError`).
+- Bubblewrap must be able to create unprivileged user namespaces. Under Ubuntu's
+  default `kernel.apparmor_restrict_unprivileged_userns=1` it cannot, and every
+  isolated stage then fails closed with
+  `bwrap: setting up uid map: Permission denied` (a live run reproduced this).
+  Check the host with `unshare --user --map-root-user true`; if it fails, allow
+  unprivileged user namespaces (or load an AppArmor profile for bubblewrap)
+  before running. The backend never executes a stage on the host to work around
+  this: the core owns that decision and fails closed.
 
 ## Project resolution
 
