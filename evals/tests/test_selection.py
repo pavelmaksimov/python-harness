@@ -107,6 +107,14 @@ class SelectionTests(unittest.TestCase):
         enabled = resolve_selection("all standard,31", "", self.matrix)
         self.assertIn(31, enabled.numbers)
 
+    def test_standard_all_skips_harnesses_whose_probe_does_not_exist(self):
+        selection = resolve_selection("всё стандартное", "", self.matrix)
+        future = {item.number for item in self.matrix if item.future_probe}
+        self.assertEqual(future, {13, 15, 21, 27})
+        self.assertFalse(set(selection.numbers) & future)
+        self.assertIn(14, selection.numbers)
+        self.assertIn(22, selection.numbers)
+
     def test_closure_is_transitive_across_tests_database_and_cli(self):
         self.assertEqual(resolve_selection("12", "", self.matrix).numbers, (10, 11, 12, 30))
         self.assertEqual(resolve_selection("19", "", self.matrix).numbers, (17, 18, 19, 20))
@@ -166,6 +174,13 @@ class CoverageTests(unittest.TestCase):
         for include in ("13", "15", "21", "27", "13,15,21,27", "1,2,4,15"):
             with self.subTest(include=include), self.assertRaisesRegex(ValueError, "separate bounded task"):
                 ensure_coverage(resolve_selection(include, "", self.matrix), tasks, self.matrix)
+
+    def test_requested_future_probe_blocks_even_beside_a_covered_harness(self):
+        tasks = [{"covered_numbers": [6, 25, 26]}]
+        for include in ("6,15", "25,27"):
+            with self.subTest(include=include), self.assertRaisesRegex(ValueError, "No probe covers"):
+                ensure_coverage(resolve_selection(include, "", self.matrix), tasks, self.matrix)
+        ensure_coverage(resolve_selection("6,25-26", "", self.matrix), tasks, self.matrix)
 
     def test_general_root_with_uncovered_companion_still_blocks(self):
         selection = resolve_selection("1,10", "", self.matrix)
