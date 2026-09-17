@@ -1,0 +1,39 @@
+{
+  "friendly_name": "DeepSeek V4.1 Flash (low)",
+  "human_selected": true,
+  "metadata": {
+    "capabilities": {
+      "attachment": true,
+      "reasoning": true,
+      "temperature": true,
+      "toolcall": true
+    },
+    "cost": {
+      "cache_read": 0.003,
+      "input": 0.15,
+      "output": 0.6
+    },
+    "family": "deepseek-flash",
+    "limit": {
+      "context": 1000000,
+      "output": 384000
+    },
+    "name": "DeepSeek V4.1 Flash"
+  },
+  "model": "deepseek-v4.1-flash",
+  "opencode_version": "1.18.31",
+  "provider": "opencode-go",
+  "role": "subject",
+  "succeeded_at": "2026-09-17T19:00:38+00:00",
+  "variant": "low",
+  "verification": {
+    "model": "deepseek-v4.1-flash",
+    "opencode_version": "1.18.31",
+    "provider": "opencode-go",
+    "run_id": "smoke-20260917T185933",
+    "status": "success",
+    "succeeded_at": "2026-09-17T19:00:38+00:00",
+    "variant": "low"
+  },
+  "verification_run_id": "smoke-20260917T185933"
+}
