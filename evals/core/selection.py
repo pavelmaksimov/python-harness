@@ -42,7 +42,8 @@ def _numbers(value: str | tuple[int, ...], matrix: tuple[Harness, ...]) -> set[i
             offset = match.end()
             kind = match.lastgroup
             if kind == "standard":
-                numbers.update(item.number for item in matrix if "optional" not in item.band.split())
+                numbers.update(item.number for item in matrix
+                               if "optional" not in item.band.split() and not item.future_probe)
             elif kind == "all":
                 numbers.update(known)
             elif kind == "range":
@@ -124,9 +125,10 @@ def ensure_coverage(
 ) -> None:
     """Require a real task intersection, without inventing future probe coverage.
 
-    General-workflow entries are always covered. A future-only request cannot
-    become supported merely because its dependency closure adds a current probe.
-    Coverage declarations belong to tasks, not to a second number registry here.
+    General-workflow entries are always covered. Requesting a harness whose probe
+    does not exist yet is refused outright — closing over its companions must not
+    make an unprobed experiment look supported. Coverage declarations belong to
+    tasks, not to a second number registry here.
     """
     by_number = {item.number: item for item in matrix}
     roots = set(selection.include_numbers) - set(selection.exclude_numbers)
@@ -134,6 +136,13 @@ def ensure_coverage(
     if not active:
         return
     requested = {number for number in roots if not by_number[number].general_workflow} or active
+    unprobed = {number for number in requested if by_number[number].future_probe}
+    if unprobed:
+        identifiers = ", ".join(by_number[number].id for number in sorted(unprobed))
+        raise ValueError(
+            f"No probe covers {identifiers} yet; create a separate bounded task "
+            "before running the experiment"
+        )
     eligible = {
         number for number in selection.numbers
         if not by_number[number].general_workflow and not by_number[number].future_probe
