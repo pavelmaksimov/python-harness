@@ -39,7 +39,9 @@ class FakeBackend:
     def run(self, request) -> BackendResult:
         request = replace(request, subject_command=self.subject, judge_command=self.judge)
         directory = Path(request.workdir)
-        manifest = execute_experiment(request, directory)
+        manifest = execute_experiment(request, directory, backend={
+            'name': self.name, 'version': self.version, 'ids': {'stub': True},
+        })
         self.runs[request.run_id] = directory
         return BackendResult(request.run_id, manifest['status'], directory,
                              directory / 'manifest.json', manifest['attempts'], None)

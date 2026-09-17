@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
                 request = RunRequest(task['id'], selection.include_numbers,
                                      selection.exclude_numbers, selection,
                                      args.subject_profile or args.provider, args.judge_profile,
-                                     root / 'memory/.tmp/evals' / run_id, run_id, root,
+                                     root / 'evals/history' / task['id'] / run_id, run_id, root,
                                      _git(root, 'rev-parse', 'HEAD'), revision(root))
                 outcome = backend.run(request)
                 output = asdict(outcome)

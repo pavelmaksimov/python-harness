@@ -33,8 +33,10 @@ the closed-over companions; `needs_human_choice` is empty.
 Stop and explain the dependency instead of running when the output reports:
 
 - a required companion was explicitly excluded (dependency conflict);
-- the probe does not cover the selected IDs (`нужно отдельное ограниченное
-  задание`) — propose that narrower task instead of widening this one.
+- a requested harness has no probe yet, or the probe does not cover the
+  selected IDs (`нужно отдельное ограниченное задание`) — propose that narrower
+  task instead of widening this one. `всё стандартное` therefore means every
+  non-optional harness that a current probe can exercise.
 
 Numbering and the "number → catalog ID" mapping live only in
 `evals/HARNESS_MATRIX.md`.
@@ -81,7 +83,9 @@ The run materializes an isolated workspace from `evals/_fixtures/base-project`,
 the task fixture and the task's `materialize` entries, executes the subject,
 runs the task's deterministic `checks`, then a read-only judge. Subject
 commands are limited to the workspace and the narrow allowlist; the judge never
-writes.
+writes. The CLI puts run artifacts in `evals/history/<task>/<run-id>/`
+(git-ignored, never committed); a backend passes its own name, version and IDs
+to `execute_experiment(..., backend=...)` so the manifest names the producer.
 
 Completion criterion: the process prints `HARNESS_EVAL_ARTIFACT=<run dir>` and
 the run directory holds `manifest.json`, `result.patch`, `report.md` and

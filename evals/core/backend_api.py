@@ -9,6 +9,13 @@ from .selection import Selection
 
 @dataclass(frozen=True)
 class RunRequest:
+    """One experiment request, frozen so a backend cannot mutate the selection.
+
+    ``subject_command`` / ``judge_command`` are test overrides: they run the
+    given argv instead of the isolated OpenCode call, so only the stub backend
+    and the test suite set them. A real run leaves them ``None``.
+    """
+
     task_id: str
     include: tuple[int, ...]
     exclude: tuple[int, ...]
