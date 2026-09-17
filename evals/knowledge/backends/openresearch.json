@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-17T19:01:08+00:00",
+  "orx_version": "0.2.4",
+  "smoke": {
+    "experiment": "740c3385-9b62-44ff-a8a2-fc0bf2ca1442",
+    "marker": true,
+    "run_id": "0d39d485-8f5d-4008-9000-0a0d6e3ae15d",
+    "status": "success"
+  },
+  "telemetry": "off",
+  "verification": {
+    "run_id": "0d39d485-8f5d-4008-9000-0a0d6e3ae15d",
+    "status": "success",
+    "succeeded_at": "2026-09-17T19:01:08+00:00"
+  }
+}
