@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized harness evaluation run",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "backend": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "ids": {
+          "type": "object"
+        }
+      }
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "id",
+        "hash",
+        "rubric_hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "rubric_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "include_numbers": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true
+    },
+    "exclude_numbers": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true
+    },
+    "harness_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "source_commit": {
+      "type": "string"
+    },
+    "catalog_version": {
+      "type": "string"
+    },
+    "harness_hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "knowledge_revision": {
+      "type": "string"
+    },
+    "subject_profile": {
+      "type": "object"
+    },
+    "judge_profile": {
+      "type": "object"
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model",
+        "variant"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "variant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "opencode_version": {
+      "type": "string"
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "action",
+          "result",
+          "duration_ms",
+          "incident"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "incident": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "evidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "error"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "judge_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "patch",
+        "report",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "patch": {
+          "type": "string"
+        },
+        "report": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "success",
+        "failed",
+        "timeout",
+        "error"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "backend",
+    "run_id",
+    "task",
+    "include_numbers",
+    "exclude_numbers",
+    "harness_ids",
+    "source_commit",
+    "catalog_version",
+    "harness_hashes",
+    "knowledge_revision",
+    "subject_profile",
+    "judge_profile",
+    "model",
+    "opencode_version",
+    "attempts",
+    "checks",
+    "metrics",
+    "judge_score",
+    "artifacts",
+    "status",
+    "started_at",
+    "finished_at"
+  ]
+}
