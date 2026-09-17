@@ -65,7 +65,13 @@ written.
   the *same* node, while any harness, model, judge, task/rubric or command change
   creates a new child.
 - A node that has already run is never edited (matching OpenResearch's own rule).
-  Corrections become children, so the failed path stays visible in the lineage.
+  Corrections become children: a new variant hangs under the **latest variant
+  node of the same probe** (the tree grows downward, as orx expects), not under
+  the root, so a fix for a node that already answered stays in that node's
+  lineage and the failed path remains visible.
+- A node runs from an extracted source archive in the orx data directory
+  (`~/.local/share/openresearch/local-runs/<run-id>/repo`), not from a Git
+  checkout; the recorded commit therefore travels in the run command.
 - Before the first run of a fresh node the recorded commit is pushed onto that
   node's branch (`git push --force <project-repo> <commit>:refs/heads/orx/<slug>`)
   from the checkout that owns the commit. The node has not run yet, so this is
@@ -79,11 +85,16 @@ Each node is frozen with exactly:
 ```text
 uv run python evals/orx_entrypoint.py execute --task <task-id> \
   --include <canonical-numbers> --subject-profile <profile> \
-  --judge-profile <profile> --selection <fingerprint>
+  --judge-profile <profile> --selection <fingerprint> \
+  --source-commit <recorded-commit>
 ```
 
-Provider/model/variant never appear in the command: they are read from the
-profile files of the recorded commit and recorded in the run manifest.
+The recorded commit is part of the command because a node does **not** run in a
+Git checkout: orx executes an immutable source archive, so `git rev-parse` fails
+inside the node and the commit can only come from the request. It is also part of
+the fingerprint, so a new commit already produces a new node instead of an edited
+command. Provider/model/variant never appear in the command: they are read from
+the profile files of the recorded commit and recorded in the run manifest.
 `--exclude` is appended only when the selection has exclusions. The adapter then
 runs and supervises through the public CLI only:
 

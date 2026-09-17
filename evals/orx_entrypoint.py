@@ -7,7 +7,7 @@ Orchestrated by ``evals/backends/openresearch/backend.py``, a node runs:
     uv run python evals/orx_entrypoint.py execute \
       --task <task-id> --include <canonical-numbers> \
       --subject-profile <profile> --judge-profile <profile> \
-      --selection <fingerprint>
+      --selection <fingerprint> --source-commit <recorded-commit>
 
 The script owns only the subject matter: it verifies the recorded commit, the
 task manifest, the harness matrix and both profiles, resolves the selection,
@@ -28,6 +28,7 @@ import json
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 import subprocess
 import sys
 import uuid
@@ -46,14 +47,6 @@ from evals.backends.openresearch.backend import selection_fingerprint
 from evals.core.validate import load_tasks
 
 
-def _git(root: Path, *args: str) -> str:
-    result = subprocess.run(('git', *args), cwd=root, capture_output=True,
-                            text=True, timeout=30, check=False)
-    if result.returncode:
-        raise ValueError(f'git {args[0]} failed: {result.stderr.strip()}')
-    return result.stdout.strip()
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -66,6 +59,9 @@ def build_parser() -> argparse.ArgumentParser:
     execute.add_argument('--judge-profile', required=True)
     execute.add_argument('--selection', required=True,
                          help='selection fingerprint frozen on the node')
+    execute.add_argument('--source-commit', required=True,
+                         help='recorded commit of this node (nodes run without '
+                              'Git metadata, so it cannot be read from the tree)')
     return parser
 
 
@@ -82,7 +78,9 @@ def execute(args: argparse.Namespace, *, repo_root: Path | None = None,
     tasks = load_tasks(repo_root)
     if not any(task['id'] == args.task for task in tasks):
         raise ValueError(f'unknown task {args.task!r}')
-    source_commit = _git(repo_root, 'rev-parse', 'HEAD')
+    source_commit = args.source_commit.strip()
+    if not re.fullmatch(r'[0-9a-f]{7,64}', source_commit):
+        raise ValueError('--source-commit must be the recorded Git commit hash')
     # Loading with the role check doubles as the profile verification step.
     load_profile(repo_root, args.subject_profile, role='subject')
     load_profile(repo_root, args.judge_profile, role='judge')

@@ -116,6 +116,8 @@ class BackendTests(unittest.TestCase):
         runs = [call for call in argv if call[:2] == ['exp', 'run']]
         self.assertEqual(len(runs), 2)
         self.assertEqual(runs[0][2], runs[1][2], 'the same node is re-run')
+        self.assertIn('--source-commit ' + self.head,
+                      creates[1][creates[1].index('--run-command') + 1])
         self.assertNotEqual(first.run_id, second.run_id)
 
     def test_configuration_change_creates_a_child_node(self):
@@ -134,9 +136,11 @@ class BackendTests(unittest.TestCase):
         creates = [call for call in argv if call[0] == 'create-experiment']
         self.assertEqual(len(creates), 3)
         child = creates[2]
-        self.assertEqual(child[child.index('--parent') + 1], 'evalpyh_1')
-        self.assertIn('--selection ' + changed_fingerprint,
-                      child[child.index('--run-command') + 1])
+        command = child[child.index('--run-command') + 1]
+        self.assertIn('--selection ' + changed_fingerprint, command)
+        self.assertIn('--source-commit ' + self.head, command)
+        self.assertEqual(child[child.index('--parent') + 1], 'evalpyh_2',
+                         'a new variant descends onto the latest variant node')
 
     # ------------------------------------------------------------------- run
     def test_run_exports_normalized_artifacts_carrying_the_orx_ids(self):

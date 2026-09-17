@@ -90,14 +90,21 @@ def selection_fingerprint(*, task_id: str, include, exclude, harness_ids,
 
 
 def build_run_command(task_id: str, include, exclude, subject_profile: str,
-                      judge_profile: str, fingerprint: str) -> str:
-    """The frozen node run command; plan B fixes this exact shape."""
+                      judge_profile: str, fingerprint: str,
+                      source_commit: str) -> str:
+    """The node run command, frozen at creation.
+
+    It carries the recorded commit because orx executes a node from an extracted
+    source archive without Git metadata, so the entrypoint cannot read the commit
+    from the working tree. The commit is part of the fingerprint, so any commit
+    change already produces a new node rather than an edited command.
+    """
     include_text = ','.join(str(number) for number in include)
     command = (
         f'uv run python evals/orx_entrypoint.py execute'
         f' --task {task_id} --include {include_text}'
         f' --subject-profile {subject_profile} --judge-profile {judge_profile}'
-        f' --selection {fingerprint}'
+        f' --selection {fingerprint} --source-commit {source_commit}'
     )
     exclude_text = ','.join(str(number) for number in exclude)
     if exclude_text:
@@ -355,15 +362,24 @@ class OpenResearchBackend:
 
     def _ensure_variant(self, project_id: str, baseline: dict, request: RunRequest,
                         fingerprint: str, run_command: str, description: str) -> tuple[str, dict, bool]:
-        for node_id, node in self._view(project_id)['experiments'].items():
+        """Reuse the node with this fingerprint, or descend a new child onto it.
+
+        A new variant hangs under the most recent variant node of the same probe,
+        not under the root: orx expects the tree to grow downward, and a fix for a
+        node that already answered therefore stays in that node's lineage.
+        """
+        view = self._view(project_id)
+        parent = baseline['id']
+        for node_id, node in view['experiments'].items():
             if node['root']:
                 continue
             if re.search(rf'^selection-fingerprint: {re.escape(fingerprint)}$',
                          self._desc(node_id), re.M):
                 return node_id, node, True
+            parent = node_id
         created = self._create_node(
             project_id, title=f'eval {request.task_id} {fingerprint}',
-            parent=baseline['id'], run_command=run_command,
+            parent=parent, run_command=run_command,
         )
         self._set_desc(created, description)
         return created, self._view(project_id)['experiments'][created], False
@@ -522,7 +538,7 @@ class OpenResearchBackend:
         )
         command = build_run_command(request.task_id, request.include, request.exclude,
                                     request.subject_profile, request.judge_profile,
-                                    fingerprint)
+                                    fingerprint, request.source_commit)
         incidents = self._known_incidents(repo_root)
         record('orx resolve-project',
                f"{project.get('id')}; telemetry {telemetry}; "

@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import shutil
 import sys
 import tempfile
 import unittest
@@ -57,21 +58,23 @@ class EntrypointTests(unittest.TestCase):
                                         fixtures.build_eval_repo(repo_root))
         return fixtures.fingerprint_for(request)
 
-    def run_entry(self, *, repo_root, selection, task='orders-cli', include='25-26',
-                  subject=SUBJECT, judge=JUDGE):
+    def run_entry(self, *, repo_root, selection, source_commit, task='orders-cli',
+                  include='25-26', subject=SUBJECT, judge=JUDGE):
         stdout, stderr = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             code = main(['execute', '--task', task, '--include', include,
                          '--subject-profile', fixtures.SUBJECT_ALIAS,
                          '--judge-profile', fixtures.JUDGE_ALIAS,
-                         '--selection', selection], repo_root=repo_root,
+                         '--selection', selection,
+                         '--source-commit', source_commit], repo_root=repo_root,
                         subject_command=subject, judge_command=judge)
         return code, stdout.getvalue(), stderr.getvalue()
 
     def test_execute_writes_normalized_artifacts_and_summary(self):
         fingerprint = self.fingerprint()
         code, stdout, stderr = self.run_entry(repo_root=self.root,
-                                              selection=fingerprint)
+                                              selection=fingerprint,
+                                              source_commit=self.head)
         self.assertEqual((code, stderr), (0, ''))
         marker = next(line for line in stdout.splitlines()
                       if line.startswith('HARNESS_EVAL_ARTIFACT='))
@@ -83,6 +86,7 @@ class EntrypointTests(unittest.TestCase):
         self.assertEqual(manifest['status'], 'success')
         self.assertEqual(manifest['backend']['name'], 'openresearch')
         self.assertEqual(manifest['backend']['ids']['fingerprint'], fingerprint)
+        self.assertEqual(manifest['source_commit'], self.head)
         self.assertEqual(manifest['backend']['ids']['local_run'], manifest['run_id'])
         self.assertEqual(manifest['task']['id'], 'orders-cli')
         self.assertEqual(manifest['include_numbers'], [25, 26])
@@ -92,16 +96,34 @@ class EntrypointTests(unittest.TestCase):
 
     def test_fingerprint_mismatch_is_refused_before_any_run(self):
         code, stdout, stderr = self.run_entry(repo_root=self.root,
-                                              selection='0' * 16)
+                                              selection='0' * 16,
+                                              source_commit=self.head)
         self.assertEqual(code, 2)
         self.assertIn('fingerprint mismatch', stderr)
         self.assertFalse((self.root / 'memory/.tmp/orx-runs/orders-cli').exists())
 
     def test_unknown_task_is_refused(self):
         code, _, stderr = self.run_entry(repo_root=self.root, selection='0' * 16,
+                                         source_commit=self.head,
                                          task='missing-probe')
         self.assertEqual(code, 2)
         self.assertIn('unknown task', stderr)
+
+    def test_execute_runs_from_an_archive_without_git_metadata(self):
+        """orx nodes run from an extracted archive: no .git, commit comes as an argument."""
+        shutil.rmtree(self.root / '.git')
+        fingerprint = fixtures.fingerprint_for(
+            fixtures.make_request(self.root, self.head))
+        code, stdout, stderr = self.run_entry(repo_root=self.root,
+                                              selection=fingerprint,
+                                              source_commit=self.head)
+        self.assertEqual((code, stderr), (0, ''))
+        directory = Path(next(line for line in stdout.splitlines()
+                              if line.startswith('HARNESS_EVAL_ARTIFACT=')
+                              ).split('=', 1)[1])
+        manifest = json.loads((directory / 'manifest.json').read_text())
+        self.assertEqual(manifest['source_commit'], self.head)
+        self.assertEqual(manifest['status'], 'success')
 
     def test_failed_checks_exit_one_with_failed_status(self):
         root = Path(self.temp.name) / 'failing'
@@ -111,7 +133,7 @@ class EntrypointTests(unittest.TestCase):
         request = fixtures.make_request(root, head)
         code, stdout, stderr = self.run_entry(repo_root=root,
                                               selection=fixtures.fingerprint_for(request),
-                                              subject=BAD_SUBJECT)
+                                              source_commit=head, subject=BAD_SUBJECT)
         self.assertEqual((code, stderr), (1, ''))
         directory = Path(next(line for line in stdout.splitlines()
                               if line.startswith('HARNESS_EVAL_ARTIFACT=')
