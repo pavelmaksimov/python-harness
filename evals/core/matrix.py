@@ -23,6 +23,10 @@ class Harness:
     def future_probe(self) -> bool:
         return self.primary_probe.startswith("Будущая ")
 
+    @property
+    def all_code_probes(self) -> bool:
+        return self.primary_probe == "Все кодовые пробы"
+
 
 _REQUIRED = re.compile(
     r"^(?:Использует|Требует|Автоматически добавляет|DB bundle:)\s+"

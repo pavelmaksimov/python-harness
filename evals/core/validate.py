@@ -82,6 +82,34 @@ def load_tasks(repo_root: Path) -> list[dict]:
     return tasks
 
 
+def _task_errors(task: dict) -> list[str]:
+    """The manifest shape the core actually reads; drift here fails runs at load."""
+    identifier = task.get('id', '?')
+    errors: list[str] = []
+    prompt = task.get('prompt')
+    if not (isinstance(prompt, str) and prompt.strip()) and not task.get('prompt_file'):
+        errors.append(f'{identifier}: missing prompt or prompt_file')
+    if 'rubric' not in task and not task.get('rubric_file'):
+        errors.append(f'{identifier}: missing rubric or rubric_file')
+    checks = task.get('checks', [])
+    if not isinstance(checks, list):
+        errors.append(f'{identifier}: checks must be a list')
+        return errors
+    for index, check in enumerate(checks):
+        label = f"{identifier}: checks[{index}]"
+        if not isinstance(check, dict) or check.get('kind') != 'shell':
+            errors.append(f'{label}: only shell checks are supported')
+            continue
+        command = check.get('command')
+        valid_command = isinstance(command, str) and command.strip() or (
+            isinstance(command, list) and command and all(isinstance(arg, str) for arg in command))
+        if not valid_command:
+            errors.append(f'{label}: command must be a nonempty string or argument list')
+        if check.get('on_fixture') not in (None, 'pass', 'fail'):
+            errors.append(f'{label}: on_fixture must be "pass" or "fail"')
+    return errors
+
+
 def validate_repository(repo_root: Path) -> dict:
     root = repo_root.resolve()
     matrix = load_matrix(root)
@@ -92,6 +120,7 @@ def validate_repository(repo_root: Path) -> dict:
     by_number = {row.number: row for row in matrix}
     coverage = Counter()
     for task in tasks:
+        errors.extend(_task_errors(task))
         numbers = task.get('covered_numbers', [])
         if not isinstance(numbers, list) or any(type(n) is not int for n in numbers):
             errors.append(f'{task["id"]}: covered_numbers must contain integers')
@@ -100,9 +129,11 @@ def validate_repository(repo_root: Path) -> dict:
         for number in numbers:
             if number not in by_number:
                 errors.append(f'{task["id"]}: unknown covered number {number}')
-            else:
-                probe = by_number[number].primary_probe.strip('`')
-                if probe and probe[0].isascii() and '-' in probe and probe != task['id']:
+                continue
+            row = by_number[number]
+            if not (row.general_workflow or row.future_probe or row.all_code_probes):
+                probe = row.primary_probe.strip('`')
+                if probe and probe != task['id']:
                     errors.append(f'{task["id"]}: number {number} belongs to {probe}')
         for item in task.get('materialize', []):
             source = item.get('from', '')
@@ -110,9 +141,12 @@ def validate_repository(repo_root: Path) -> dict:
             if not source or Path(source).is_absolute() or not path.resolve().is_relative_to(root) or not path.exists():
                 errors.append(f'{task["id"]}: missing/unsafe materialize.from {source}')
     for number, row in by_number.items():
-        probe = row.primary_probe.strip('`')
-        if probe and probe[0].isascii() and '-' in probe and coverage[number] != 1:
+        if row.general_workflow or row.future_probe:
+            if coverage[number]:
+                errors.append(f'{row.id}: reserved for {row.primary_probe}, covered by {coverage[number]} probe(s)')
+        elif row.all_code_probes:
+            if coverage[number] < 1:
+                errors.append(f'{row.id}: no probe covers it')
+        elif coverage[number] != 1:
             errors.append(f'{row.id}: expected exactly one probe, found {coverage[number]}')
-        elif coverage[number] > 1:
-            errors.append(f'{row.id}: declared by multiple probes')
     return {'errors': errors, 'notes': []}
