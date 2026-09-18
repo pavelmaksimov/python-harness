@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "payment-http-client",
+  "title": "Outbound invoice client and transient failure handling",
+  "task_md": "evals/tasks/payment-http-client/task.md",
+  "rubric_md": "evals/tasks/payment-http-client/rubric.md",
+  "covered_numbers": [3, 5, 8, 9, 16, 32],
+  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-base-client", "python-retry", "dddlint"],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/payment-http-client/fixture",
+  "materialize": [
+    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
+    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
+    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-base-client.mdc", "to": ".cursor/rules/python-base-client.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-retry.mdc", "to": ".cursor/rules/python-retry.mdc"},
+    {"kind": "template", "from": "harnesses/rules/python-libs/ASYNC_CLIENT.md", "to": ".cursor/rules/ASYNC_CLIENT.md"},
+    {"kind": "template", "from": "harnesses/rules/python-libs/RETRY.md", "to": ".cursor/rules/RETRY.md"},
+    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+  ],
+  "checks": [
+    {"id": "client-composes-async-api", "kind": "shell", "cmd": "grep -n 'AsyncApi' project/infrastructure/adapters/invoices.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "client-names-monitoring-api", "kind": "shell", "cmd": "grep -n 'name_for_monitoring' project/infrastructure/adapters/invoices.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "client-avoids-raise-for-status", "kind": "shell", "cmd": "grep -n 'raise_for_status' project/infrastructure/adapters/invoices.py", "expect": "empty", "expect_on_fixture": "fail"},
+    {"id": "client-maps-domain-errors", "kind": "shell", "cmd": "grep -nE 'ClientError|ServerError|ExternalHTTPConnectionError' project/infrastructure/adapters/invoices.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "client-retries-transient-failures", "kind": "shell", "cmd": "grep -nE 'retry_on_exception|retry_unless_exception' project/infrastructure/adapters/invoices.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "client-does-not-use-sync-implementation", "kind": "shell", "cmd": "grep -n 'SyncApi' project/infrastructure/adapters/invoices.py", "expect": "empty", "expect_on_fixture": "pass"}
+  ],
+  "judge_criteria": ["transport abstraction and error mapping", "transient-only retries", "borrowed session safety"],
+  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+}
