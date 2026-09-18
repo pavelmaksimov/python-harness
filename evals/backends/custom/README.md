@@ -169,19 +169,21 @@ degraded boundary instead:
 `doctor` reports `isolation: weak` while this is active and keeps a restoration
 reminder in its notes; the manifest records `backend.ids.isolation = weak-approved`
 so history never confuses degraded runs with sandboxed ones. An explicit
-`subject_command`/`judge_command` (the core's override hook, used by tests) is
-never overridden.
+`subject_command`/`judge_command` launcher (the core's override hook, used by
+tests) is never overridden.
 
 This module is temporary by design: the follow-up task on MY-45 removes it once
 the host runs unprivileged namespaces again. Without the approval record nothing
 changes — the core stays fail-closed.
 
 Diagnosability on this host: the core reads subject and judge output through
-pipes and keeps only the parsed result, so weak mode runs the real command
-through a tee shim that appends the raw stream to
+pipes and keeps only the parsed result, so weak mode prepends a launcher — the
+pinned per-role policy plus a tee shim that appends the raw stream to
 `memory/.tmp/evals/transcripts/<run-id>-<role>.jsonl` (git-ignored scratch, same
-policy as the attempt logs) while forwarding the unchanged stream and exit code
-to the parser.
+policy as the attempt logs) while forwarding the unchanged stream and exit code to
+the parser. The launcher carries no `--model`: the core appends the exact
+invocation of the profile it chose, so a judge that falls back to another profile
+needs no second launcher and the model is never picked outside the records.
 
 ## Doctor
 

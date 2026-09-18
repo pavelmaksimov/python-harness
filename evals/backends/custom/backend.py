@@ -59,12 +59,13 @@ class CustomBackend:
     def run(self, request) -> BackendResult:
         weak = weak_isolation.active(request.repo_root)
         if weak and request.subject_command is None:
-            # Approved degraded isolation: real OpenCode invocations with the
-            # materialized per-role policy pinned, minus OS namespaces. An explicit
-            # subject/judge command (the core's override hook) is never overridden.
+            # Approved degraded isolation: the materialized per-role policy and the
+            # tee shim as a launcher, minus OS namespaces; the core still appends
+            # the exact OpenCode invocation for the profile it chose. An explicit
+            # subject/judge launcher (the core's override hook) is never overridden.
             request = replace(request,
-                              subject_command=weak_isolation.command_for(request, request.subject_profile, 'subject'),
-                              judge_command=weak_isolation.command_for(request, request.judge_profile, 'judge'))
+                              subject_command=weak_isolation.command_for(request, 'subject'),
+                              judge_command=weak_isolation.command_for(request, 'judge'))
         identity = dict(IDENTITY, ids=dict(IDENTITY['ids'], isolation='weak-approved' if weak else 'sandbox'))
         gate = weak_isolation.host_execution() if weak else contextlib.nullcontext()
         with gate:

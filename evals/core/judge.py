@@ -108,8 +108,11 @@ def judge_workspace(workspace: Path, profile: dict, rubric: dict | list, checks:
     for attempt in (1, 2):
         instruction = prompt if attempt == 1 else prompt + '\n' + _RETRY_INSTRUCTION
         if command:
-            # Test override: never used for real runs, which always require isolation.
-            result = run_process([*command, instruction], cwd=workspace, timeout=timeout)
+            # Test/transport override: a launcher; the invocation for this profile
+            # is appended, so a fallback profile is a profile change, not a new
+            # transport.
+            result = run_process([*command, *opencode_command(profile, instruction)],
+                                 cwd=workspace, timeout=timeout)
         else:
             result = run_isolated(opencode_command(profile, instruction), workspace,
                                   timeout=timeout, role='judge', readonly=True)

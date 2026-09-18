@@ -55,10 +55,10 @@ class GatingTests(unittest.TestCase):
             self.assertIs(checks.run_isolated, weak_isolation._host_run_isolated)
         self.assertIs(checks.run_isolated, original)
 
-    def test_commands_pin_the_role_policy_and_end_with_the_prompt_separator(self):
+    def test_the_launcher_pins_the_role_policy_and_leaves_the_model_to_the_core(self):
         request = harness.request(self.root, 'weak-cmd')
-        subject = weak_isolation.command_for(request, 'subject', 'subject')
-        judge = weak_isolation.command_for(request, 'judge', 'judge')
+        subject = weak_isolation.command_for(request, 'subject')
+        judge = weak_isolation.command_for(request, 'judge')
         for command, role in ((subject, 'subject'), (judge, 'judge')):
             self.assertEqual(command[0], 'env')
             settings = dict(item.split('=', 1) for item in command[1:] if '=' in item)
@@ -72,9 +72,9 @@ class GatingTests(unittest.TestCase):
                              'weak mode points the policy at the real workspace')
             self.assertIn(str(weak_isolation.shim_path(request.repo_root)), command)
             self.assertIn(str(weak_isolation.transcript_path(request, role)), command)
-            self.assertEqual(command[-1], '--')
-        self.assertEqual(subject[subject.index('--model') + 1], 'fake/fake-model')
-        self.assertNotIn('--variant', subject, 'the profile has no variant; none is invented')
+            self.assertNotIn('--model', command,
+                             'the core appends the invocation of the profile it chose')
+            self.assertEqual(command[-1], str(weak_isolation.transcript_path(request, role)))
         self.assertIn('"edit": "deny"', ' '.join(judge), 'the judge policy stays read-only')
 
     def test_transcript_shim_forwards_stream_and_exit_code(self):

@@ -32,7 +32,6 @@ import sys
 from evals.core import checks, sandbox
 from evals.core.checks import run_process
 from evals.core.knowledge import knowledge_path, sanitize
-from evals.core.profiles import load_profile
 
 _PROBE = ('bwrap', '--die-with-parent', '--unshare-pid', '--ro-bind', '/', '/',
           '--proc', '/proc', '--tmpfs', '/tmp', '--', '/bin/true')
@@ -188,18 +187,20 @@ def host_execution():
         checks.run_isolated = original
 
 
-def command_for(request, alias: str, role: str) -> tuple[str, ...]:
-    """Real OpenCode invocation with the materialized per-role policy pinned.
+def command_for(request, role: str) -> tuple[str, ...]:
+    """Weak-mode launcher: the per-role policy and the tee shim, no model choice.
 
-    The core appends the prompt as the last argument after this command, which is
-    why the trailing ``--`` is already part of it. Environment pinning replaces
-    the sandbox's ``--setenv``; the inherited host environment is what carries
-    provider credentials, exactly as inside the bubblewrap subject role. The
-    policy and the shell are the weak-mode equivalents of the sandbox layout:
-    real workspace paths instead of ``/workspace``, and the bubblewrap-free
-    allowlist shell instead of ``/control/eval-shell``.
+    The core appends the exact OpenCode invocation for the profile it chose, which
+    is why this launcher carries no ``--model``: a judge that falls back to
+    another profile is a profile change inside the core, not a second launcher,
+    and the model or variant is never chosen outside the recorded profiles.
+    Environment pinning replaces the sandbox's ``--setenv``; the inherited host
+    environment is what carries provider credentials, exactly as inside the
+    bubblewrap subject role. The policy and the shell are the weak-mode
+    equivalents of the sandbox layout: real workspace paths instead of
+    ``/workspace``, and the bubblewrap-free allowlist shell instead of
+    ``/control/eval-shell``.
     """
-    profile = load_profile(Path(request.repo_root), alias, role=role)
     control = Path(request.workdir) / 'control' / role
     workspace = Path(request.workdir) / 'workspace'
     settings = {
@@ -212,11 +213,5 @@ def command_for(request, alias: str, role: str) -> tuple[str, ...]:
         'OPENCODE_PURE': '1',
         'SHELL': str(shell_path(request.repo_root)),
     }
-    provider, model = profile['provider'], profile['model']
-    model_id = model if model.startswith(provider + '/') else provider + '/' + model
-    command = ['env', *[f'{key}={value}' for key, value in settings.items()],
-               sys.executable, str(shim_path(request.repo_root)), str(transcript_path(request, role)),
-               'opencode', 'run', '--pure', '--format', 'json', '--model', model_id]
-    if profile.get('variant'):
-        command += ['--variant', profile['variant']]
-    return tuple([*command, '--'])
+    return tuple(['env', *[f'{key}={value}' for key, value in settings.items()],
+                  sys.executable, str(shim_path(request.repo_root)), str(transcript_path(request, role))])

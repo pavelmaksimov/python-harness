@@ -11,9 +11,11 @@ from .selection import Selection
 class RunRequest:
     """One experiment request, frozen so a backend cannot mutate the selection.
 
-    ``subject_command`` / ``judge_command`` are test overrides: they run the
-    given argv instead of the isolated OpenCode call, so only the stub backend
-    and the test suite set them. A real run leaves them ``None``.
+    ``subject_command`` / ``judge_command`` are overrides the core prepends to the
+    exact OpenCode invocation it builds for the profile it chose: a launcher for
+    the transcript shim or the test suite, never a model choice. A fallback
+    profile therefore needs no second launcher, and a real run leaves them
+    ``None``.
     """
 
     task_id: str

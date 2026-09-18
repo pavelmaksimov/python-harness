@@ -205,8 +205,9 @@ def _quota_diagnostic(artifact_dir: Path, manifest: dict, stage: str, alias: str
 def _subject(request: RunRequest, task: dict, profile: dict, prompt: str, workspace: Path) -> tuple[str, dict]:
     timeout = _timeout(task, 'subject')
     if request.subject_command:
-        # Test override: never used for real runs, which always require isolation.
-        result = run_process([*request.subject_command, prompt], cwd=workspace, timeout=timeout)
+        # Test/transport override: a launcher, never a second model choice.
+        result = run_process([*request.subject_command, *opencode_command(profile, prompt)],
+                             cwd=workspace, timeout=timeout)
     else:
         result = run_isolated(opencode_command(profile, prompt), workspace, timeout=timeout, role='subject')
     return parse_opencode(result)
