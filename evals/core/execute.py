@@ -226,6 +226,20 @@ def execute_experiment(request: RunRequest, artifact_dir: Path, *, backend: dict
         workspace = materialize(request.repo_root, task, request.selection, Path(request.workdir))
         _record(attempts, 'materialize', 'ok', _elapsed(stage_started))
 
+        # Probe self-check: declared on_fixture expectations must hold on the
+        # pristine fixture, before any model spends tokens on a broken probe.
+        stage, stage_started = 'fixture_checks', time.monotonic()
+        declared = [entry for entry in task.get('checks', [])
+                    if isinstance(entry, dict) and entry.get('on_fixture')]
+        outcomes = run_checks(declared, workspace, default_timeout=_timeout(task, 'check')) if declared else []
+        violated = [f"{entry.get('id', 'check')} expected on_fixture={entry['on_fixture']}, got {outcome['status']}"
+                    for entry, outcome in zip(declared, outcomes) if outcome['status'] != entry['on_fixture']]
+        if violated:
+            # Recorded by the stage-failure handler as fixture_checks/fixture_self_check.
+            raise CommandError('fixture_self_check', 'probe self-check violated: ' + '; '.join(violated))
+        if declared:
+            _record(attempts, 'fixture_checks', 'ok', _elapsed(stage_started))
+
         stage, stage_started = 'subject', time.monotonic()
         _, subject_metrics = _subject(request, task, subject_profile, prompt, workspace)
         metrics['subject'] = subject_metrics

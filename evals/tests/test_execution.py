@@ -562,6 +562,45 @@ class ExecuteTests(unittest.TestCase):
         self.assertEqual((directory / 'result.patch').read_text(encoding='utf-8'), '')
         self.assertTrue((Path(self.temp.name) / 'runs/run-1/workspace/check-cache.txt').is_file())
 
+    def test_sound_fixture_expectations_run_before_the_subject(self):
+        probe = task(checks=[
+            {'id': 'marker-required', 'kind': 'shell',
+             'command': ['/bin/sh', '-c', 'test -f marker.txt'], 'on_fixture': 'fail'},
+            {'id': 'clean-base', 'kind': 'shell', 'command': ['/bin/sh', '-c', 'exit 0'], 'on_fixture': 'pass'},
+            {'id': 'post-subject', 'kind': 'shell', 'command': ['/bin/sh', '-c', 'exit 0']},
+        ])
+        subject = self.script('marker.py', '''
+            import json, pathlib
+            pathlib.Path("marker.txt").write_text("done")
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        manifest, _, _ = self.run_experiment(self.request(
+            probe, subject_command=subject, judge_command=self.judge_script(self.valid_scorecard())))
+        self.assertEqual(manifest['status'], 'success')
+        self.assertEqual([attempt['action'] for attempt in manifest['attempts']],
+                         ['materialize', 'fixture_checks', 'subject', 'checks', 'judge'])
+        self.assertTrue(all(attempt['result'] == 'ok' for attempt in manifest['attempts']))
+
+    def test_broken_probe_fails_closed_before_the_subject_runs(self):
+        subject = self.script('marker.py', '''
+            import pathlib
+            pathlib.Path("subject-ran.txt").write_text("ran")
+        ''')
+        probe = task(checks=[{'id': 'self-contradictory', 'kind': 'shell',
+                              'command': ['/bin/sh', '-c', 'exit 1'], 'on_fixture': 'pass'}])
+        manifest, _, directory = self.run_experiment(self.request(
+            probe, subject_command=subject, judge_command=self.judge_script(self.valid_scorecard())))
+        self.assertEqual(manifest['status'], 'error')
+        self.assertEqual([attempt['action'] for attempt in manifest['attempts']], ['materialize', 'fixture_checks'])
+        self.assertEqual(manifest['attempts'][1]['result'], 'fixture_self_check')
+        report = (directory / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('self-check violated', report)
+        self.assertIn('self-contradictory', report)
+        self.assertFalse((Path(self.temp.name) / 'runs/run-1/workspace/subject-ran.txt').exists())
+        self.assertIsNone(manifest['judge_score'])
+        self.assertIn('fixture_self_check', (directory / 'report.md').read_text(encoding='utf-8'))
+        self.assertEqual(read_manifest(directory)['status'], 'error')
+
     def test_subject_timeout_stops_the_run_and_still_writes_artifacts(self):
         subject = self.script('hang.py', 'import time; time.sleep(30)')
         manifest, _, directory = self.run_experiment(self.request(
