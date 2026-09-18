@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "telegram-order-bot",
+  "title": "Telegram order handlers and centralized retries",
+  "task_md": "evals/tasks/telegram-order-bot/task.md",
+  "rubric_md": "evals/tasks/telegram-order-bot/rubric.md",
+  "covered_numbers": [3, 5, 9, 24, 32],
+  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-telegram", "dddlint"],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/telegram-order-bot/fixture",
+  "materialize": [
+    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
+    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
+    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
+    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
+    {"kind": "rule", "from": "harnesses/rules/python-telegram/python-telegram.mdc", "to": ".cursor/rules/python-telegram.mdc"},
+    {"kind": "template", "from": "harnesses/rules/python-telegram/BOT.md", "to": ".cursor/rules/BOT.md"},
+    {"kind": "template", "from": "harnesses/rules/python-telegram/TELEGRAM.md", "to": ".cursor/rules/TELEGRAM.md"},
+    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+  ],
+  "checks": [
+    {"id": "handlers-use-timeout-decorator", "kind": "shell", "cmd": "grep -n '@timeout_with_retry' project/components/*/handlers.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "handlers-use-error-decorator", "kind": "shell", "cmd": "grep -n '@processing_errors' project/components/*/handlers.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "handlers-do-not-swallow-errors", "kind": "shell", "cmd": "grep -RnE 'except .*:' project/components/*/handlers.py", "expect": "empty", "expect_on_fixture": "fail"},
+    {"id": "handlers-resolve-collaborators-through-container", "kind": "shell", "cmd": "grep -n 'Container()' project/components/*/handlers.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "bot-registers-command-handlers", "kind": "shell", "cmd": "grep -n 'add_handler' project/infrastructure/apps/bot.py", "expect": "nonempty", "expect_on_fixture": "fail"},
+    {"id": "handlers-stay-free-of-persistence-clients", "kind": "shell", "cmd": "grep -RnE 'from sqlalchemy|import redis|AsyncSession' project/components/*/handlers.py", "expect": "empty", "expect_on_fixture": "fail"},
+    {"id": "project-package-imports", "kind": "shell", "cmd": "test -f project/__init__.py", "expect": "exit0", "expect_on_fixture": "pass"}
+  ],
+  "judge_criteria": ["centralized handler failure policy", "dependency-injected presentation handlers", "explicit bot registration"],
+  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+}

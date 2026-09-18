@@ -1,0 +1,112 @@
+{
+  "capabilities": {
+    "attachment": true,
+    "input": {
+      "audio": false,
+      "image": true,
+      "pdf": true,
+      "text": true,
+      "video": true
+    },
+    "interleaved": {
+      "field": "reasoning_content"
+    },
+    "output": {
+      "audio": false,
+      "image": false,
+      "pdf": false,
+      "text": true,
+      "video": false
+    },
+    "reasoning": true,
+    "temperature": true,
+    "toolcall": true
+  },
+  "cost": {
+    "cache": {
+      "read": 0,
+      "write": 0
+    },
+    "input": 0,
+    "output": 0
+  },
+  "friendly_name": "GLM-5.3-Flash",
+  "human_selected": true,
+  "metadata": {
+    "api": {
+      "id": "glm-5.3-flash",
+      "npm": "@ai-sdk/openai-compatible",
+      "url": "https://api.z.ai/api/coding/paas/v4"
+    },
+    "capabilities": {
+      "attachment": true,
+      "input": {
+        "audio": false,
+        "image": true,
+        "pdf": true,
+        "text": true,
+        "video": true
+      },
+      "interleaved": {
+        "field": "reasoning_content"
+      },
+      "output": {
+        "audio": false,
+        "image": false,
+        "pdf": false,
+        "text": true,
+        "video": false
+      },
+      "reasoning": true,
+      "temperature": true,
+      "toolcall": true
+    },
+    "cost": {
+      "cache": {
+        "read": 0,
+        "write": 0
+      },
+      "input": 0,
+      "output": 0
+    },
+    "family": "glm-flash",
+    "headers": {},
+    "id": "glm-5.3-flash",
+    "limit": {
+      "context": 1000000,
+      "output": 131072
+    },
+    "name": "GLM-5.3-Flash",
+    "options": {},
+    "providerID": "zai-coding-plan",
+    "release_date": "2026-08-26",
+    "status": "active",
+    "variants": {
+      "high": {
+        "reasoningEffort": "high"
+      },
+      "low": {
+        "reasoningEffort": "low"
+      },
+      "max": {
+        "reasoningEffort": "max"
+      }
+    }
+  },
+  "model": "glm-5.3-flash",
+  "opencode_version": "1.18.31",
+  "provider": "zai-coding-plan",
+  "role": "judge",
+  "succeeded_at": "2026-09-17T19:06:40+00:00",
+  "variant": "max",
+  "verification": {
+    "model": "glm-5.3-flash",
+    "opencode_version": "1.18.31",
+    "provider": "zai-coding-plan",
+    "run_id": "ses_f4f3ada55ffeSdkr7l2Erqei1t",
+    "status": "success",
+    "succeeded_at": "2026-09-17T19:06:40+00:00",
+    "variant": "max"
+  },
+  "verification_run_id": "ses_f4f3ada55ffeSdkr7l2Erqei1t"
+}

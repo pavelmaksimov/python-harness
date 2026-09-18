@@ -7,4 +7,5 @@ TODO.md
 .omo
 memory/.tmp
 memory/workflow
+evals/history
 AGENTS.override.md
