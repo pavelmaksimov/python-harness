@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -63,10 +65,25 @@ class GatingTests(unittest.TestCase):
             self.assertIn('"edit"', settings['OPENCODE_CONFIG_CONTENT'])
             self.assertEqual(settings['OPENCODE_DISABLE_PROJECT_CONFIG'], 'true')
             self.assertEqual(settings['OPENCODE_PURE'], '1')
+            self.assertEqual(settings['SHELL'], str(weak_isolation.shell_path(request.repo_root)))
+            config = json.loads(settings['OPENCODE_CONFIG_CONTENT'])
+            self.assertEqual(config['instructions'], [str(request.workdir / 'workspace' / 'AGENTS.md')],
+                             'weak mode points the policy at the real workspace')
             self.assertEqual(command[-1], '--')
         self.assertEqual(subject[subject.index('--model') + 1], 'fake/fake-model')
         self.assertNotIn('--variant', subject, 'the profile has no variant; none is invented')
         self.assertIn('"edit": "deny"', ' '.join(judge), 'the judge policy stays read-only')
+
+    def test_weak_shell_enforces_the_allowlist_without_bubblewrap(self):
+        shell = weak_isolation.shell_path(self.root)
+        self.assertTrue(shell.is_file() and shell.stat().st_mode & 0o111)
+        rejected = subprocess.run([str(shell), '-c', 'echo hi'], capture_output=True, text=True, timeout=30)
+        self.assertIn('not allowlisted', rejected.stdout + rejected.stderr)
+        outside = subprocess.run([str(shell), '-c', 'git status /etc'], capture_output=True, text=True, timeout=30)
+        self.assertIn('external paths', outside.stdout + outside.stderr)
+        allowed = subprocess.run([str(shell), '-c', 'git status --short'], cwd=self.root,
+                                 capture_output=True, text=True, timeout=30)
+        self.assertEqual(allowed.returncode, 0, allowed.stderr)
 
 
 class DoctorWeakTests(unittest.TestCase):

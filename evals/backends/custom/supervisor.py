@@ -35,7 +35,7 @@ from evals.core.knowledge import sanitize
 _OVERHEAD_SECONDS = 300.0
 _STAGE_DEFAULTS = {'subject': 900.0, 'check': 300.0, 'judge': 600.0}
 _FALLBACK_WALL_SECONDS = 2400.0
-_LOGS = ('memory/.tmp/evals/supervisor')
+_LOGS = 'memory/.tmp/evals/supervisor'
 _ARTIFACTS = {'patch': 'result.patch', 'report': 'report.md', 'status': 'status.json'}
 
 
@@ -95,7 +95,7 @@ def archive_previous(workdir) -> Path | None:
 
 
 def log_path(request, attempt: int) -> Path | None:
-    directory = Path(request.repo_root) / _LOGS[0]
+    directory = Path(request.repo_root) / _LOGS
     try:
         directory.mkdir(parents=True, exist_ok=True)
     except OSError:
