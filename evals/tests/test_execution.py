@@ -11,6 +11,7 @@ import tempfile
 import textwrap
 import time
 import unittest
+from datetime import datetime
 from unittest import mock
 
 from evals.core import checks, execute, sandbox
@@ -25,6 +26,18 @@ SELECTION = Selection(include_numbers=(6, 7, 9), exclude_numbers=(),
                       numbers=(6, 7, 9),
                       harness_ids=('python-architecture', 'python-fsm', 'python-stdlib-first-review'))
 STREAM = '{"type":"text","part":{"text":"%s"}}\n{"type":"step_finish","part":{"tokens":{"input":5,"output":7},"cost":0.25}}\n'
+# The answer one real judge run received from zai-coding-plan on 2026-09-18: a
+# five-hour usage limit with a stated reset, not throttling to retry.
+QUOTA_SENTENCE = 'Usage limit reached for 5 hour. Your limit will reset at 2026-09-18 20:18:27'
+QUOTA_EVENT = {
+    'type': 'error', 'timestamp': 1789721530425, 'sessionID': 'ses_f4c49d5b5ffeXaFUg1mx89QkUS',
+    'error': {'name': 'APIError', 'data': {
+        'message': QUOTA_SENTENCE, 'statusCode': 429, 'isRetryable': True,
+        'responseHeaders': {'date': 'Fri, 18 Sep 2026 08:52:10 GMT',
+                            'x-log-id': '2026091816521079e240a0691045bb'},
+        'responseBody': '{"error":{"code":"1308","message":"' + QUOTA_SENTENCE + '"}}',
+        'metadata': {'url': 'https://api.z.ai/api/coding/paas/v4/chat/completions'}}},
+}
 
 
 def profile(role: str) -> dict:
@@ -390,6 +403,35 @@ class ParsingTests(unittest.TestCase):
             self.parse(ProcessResult(0, '{"type":"step_finish","part":{"tokens":{"input":-1}}}\n', '', 1))
         self.assertEqual(error.exception.kind, 'malformed_json')
 
+    def test_an_exhausted_quota_is_its_own_symptom_and_a_throttle_is_not(self):
+        cases = (
+            ('{"type":"error","error":' + json.dumps(QUOTA_EVENT['error']) + '}\n', 'provider_quota'),
+            ('{"type":"error","error":{"message":"Rate limit exceeded, retry after 30 s",'
+             '"statusCode":429}}\n', 'command_failed'),
+        )
+        for stdout, kind in cases:
+            with self.subTest(kind=kind), self.assertRaises(CommandError) as error:
+                self.parse(ProcessResult(0, stdout, '', 1))
+            self.assertEqual(error.exception.kind, kind)
+
+    def test_quota_hold_keeps_the_provider_sentence_and_reads_its_stated_reset(self):
+        details = checks.quota_hold(json.dumps(QUOTA_EVENT['error']))
+        self.assertEqual(details['message'], QUOTA_SENTENCE)
+        self.assertEqual(details['hint'], '2026-09-18 20:18:27')
+        self.assertEqual(details['reset_timezone'], 'local',
+                         'a zone-less provider clock is read on the local clock, never invented')
+        self.assertEqual(datetime.fromisoformat(details['reset_at']).replace(tzinfo=None),
+                         datetime(2026, 9, 18, 20, 18, 27))
+
+        stated = checks.quota_hold('usage limit; reset at 2026-09-19T01:00:00+02:00')
+        self.assertEqual((stated['reset_timezone'], stated['reset_at']),
+                         ('stated', '2026-09-19T01:00:00+02:00'))
+
+        unstated = checks.quota_hold('{"error":{"message":"Quota exceeded"}}')
+        self.assertEqual(unstated['message'], 'Quota exceeded')
+        self.assertEqual((unstated['hint'], unstated['reset_at'], unstated['reset_timezone']),
+                         (None, None, None), 'a reset the provider never stated is never invented')
+
     def test_missing_model_and_unsupported_variant_are_distinguished(self):
         cases = (
             (1, 'Wrong model: openrouter/ghost is not available', '', 'missing_model'),
@@ -671,6 +713,101 @@ class ExecuteTests(unittest.TestCase):
                 report = (directory / 'report.md').read_text(encoding='utf-8')
                 self.assertIn('judge invalid_scorecard', report)
                 self.assertIn('smoke: pass', report)
+
+    def sequence_judge(self, replies: list[str], name: str = 'sequence-judge') -> tuple[str, ...]:
+        """A judge that replies with the next scripted text and records each prompt."""
+        scripted = Path(self.temp.name) / f'{name}-replies.json'
+        scripted.write_text(json.dumps(replies), encoding='utf-8')
+        calls = Path(self.temp.name) / f'{name}-calls.txt'
+        prompts = Path(self.temp.name) / f'{name}-prompts.txt'
+        return self.script(f'{name}.py', f'''
+            import json, pathlib, sys
+            scripted = json.loads(pathlib.Path({str(scripted)!r}).read_text(encoding="utf-8"))
+            counter = pathlib.Path({str(calls)!r})
+            index = int(counter.read_text(encoding="utf-8")) if counter.exists() else 0
+            counter.write_text(str(index + 1), encoding="utf-8")
+            with open({str(prompts)!r}, "a", encoding="utf-8") as handle:
+                handle.write("=== call ===\\n" + sys.argv[-1] + "\\n")
+            reply = scripted[min(index, len(scripted) - 1)]
+            print(json.dumps({{"type": "text", "part": {{"text": reply}}}}))
+        ''')
+
+    def judge_history(self, name: str = 'sequence-judge') -> tuple[int, list[str]]:
+        calls = Path(self.temp.name) / f'{name}-calls.txt'
+        prompts = Path(self.temp.name) / f'{name}-prompts.txt'
+        count = int(calls.read_text(encoding='utf-8')) if calls.exists() else 0
+        text = prompts.read_text(encoding='utf-8') if prompts.exists() else ''
+        return count, [block for block in text.split('=== call ===\n') if block.strip()]
+
+    def event_judge(self, event: dict, name: str = 'event-judge') -> tuple[str, ...]:
+        """A judge whose single answer is one raw OpenCode event, as the CLI emits it."""
+        payload = Path(self.temp.name) / f'{name}.json'
+        payload.write_text(json.dumps(event), encoding='utf-8')
+        return self.script(f'{name}.py', f'''
+            print(open({str(payload)!r}, encoding="utf-8").read().strip())
+        ''')
+
+    def test_one_rejected_scorecard_is_asked_again_with_an_explicit_instruction(self):
+        subject = self.script('subject.py', '''
+            import json
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        judge = self.sequence_judge(['The code looks solid to me, honestly.',
+                                     json.dumps(self.valid_scorecard())])
+        manifest, _, directory = self.run_experiment(self.request(
+            subject_command=subject, judge_command=judge))
+
+        self.assertEqual(manifest['status'], 'success')
+        self.assertEqual(manifest['judge_score'], 3)
+        self.assertEqual(manifest['metrics']['judge']['attempts'], 2)
+        calls, prompts = self.judge_history()
+        self.assertEqual(calls, 2)
+        self.assertIn('Only a JSON object', prompts[-1], 'the retry says what shape is accepted')
+        self.assertNotIn('Only a JSON object', prompts[0])
+        self.assertEqual(manifest['artifacts']['judge_response'], 'judge-response.txt')
+        kept = (directory / 'judge-response.txt').read_text(encoding='utf-8')
+        self.assertIn('The code looks solid to me, honestly.', kept)
+        self.assertIn('"summary": "solid"', kept)
+
+    def test_a_judge_that_keeps_refusing_json_is_rejected_after_one_retry(self):
+        subject = self.script('subject.py', '''
+            import json
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        judge = self.sequence_judge(['the code is fine', 'still prose, sorry'])
+        manifest, _, directory = self.run_experiment(self.request(
+            run='judge-prose', subject_command=subject, judge_command=judge))
+
+        self.assertEqual(manifest['status'], 'error')
+        self.assertIsNone(manifest['judge_score'])
+        self.assertEqual(manifest['attempts'][3]['result'], 'malformed_json')
+        self.assertEqual(self.judge_history()[0], 2, 'exactly one retry, never a loop')
+        self.assertIn('still prose, sorry', (directory / 'judge-response.txt').read_text(encoding='utf-8'))
+        self.assertIn('judge malformed_json', (directory / 'report.md').read_text(encoding='utf-8'))
+
+    def test_an_exhausted_provider_quota_ends_the_run_with_the_provider_words(self):
+        # The real shape: the deterministic checks had already failed, and the
+        # judge then hit the provider quota — an error, not a grade.
+        probe = task(checks=[{'id': 'smoke', 'kind': 'shell', 'command': ['/bin/sh', '-c', 'exit 1']}])
+        subject = self.script('subject.py', '''
+            import json
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        manifest, _, directory = self.run_experiment(self.request(
+            probe, run='judge-quota', subject_command=subject, judge_command=self.event_judge(QUOTA_EVENT)))
+
+        self.assertEqual(manifest['status'], 'error')
+        self.assertEqual(manifest['attempts'][3]['result'], 'provider_quota')
+        self.assertEqual(manifest['checks'], [{'id': 'smoke', 'status': 'fail', 'evidence': 'Exit status: 1'}])
+        self.assertEqual(manifest['artifacts']['provider_quota'], 'provider-quota.json')
+        report = (directory / 'report.md').read_text(encoding='utf-8')
+        self.assertIn(QUOTA_SENTENCE, report)
+        self.assertNotIn('statusCode', report, 'the report carries the sentence, not the raw payload')
+        payload = json.loads((directory / 'provider-quota.json').read_text(encoding='utf-8'))
+        self.assertEqual((payload['role'], payload['provider']), ('judge', 'fake'))
+        self.assertEqual((payload['provider_said'], payload['reset_hint']), (QUOTA_SENTENCE, '2026-09-18 20:18:27'))
+        from evals.core.validate import validate_manifest
+        self.assertEqual(validate_manifest(read_manifest(directory)), [])
 
     def test_missing_task_or_unverified_profile_still_writes_terminal_artifacts(self):
         empty = Path(self.root)
