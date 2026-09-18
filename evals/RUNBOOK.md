@@ -115,8 +115,8 @@ Completion criterion: the manifest validates, and every check has evidence.
 Comparison reads only normalized manifests, never backend storage, and refuses
 when task or rubric hashes differ. It reports selection, source commits,
 profiles, backend and version, checks, structural metrics, judge score, attempt
-and repair counts, wall time and patch differences. Any pairing works:
-custom↔custom, orx↔orx, custom↔orx.
+and repair counts, wall time and patch differences. Any pairing works — the
+backend names come from the manifests themselves.
 
 Completion criterion: the report names the differing dimensions (harness,
 model, knowledge revision) explicitly instead of a bare score delta.
