@@ -2,9 +2,9 @@
 
 The shared core names the symptom (``provider_quota``) and keeps the provider's
 own words in the run's ``provider-quota.json``. This module owns the lifecycle
-rule the backend derives from it: no attempt starts while the window the
-provider named is still closed, and the wait itself is recorded as a verified
-incident once a later run succeeds.
+rule the backend derives from it: no attempt starts on a closed window unless the
+fixed judge profile declares a fallback that can answer instead, and the remedy a
+run actually proved — the wait or the fallback — becomes a verified incident.
 
 The hold is operational state, not knowledge: it lives in git-ignored scratch,
 it is replaced whenever the provider states a newer window, and it is removed on
@@ -17,9 +17,10 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
+from evals.backends.custom import repair
 from evals.core.artifacts import DIAGNOSTICS
 from evals.core.knowledge import sanitize, validate_identifier
-from evals.core.profiles import load_profile
+from evals.core.profiles import load_profile, resolve_fallback
 
 DIRECTORY = 'memory/.tmp/evals/quota'
 REMEDY = {'kind': 'quota_wait',
@@ -84,13 +85,16 @@ def detail(hold: dict) -> str:
     return '; '.join(parts)
 
 
-def refusal(hold: dict) -> str:
+def refusal(decision: dict) -> str:
     """Why no attempt was started, and what actually clears the hold."""
+    hold = decision.get('hold') or {}
     provider = hold.get('provider', '')
-    return (f'provider quota hold: {detail(hold)}. '
-            f'No attempt was started; wait for the window to reset, then re-run — a different judge '
-            f'profile is a human decision. Clear the hold early with '
-            f'`rm {DIRECTORY}/{provider}.json` once the provider confirms the quota is back.')
+    message = (f'provider quota hold: {detail(hold)}. No attempt was started; wait for the window to '
+               f'reset, then re-run, or clear the hold with `rm {DIRECTORY}/{provider}.json` once the '
+               f'provider confirms the quota is back')
+    if decision.get('problem'):
+        return f'{message}. {decision["problem"]}.'
+    return f'{message}; changing the fixed judge profile is a human decision.'
 
 
 def _provider(repo_root: Path, alias: str) -> str | None:
@@ -101,38 +105,71 @@ def _provider(repo_root: Path, alias: str) -> str | None:
     return provider if isinstance(provider, str) and provider else None
 
 
-def _holds(repo_root: Path, request) -> list[tuple[str, dict]]:
-    """Every hold that applies to this run, in role order, without duplicates."""
-    found: list[tuple[str, dict]] = []
-    for alias in (request.subject_profile, request.judge_profile):
+def _defined_fallback(repo_root: Path, alias: str) -> tuple[str | None, dict | None, str | None]:
+    try:
+        profile = load_profile(Path(repo_root), alias)
+    except (ValueError, OSError):
+        return None, None, None
+    return resolve_fallback(Path(repo_root), profile, alias)
+
+
+def _holds(repo_root: Path, request) -> list[tuple[str, str, dict]]:
+    """Every hold that applies to this run: ``(role, provider, record)``."""
+    found: list[tuple[str, str, dict]] = []
+    for role, alias in (('subject', request.subject_profile), ('judge', request.judge_profile)):
         provider = _provider(repo_root, alias)
-        if not provider or any(name == provider for name, _ in found):
-            continue
-        hold = read(repo_root, provider)
-        if hold is not None:
-            found.append((provider, hold))
+        hold = read(repo_root, provider) if provider else None
+        if provider and hold is not None:
+            found.append((role, provider, hold))
     return found
 
 
-def blocking(repo_root: Path, request) -> dict | None:
-    """The first hold whose window is still closed: this run must not start."""
-    for _, hold in _holds(repo_root, request):
-        if not expired(hold):
-            return hold
-    return None
+def decision(repo_root: Path, request) -> dict:
+    """What this run does about a closed provider window.
 
-
-def releasable(repo_root: Path, request) -> dict | None:
-    """The first hold whose stated reset has passed: the wait is over."""
-    for _, hold in _holds(repo_root, request):
+    Refusing is the last resort. The subject provider has no fallback at all; a
+    judge provider is bypassed when the fixed judge profile declares a usable
+    fallback — the pair a human selected — and a hold whose stated reset has
+    passed is simply waited out. Only then does the run stop before starting.
+    """
+    for role, provider, hold in _holds(repo_root, request):
         if expired(hold):
-            return hold
-    return None
+            return {'action': 'wait', 'role': role, 'provider': provider, 'hold': hold}
+        if role == 'judge':
+            alias, fallback, problem = _defined_fallback(repo_root, request.judge_profile)
+            if fallback is not None:
+                return {'action': 'fallback', 'role': role, 'provider': provider, 'hold': hold,
+                        'fallback': alias}
+            return {'action': 'refuse', 'role': role, 'provider': provider, 'hold': hold,
+                    'problem': problem}
+        return {'action': 'refuse', 'role': role, 'provider': provider, 'hold': hold}
+    return {'action': 'run', 'role': None, 'provider': None, 'hold': None}
+
+
+def remedy_proven(intent: str, manifest: dict) -> str | None:
+    """Which remedy a finished run proved, from the run's own evidence.
+
+    ``judge_fallback`` is proven only by the metric the core writes when the
+    declared fallback actually judged; a wait is proven by a run that succeeded
+    after the stated moment had passed. An intent never records itself.
+    """
+    metrics = manifest.get('metrics')
+    if isinstance(metrics, dict) and isinstance(metrics.get('judge_fallback'), dict):
+        return 'judge_fallback'
+    return 'quota_wait' if intent == 'wait' else None
+
+
+def credited(hold: dict, remedy: str) -> dict:
+    """The hold shaped as the incident a proven remedy deserves."""
+    kind = next((item for item in repair.REMEDIES if item.name == remedy), None)
+    if kind is None:
+        raise ValueError(f'a proven remedy must be one this backend applies: {remedy!r}')
+    return dict(hold, remedy={'kind': kind.name, 'description': kind.description})
 
 
 def release(repo_root: Path, request) -> None:
     """Drop this run's holds: a successful run proves the window is open again."""
-    for provider, _ in _holds(repo_root, request):
+    for _, provider, _ in _holds(repo_root, request):
         clear(repo_root, provider)
 
 

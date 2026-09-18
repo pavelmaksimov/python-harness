@@ -74,19 +74,19 @@ class CustomBackend:
         state = repair.AttemptState(wall_seconds=supervisor.wall_budget(request),
                                     context=repair.context(request, NAME))
         journal: list[dict] = []
-        blocked = quota.blocking(request.repo_root, request)
-        if blocked is not None:
-            # A closed provider window cannot be argued with: refuse before the
-            # first attempt instead of spending a whole run on a certain failure.
+        decision = quota.decision(request.repo_root, request)
+        if decision['action'] == 'refuse':
+            # Nothing can answer for this closed window: refuse before the first
+            # attempt instead of spending a whole run on a certain failure.
             journal.append(repair.entry('quota_hold', 'active', 0))
-            refused = supervisor.refuse(request, identity, quota.refusal(blocked), entries=journal)
+            refused = supervisor.refuse(request, identity, quota.refusal(decision), entries=journal)
             return self._result(request, refused, refused.error)
-        held = quota.releasable(request.repo_root, request)
-        if held is not None:
-            # The stated reset has passed: the wait is the remedy this run is
-            # built on, and a success turns it into a verified incident.
-            repair.apply_incident(held, state)
-            journal.append(repair.entry('quota_wait', 'applied', 0))
+        if decision['action'] != 'run':
+            # Waiting out a reset and judging with the declared fallback are both
+            # pre-flight intents; which remedy the run proved is decided by the
+            # run's own evidence once it has finished.
+            intent = 'quota_wait' if decision['action'] == 'wait' else 'quota_fallback'
+            journal.append(repair.entry(intent, 'applied' if decision['action'] == 'wait' else 'expected', 0))
         incident = self._replay_known_incident(request, state, journal)
         symptom, outcome, error, observed = None, None, None, None
         for attempt in range(1, repair.MAX_ATTEMPTS + 1):
@@ -127,6 +127,13 @@ class CustomBackend:
             journal.append(repair.entry(f'remedy-{remedy.name}', 'applied', 0,
                                         incident['fingerprint'] if incident else None))
         if outcome is not None and outcome.status == 'success':
+            if decision['action'] != 'run':
+                proven = quota.remedy_proven(decision['action'], outcome.manifest)
+                if proven is not None:
+                    # Only what the run proves is recorded: an intent is never
+                    # credited, so the incident states the remedy that worked.
+                    repair.apply_incident(quota.credited(decision['hold'], proven), state)
+                    journal.append(repair.entry('remedy-' + proven, 'credited', 0))
             repair.record_success(request.repo_root, symptom, state, request.run_id)
             quota.release(request.repo_root, request)
         directory = Path(outcome.artifact_dir)

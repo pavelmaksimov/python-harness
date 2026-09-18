@@ -22,7 +22,7 @@ from .checks import (CommandError, parse_opencode, quota_hold, run_checks, run_i
                      timeout_seconds)
 from .judge import judge_workspace
 from .knowledge import sanitize
-from .profiles import load_profile
+from .profiles import load_profile, resolve_fallback
 from .sandbox import IsolationError, materialize, opencode_command, safe_path
 
 ARTIFACTS = artifacts_api.ARTIFACTS
@@ -169,15 +169,21 @@ def _harness_hashes(repo_root: Path, harness_ids: tuple[str, ...]) -> dict:
     return hashes
 
 
+def _failure_kind(failure: Exception, default: str = 'invalid_task') -> str:
+    if isinstance(failure, CommandError):
+        return failure.kind
+    return 'isolation_error' if isinstance(failure, IsolationError) else default
+
+
 def _quota_diagnostic(artifact_dir: Path, manifest: dict, stage: str, alias: str,
-                      failure: Exception) -> str:
+                      failure: Exception, profile: dict | None = None) -> str:
     """Record an exhausted provider as its own artifact and return the plain reason.
 
     The provider sentence and the moment it states are what a reader needs: the
     raw payload is the artifact, and the run's report carries one readable line.
     """
     details = quota_hold(str(failure))
-    profile = manifest.get(f'{alias}_profile') or {}
+    profile = profile or manifest.get(f'{alias}_profile') or {}
     artifacts_api.write_diagnostic(
         artifact_dir, artifacts_api.DIAGNOSTICS['provider_quota'],
         json.dumps(sanitize({'run_id': manifest.get('run_id', ''), 'stage': stage, 'role': alias,
@@ -210,6 +216,45 @@ def _judge(request: RunRequest, task: dict, profile: dict, workspace: Path, rubr
            checks: list[dict], artifact_dir: Path) -> tuple[dict, str, dict]:
     return judge_workspace(workspace, profile, rubric, checks, command=request.judge_command,
                            timeout=_timeout(task, 'judge'), diagnostics=artifact_dir)
+
+
+def _fallback_note(alias: str, primary: str, reason: str) -> str:
+    return (f'> Judged by the fallback profile `{alias}`: the primary judge `{primary}` '
+            f'answered: {reason}\n\n')
+
+
+def _judge_outcome(request: RunRequest, task: dict, profile: dict, workspace: Path, rubric: dict | list,
+                   checks: list[dict], artifact_dir: Path, manifest: dict) -> dict:
+    """Judge the workspace, and after a provider quota the declared fallback judge.
+
+    Only the provider-quota symptom falls back: a closed window is a provider
+    state that another fixed profile can answer, while a timeout, a broken
+    command or a refused scorecard is a defect no substitution would fix.
+    """
+    try:
+        scorecard, report, metrics = _judge(request, task, profile, workspace, rubric, checks, artifact_dir)
+        return {'scorecard': scorecard, 'report': report, 'metrics': metrics}
+    except (CommandError, IsolationError, OSError, ValueError) as failure:
+        kind = _failure_kind(failure, 'isolation_error')
+        if kind != 'provider_quota':
+            return {'failure': failure, 'kind': kind, 'detail': str(failure)}
+        detail = _quota_diagnostic(artifact_dir, manifest, 'judge', 'judge', failure, profile=profile)
+        alias, fallback, problem = resolve_fallback(request.repo_root, profile, request.judge_profile)
+        if fallback is None:
+            if problem:
+                detail = f'{detail}; {problem}'
+            return {'failure': failure, 'kind': kind, 'detail': detail}
+        try:
+            scorecard, report, metrics = _judge(request, task, fallback, workspace, rubric, checks, artifact_dir)
+        except (CommandError, IsolationError, OSError, ValueError) as second:
+            second_kind = _failure_kind(second, 'isolation_error')
+            second_detail = (_quota_diagnostic(artifact_dir, manifest, 'judge', 'judge', second,
+                                               profile=fallback)
+                             if second_kind == 'provider_quota' else str(second))
+            return {'failure': second, 'kind': second_kind, 'fallback': alias,
+                    'detail': f'{detail}; the fallback {alias!r} failed as well: {second_detail}'}
+        return {'scorecard': scorecard, 'report': report, 'metrics': metrics, 'fallback': alias,
+                'fallback_profile': fallback, 'kind': kind, 'detail': detail}
 
 
 def _capture_patch(request: RunRequest, workspace: Path) -> str:
@@ -291,26 +336,37 @@ def execute_experiment(request: RunRequest, artifact_dir: Path, *, backend: dict
 
         stage, stage_started = 'judge', time.monotonic()
         if status in {'success', 'failed'}:
-            try:
-                scorecard, report, metrics['judge'] = _judge(request, task, judge_profile, workspace,
-                                                             rubric, checks, artifact_dir)
-                manifest['judge_score'] = scorecard['score']
+            outcome = _judge_outcome(request, task, judge_profile, workspace, rubric, checks,
+                                     artifact_dir, manifest)
+            failure = outcome.get('failure')
+            if failure is None:
+                report = outcome['report']
+                metrics['judge'] = outcome['metrics']
+                manifest['judge_score'] = outcome['scorecard']['score']
+                if outcome.get('fallback'):
+                    # The declared fallback judged: never silently, so the manifest
+                    # names the profile that produced the scorecard and keeps the
+                    # primary's quota answer next to it.
+                    manifest['judge_profile'] = outcome['fallback_profile']
+                    metrics['judge_fallback'] = {'profile': outcome['fallback'], 'reason': outcome['kind'],
+                                                 'primary': request.judge_profile}
+                    report = _fallback_note(outcome['fallback'], request.judge_profile,
+                                            outcome['detail']) + report
+                    _record(attempts, 'judge', outcome['kind'], _elapsed(stage_started))
+                    _record(attempts, 'judge_fallback', 'ok', _elapsed(stage_started))
+                else:
+                    _record(attempts, 'judge', 'ok', _elapsed(stage_started))
                 manifest['metrics'] = metrics
-                _record(attempts, 'judge', 'ok', _elapsed(stage_started))
-            except (CommandError, IsolationError, OSError, ValueError) as failure:
-                kind = failure.kind if isinstance(failure, CommandError) else 'isolation_error'
-                detail = str(failure)
-                if kind == 'provider_quota':
-                    detail = _quota_diagnostic(artifact_dir, manifest, 'judge', 'judge', failure)
+            else:
+                kind = outcome['kind']
                 _record(attempts, 'judge', kind, _elapsed(stage_started))
-                report = _fallback_report('judge ' + kind, detail, checks)
+                report = _fallback_report('judge ' + kind, outcome['detail'], checks)
                 if status == 'success' or kind == 'provider_quota':
                     # An unscored grade is not the experiment's answer, and an
                     # exhausted provider ends the run instead of retrying it.
                     status, error = 'error', f'judge {kind}'
     except (CommandError, IsolationError, OSError, ValueError, KeyError, TypeError) as failure:
-        kind = failure.kind if isinstance(failure, CommandError) else ('isolation_error'
-                                                                       if isinstance(failure, IsolationError) else 'invalid_task')
+        kind = _failure_kind(failure)
         detail = str(failure)
         if kind == 'provider_quota':
             detail = _quota_diagnostic(artifact_dir, manifest, stage, stage, failure)

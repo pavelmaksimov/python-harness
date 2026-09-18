@@ -51,6 +51,8 @@ HUMAN_KINDS = {
                          'needs a human decision',
     'provider_quota': 'the provider quota window is exhausted — waiting for the stated reset is the only '
                       'remedy; a different judge profile is a human decision, never a substitution',
+    'judge_fallback': 'the primary judge provider is closed while the fallback judge also failed — inspect '
+                      'both read-only judge replies, then ask the human',
     'output_limit': 'a process exceeded the capture limit — changing that policy is a shared-core decision',
     'crash': 'the attempt ended before the shared core reported a stage — inspect the raw attempt log '
              'under memory/.tmp/evals/supervisor, then ask the human',
@@ -91,6 +93,8 @@ REMEDIES = (
     # is never proposed as a retry — it is applied when a later run is built on a
     # reset that has already been waited out.
     Remedy('quota_wait', ('provider_quota',), 'wait for the provider quota window to reset before retrying',
+           no_parameter_change, preflight=True),
+    Remedy('judge_fallback', ('provider_quota',), 'judge with the fallback profile the fixed judge declares',
            no_parameter_change, preflight=True),
 )
 

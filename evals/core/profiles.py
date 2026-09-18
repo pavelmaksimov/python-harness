@@ -3,7 +3,11 @@
 Discover candidates, present them to a human, call select_candidate with their
 explicit choice, then run an isolated smoke with that exact model/variant. Only
 record_provider_profile writes the resulting verified profile. Missing profiles
-and malformed catalogs fail closed; no automatic provider/model fallback exists.
+and malformed catalogs fail closed; nothing is substituted at run time.
+
+The one exception is declared, not automatic: a judge profile may name another
+verified judge profile as its ``fallback``, and only the provider-quota symptom
+uses it — see ``resolve_fallback``. Every run records which profile judged.
 """
 from __future__ import annotations
 
@@ -48,6 +52,8 @@ def validate_profile(data: dict, role: str | None = None) -> None:
         raise ValueError("profile requires an explicit variant (or null)")
     if data["variant"] is not None:
         validate_identifier(data["variant"])
+    if data.get("fallback") is not None:
+        validate_identifier(data["fallback"])
     if data.get("role") not in {"subject", "judge"}:
         raise ValueError("profile role must be subject or judge")
     if role is not None and (role not in {"subject", "judge"} or data["role"] != role):
@@ -82,6 +88,28 @@ def load_profile(repo_root: Path, alias: str, role: str | None = None) -> dict:
     if any(clean[key] != data[key] for key in ("provider", "model", "variant", "opencode_version")):
         raise ValueError("profile identifiers must not contain sensitive content")
     return clean
+
+
+def resolve_fallback(repo_root: Path, profile: dict, alias: str) -> tuple[str | None, dict | None, str | None]:
+    """The verified judge profile ``profile`` declares as its fallback, if usable.
+
+    A fallback is another verified, human-selected judge profile named in the
+    record itself — the same fixed pair of profiles, never a substitution chosen
+    at run time. The profile must be a verified judge: an absent, self-referential
+    or unverified alias is returned as a reason, so a caller keeps its primary
+    outcome and reports why the declaration could not be honoured.
+    """
+    declared = profile.get("fallback")
+    if declared is None:
+        return None, None, None
+    if not isinstance(declared, str) or not declared.strip():
+        return None, None, "the declared judge fallback is not a profile alias"
+    if declared == alias:
+        return declared, None, f"the judge profile {declared!r} declares itself as its fallback"
+    try:
+        return declared, load_profile(repo_root, declared, role="judge"), None
+    except (ValueError, OSError) as problem:
+        return declared, None, f"the declared judge fallback {declared!r} is unusable: {problem}"
 
 
 def discover_candidates(provider: str, query: str | None = None, limit: int = 5) -> list[dict]:
