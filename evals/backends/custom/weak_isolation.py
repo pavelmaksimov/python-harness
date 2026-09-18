@@ -86,6 +86,60 @@ def _host_run_isolated(command, workspace, *, timeout, role='check', readonly=Fa
     return run_process(command, cwd=workspace, timeout=timeout)
 
 
+# The materialized eval-shell execs bubblewrap for every permitted command, which
+# is exactly what a namespaceless host cannot do. The weak shell enforces the same
+# contract — single command, no shell operators, the same allowlist, no external
+# paths — and then executes on the host: the degradation the approval covers.
+_WEAK_SHELL = r'''#!/usr/bin/python3
+import os
+import shlex
+import sys
+
+if len(sys.argv) != 3 or sys.argv[1] not in ('-c', '-lc'):
+    sys.exit('eval shell: only a single command is supported')
+text = sys.argv[2]
+if any(c in text for c in ';|&<>`$\\\n\r\x00'):
+    sys.exit('eval shell: shell operators are forbidden')
+args = shlex.split(text)
+allowed = any(args[:len(prefix)] == prefix for prefix in (
+    ['uv', 'run', 'pytest'], ['uv', 'run', 'ruff', 'check'],
+    ['git', 'status'], ['git', 'diff']))
+if not allowed:
+    sys.exit('eval shell: command is not allowlisted')
+if any(a.startswith('/') or '..' in a.split('/') for a in args[1:]):
+    sys.exit('eval shell: external paths are forbidden')
+if args[0] == 'git':
+    args[1:1] = ['--no-pager', '-c', 'core.fsmonitor=false',
+                 '-c', 'core.hooksPath=/dev/null', '-c', 'diff.external=']
+    if 'diff' in args:
+        args.extend(['--no-ext-diff', '--no-textconv'])
+os.execvp(args[0], args)
+'''
+
+
+def shell_path(repo_root) -> Path:
+    """Write (once per host) and return the shared weak allowlist shell."""
+    path = Path(repo_root) / 'memory/.tmp/evals/shells/eval-shell-weak'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists() or path.read_text(encoding='utf-8') != _WEAK_SHELL:
+        path.write_text(_WEAK_SHELL, encoding='utf-8')
+        path.chmod(0o755)
+    return path
+
+
+def configuration_for(workspace, role: str) -> dict:
+    """The core's policy with sandbox-only paths rewritten to the real workspace.
+
+    The materialized policy points at ``/workspace/AGENTS.md`` because bubblewrap
+    mounts the workspace there; without bubblewrap the subject runs in the real
+    directory, so the instruction path must be the real one or OpenCode never
+    finds the materialized rules.
+    """
+    config = sandbox.configuration(readonly=role == 'judge')
+    config['instructions'] = [str(Path(workspace) / 'AGENTS.md')]
+    return config
+
+
 @contextmanager
 def host_execution():
     """Route the core's checks through plain processes while the block is held.
@@ -107,19 +161,23 @@ def command_for(request, alias: str, role: str) -> tuple[str, ...]:
     The core appends the prompt as the last argument after this command, which is
     why the trailing ``--`` is already part of it. Environment pinning replaces
     the sandbox's ``--setenv``; the inherited host environment is what carries
-    provider credentials, exactly as inside the bubblewrap subject role.
+    provider credentials, exactly as inside the bubblewrap subject role. The
+    policy and the shell are the weak-mode equivalents of the sandbox layout:
+    real workspace paths instead of ``/workspace``, and the bubblewrap-free
+    allowlist shell instead of ``/control/eval-shell``.
     """
     profile = load_profile(Path(request.repo_root), alias, role=role)
     control = Path(request.workdir) / 'control' / role
+    workspace = Path(request.workdir) / 'workspace'
     settings = {
         'OPENCODE_CONFIG_DIR': str(control),
         'OPENCODE_CONFIG': str(control / 'opencode.json'),
-        'OPENCODE_CONFIG_CONTENT': json.dumps(sandbox.configuration(readonly=role == 'judge')),
+        'OPENCODE_CONFIG_CONTENT': json.dumps(configuration_for(workspace, role)),
         'OPENCODE_DISABLE_PROJECT_CONFIG': 'true',
         'OPENCODE_DISABLE_AUTOUPDATE': 'true',
         'OPENCODE_DISABLE_MODELS_FETCH': 'true',
         'OPENCODE_PURE': '1',
-        'SHELL': str(control / 'eval-shell'),
+        'SHELL': str(shell_path(request.repo_root)),
     }
     provider, model = profile['provider'], profile['model']
     model_id = model if model.startswith(provider + '/') else provider + '/' + model
