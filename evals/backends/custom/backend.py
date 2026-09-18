@@ -32,7 +32,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from evals.backends.custom import doctor as doctor_module
-from evals.backends.custom import repair, supervisor, weak_isolation
+from evals.backends.custom import quota, repair, supervisor, weak_isolation
 from evals.core.backend_api import BackendResult
 from evals.core.knowledge import validate_identifier
 
@@ -74,14 +74,30 @@ class CustomBackend:
         state = repair.AttemptState(wall_seconds=supervisor.wall_budget(request),
                                     context=repair.context(request, NAME))
         journal: list[dict] = []
+        blocked = quota.blocking(request.repo_root, request)
+        if blocked is not None:
+            # A closed provider window cannot be argued with: refuse before the
+            # first attempt instead of spending a whole run on a certain failure.
+            journal.append(repair.entry('quota_hold', 'active', 0))
+            refused = supervisor.refuse(request, identity, quota.refusal(blocked), entries=journal)
+            return self._result(request, refused, refused.error)
+        held = quota.releasable(request.repo_root, request)
+        if held is not None:
+            # The stated reset has passed: the wait is the remedy this run is
+            # built on, and a success turns it into a verified incident.
+            repair.apply_incident(held, state)
+            journal.append(repair.entry('quota_wait', 'applied', 0))
         incident = self._replay_known_incident(request, state, journal)
-        symptom, outcome, error = None, None, None
+        symptom, outcome, error, observed = None, None, None, None
         for attempt in range(1, repair.MAX_ATTEMPTS + 1):
             supervisor.archive_previous(request.workdir)
             outcome = supervisor.supervise(request, identity, attempt=attempt,
                                            wall_seconds=state.wall_seconds)
             journal.append(repair.entry(f'attempt-{attempt}', outcome.status, outcome.duration_ms,
                                         incident['fingerprint'] if incident and attempt == 1 else None))
+            observed = quota.observe(request.repo_root, outcome.artifact_dir, context=state.context)
+            if observed is not None:
+                journal.append(repair.entry('quota_hold', 'recorded', 0))
             state.statuses.append(outcome.status)
             if outcome.status == 'success':
                 break
@@ -97,6 +113,8 @@ class CustomBackend:
             human = repair.human_required(found)
             if human:
                 error = f'{human} [{found.stage}/{found.kind}]'
+                if observed is not None and found.kind == 'provider_quota':
+                    error += f' — {quota.detail(observed)}'
                 break
             remedy = repair.next_remedy(found, state)
             if remedy is None:
@@ -110,11 +128,17 @@ class CustomBackend:
                                         incident['fingerprint'] if incident else None))
         if outcome is not None and outcome.status == 'success':
             repair.record_success(request.repo_root, symptom, state, request.run_id)
-        directory = Path(outcome.artifact_dir) if outcome else Path(request.workdir)
+            quota.release(request.repo_root, request)
+        directory = Path(outcome.artifact_dir)
         manifest = supervisor.merge_journal(directory, entries=journal)
         print(f'HARNESS_EVAL_ARTIFACT={directory}')
-        return BackendResult(request.run_id, outcome.status if outcome else 'error', directory,
-                             directory / 'manifest.json', manifest['attempts'], error)
+        return self._result(request, replace(outcome, manifest=manifest), error)
+
+    @staticmethod
+    def _result(request, outcome, error: str | None) -> BackendResult:
+        directory = Path(outcome.artifact_dir)
+        return BackendResult(request.run_id, outcome.status, directory, directory / 'manifest.json',
+                             outcome.manifest.get('attempts', []), error)
 
     def status(self, run_id: str) -> dict:
         validate_identifier(run_id)

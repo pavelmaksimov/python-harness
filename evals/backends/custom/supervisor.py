@@ -231,6 +231,21 @@ def supervise(request, identity: dict, *, attempt: int, wall_seconds: float) -> 
     return Outcome(status, error, duration_ms, killed, directory, manifest or {})
 
 
+def refuse(request, identity: dict, message: str, *, entries: list[dict] | None = None) -> Outcome:
+    """Write the terminal artifacts of a run this backend declined to start.
+
+    A refusal is a decision about the run, so it leaves the same catalog entry a
+    finished run does — one ``HARNESS_EVAL_ARTIFACT`` marker, ``status.json``,
+    ``manifest.json``, ``report.md`` and an empty patch — and no attempt is
+    started, which is the whole point of refusing.
+    """
+    directory = Path(request.workdir)
+    manifest = _write_fallback(request, identity, 'error', message, 0)
+    if entries:
+        manifest = merge_journal(directory, entries=entries)
+    return Outcome('error', message, 0, False, directory, manifest)
+
+
 def merge_journal(directory, *, entries: list[dict]) -> dict:
     """Prepend supervisor entries to the stored attempts journal.
 
