@@ -40,6 +40,12 @@ whatever the attempt had produced. The same fallback covers a child that died
 before writing artifacts (status `error`). A run directory therefore always ends
 in a terminal state; core artifacts are never left half-written.
 
+The budget is derived once, from the task's stage timeouts plus overhead, and the
+supervisor never overrides a stage timeout. When the core asks a judge once more
+for a rejected scorecard that stage may spend a second judge timeout; an attempt
+that then outlives the whole budget is cancelled like any other overrun, with its
+artifacts kept.
+
 The child's stdout/stderr, including tracebacks, go to a raw log at
 `memory/.tmp/evals/supervisor/<run-id>-attempt-<n>.log` (git-ignored scratch).
 The operator-facing `HARNESS_EVAL_ARTIFACT=<run dir>` line is printed once per
