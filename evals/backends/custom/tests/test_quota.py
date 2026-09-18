@@ -148,6 +148,7 @@ class QuotaRunTests(unittest.TestCase):
         self.assertEqual(validate_manifest(read_manifest(result.artifact_dir)), [])
         report = (result.artifact_dir / 'report.md').read_text(encoding='utf-8')
         self.assertIn('provider quota hold', report)
+        self.assertIn('No attempt was started', report)
 
     def test_a_hold_without_a_stated_reset_is_never_expired_by_the_clock(self):
         self.seed_hold(None, reset_hint=None)

@@ -178,7 +178,9 @@ def _fallback_manifest(request, identity: dict, status: str, error: str, duratio
     return manifest
 
 
-def _write_fallback(request, identity: dict, status: str, error: str, duration_ms: int) -> dict:
+def _write_fallback(request, identity: dict, status: str, error: str, duration_ms: int,
+                    note: str = ('The shared core did not finish this attempt; the supervisor wrote the '
+                                 'terminal artifacts so the run stays diagnosable.')) -> dict:
     directory = Path(request.workdir)
     manifest = _fallback_manifest(request, identity, status, error, duration_ms)
     baseline, workspace = directory / 'baseline', directory / 'workspace'
@@ -191,8 +193,7 @@ def _write_fallback(request, identity: dict, status: str, error: str, duration_m
         except (OSError, ValueError):
             patch = ''
     report = '\n'.join(['# Evaluation report', '', f'Status: {status}', '', f'Error: `{error}`', '',
-                        'The shared core did not finish this attempt; the supervisor wrote the '
-                        'terminal artifacts so the run stays diagnosable.', '']) + '\n'
+                        note, '']) + '\n'
     artifacts_api.write_artifacts(directory, manifest, patch, report)
     return _recorded_manifest(directory) or manifest
 
@@ -240,7 +241,9 @@ def refuse(request, identity: dict, message: str, *, entries: list[dict] | None 
     started, which is the whole point of refusing.
     """
     directory = Path(request.workdir)
-    manifest = _write_fallback(request, identity, 'error', message, 0)
+    manifest = _write_fallback(request, identity, 'error', message, 0,
+                               note='No attempt was started: the run was refused before its first '
+                                    'attempt, and the terminal artifacts keep the refusal in the catalog.')
     if entries:
         manifest = merge_journal(directory, entries=entries)
     return Outcome('error', message, 0, False, directory, manifest)
