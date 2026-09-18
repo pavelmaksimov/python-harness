@@ -1,0 +1,128 @@
+{
+  "id": "postgres-order-store",
+  "covered_numbers": [
+    3,
+    5,
+    9,
+    17,
+    18,
+    19,
+    20,
+    32
+  ],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/postgres-order-store/fixture",
+  "materialize": [
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-sqlalchemy/python-sqlalchemy.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-db-sessions/python-db-sessions.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-alembic/python-alembic.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/sqlalchemy/",
+      "to": ".opencode/skills/sqlalchemy/"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-sqlalchemy/BASE_MODELS.md",
+      "to": "docs/BASE_MODELS.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-sqlalchemy/BASE_REPOSITORIES.md",
+      "to": "docs/BASE_REPOSITORIES.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-db-sessions/DATABASE.md",
+      "to": "docs/DATABASE.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-alembic/ENV.md",
+      "to": "docs/ENV.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
+  ],
+  "prompt_file": "evals/tasks/postgres-order-store/task.md",
+  "rubric_file": "evals/tasks/postgres-order-store/rubric.json",
+  "checks": [
+    {
+      "id": "order-has-orm-type",
+      "kind": "shell",
+      "command": "grep -n 'class OrderORM' project/components/orders/models.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "order-uses-typed-columns",
+      "kind": "shell",
+      "command": "grep -nE 'mapped_column|Mapped\\[' project/components/orders/models.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "order-payload-is-jsonb",
+      "kind": "shell",
+      "command": "grep -n 'JSONB' project/components/orders/models.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "repository-maps-rows",
+      "kind": "shell",
+      "command": "grep -n '_to_entity' project/components/orders/repositories.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "entities-stay-framework-free",
+      "kind": "shell",
+      "command": "! grep -RnE 'from sqlalchemy|import sqlalchemy' project/components/orders/entities.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "migration-directory-is-present",
+      "kind": "shell",
+      "command": "test -d alembic/versions",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "repositories-use-shared-session",
+      "kind": "shell",
+      "command": "grep -nE 'asession|atransaction' project/components/orders/repositories.py",
+      "on_fixture": "fail"
+    }
+  ]
+}

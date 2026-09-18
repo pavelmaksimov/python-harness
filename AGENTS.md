@@ -18,6 +18,10 @@ entries live in [agent-setup](https://github.com/pavelmaksimov/agent-setup).
   semantics.
 - **Materials log:** root `SOURCES.md` — single index of every external
   material the harness is built from (see section **Sources log**).
+- **Harness evaluation:** for requests to test a harness, module, provider, or
+  repeat an experiment, MUST read `evals/RUNBOOK.md` first. `evals/` is
+  development infrastructure, not a catalog ID: it is never copied to install
+  targets and does not bump the catalog `VERSION`.
 
 When the catalog and a local copy disagree, fix the README and remove the stale
 copy. Do not invent a second catalog format.
@@ -62,7 +66,8 @@ branch:
 4. Only author merges (`git merge agent/<topic>` from the main checkout) and
    cleans up (`git worktree remove <path>`). Never force-remove a worktree with
    uncommitted changes.
-5. Create a template plan before implementation /home/user/my/python-harness/HARNESS_ANALYSIS_TEMPLATE.md, not commit.
+5. Create a template plan before implementation from the repo's
+   `HARNESS_ANALYSIS_TEMPLATE.md`; do not commit it.
 
 ## Catalog version
 

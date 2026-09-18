@@ -1,0 +1,100 @@
+{
+  "id": "payment-http-client",
+  "covered_numbers": [
+    3,
+    5,
+    8,
+    9,
+    16,
+    32
+  ],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/payment-http-client/fixture",
+  "materialize": [
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-base-client.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-retry.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-libs/ASYNC_CLIENT.md",
+      "to": "docs/ASYNC_CLIENT.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-libs/RETRY.md",
+      "to": "docs/RETRY.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
+  ],
+  "prompt_file": "evals/tasks/payment-http-client/task.md",
+  "rubric_file": "evals/tasks/payment-http-client/rubric.json",
+  "checks": [
+    {
+      "id": "client-composes-async-api",
+      "kind": "shell",
+      "command": "grep -n 'AsyncApi' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "client-names-monitoring-api",
+      "kind": "shell",
+      "command": "grep -n 'name_for_monitoring' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "client-avoids-raise-for-status",
+      "kind": "shell",
+      "command": "! grep -n 'raise_for_status' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "client-maps-domain-errors",
+      "kind": "shell",
+      "command": "grep -nE 'ClientError|ServerError|ExternalHTTPConnectionError' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "client-retries-transient-failures",
+      "kind": "shell",
+      "command": "grep -nE 'retry_on_exception|retry_unless_exception' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "client-does-not-use-sync-implementation",
+      "kind": "shell",
+      "command": "! grep -n 'SyncApi' project/infrastructure/adapters/invoices.py",
+      "on_fixture": "pass"
+    }
+  ]
+}

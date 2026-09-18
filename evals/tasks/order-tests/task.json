@@ -1,0 +1,128 @@
+{
+  "id": "order-tests",
+  "covered_numbers": [
+    3,
+    5,
+    9,
+    10,
+    11,
+    12,
+    30,
+    33
+  ],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/order-tests/fixture",
+  "materialize": [
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tests/python-tests.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-freezegun/python-freezegun.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-polyfactory/python-polyfactory.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/patch-linter/",
+      "to": ".opencode/skills/patch-linter/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-coverage/",
+      "to": ".opencode/skills/python-coverage/"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-tests/CONFTEST.md",
+      "to": "docs/CONFTEST.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-polyfactory/FACTORIES.md",
+      "to": "docs/FACTORIES.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/python-coverage/PYPROJECT.md",
+      "to": "PYPROJECT.coverage.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
+  ],
+  "prompt_file": "evals/tasks/order-tests/task.md",
+  "rubric_file": "evals/tasks/order-tests/rubric.json",
+  "checks": [
+    {
+      "id": "tests-avoid-patching",
+      "kind": "shell",
+      "command": "! grep -RnE 'patch\\(|monkeypatch[.](setattr|setenv|delattr)' tests project",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "tests-use-modular-layout",
+      "kind": "shell",
+      "command": "test -d tests/test_modules",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "tests-use-transport-mocks",
+      "kind": "shell",
+      "command": "grep -RnE 'httpx_responses|aiohttp_responses|requests_mock' tests",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "tests-control-time",
+      "kind": "shell",
+      "command": "grep -Rn 'freeze_time' tests",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "tests-use-typed-factories",
+      "kind": "shell",
+      "command": "grep -Rn 'Factory' tests",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "coverage-gate-is-configured",
+      "kind": "shell",
+      "command": "grep -n 'fail_under' pyproject.toml",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "tests-assert-outcomes",
+      "kind": "shell",
+      "command": "grep -Rn 'assert ' tests",
+      "on_fixture": "pass"
+    }
+  ]
+}
