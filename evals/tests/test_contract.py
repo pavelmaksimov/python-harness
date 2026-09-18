@@ -94,6 +94,64 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(any('unknown covered number' in error for error in errors))
         self.assertTrue(any('materialize.from' in error for error in errors))
 
+    def matrix_root(self):
+        (self.root / 'evals').mkdir(exist_ok=True)
+        (self.root / 'evals/HARNESS_MATRIX.md').write_text((ROOT / 'evals/HARNESS_MATRIX.md').read_text())
+        (self.root / 'README.md').write_text((ROOT / 'README.md').read_text())
+
+    def write_task(self, name, data):
+        (self.root / 'evals/tasks' / name).mkdir(parents=True, exist_ok=True)
+        (self.root / 'evals/tasks' / name / 'task.json').write_text(
+            json.dumps({**data, 'id': name}), encoding='utf-8')
+
+    @staticmethod
+    def probe(**overrides):
+        base = {'id': 'demo', 'covered_numbers': [], 'materialize': []}
+        base.update(overrides)
+        return base
+
+    def test_shared_harness_numbers_accept_multiple_probes(self):
+        self.matrix_root()
+        self.write_task('one', self.probe(covered_numbers=[3]))
+        self.write_task('two', self.probe(covered_numbers=[3]))
+        errors = validate_repository(self.root)['errors']
+        self.assertEqual([error for error in errors if 'python-tooling' in error], [])
+
+    def test_probe_specific_numbers_stay_single_coverage(self):
+        self.matrix_root()
+        self.write_task('domain-order-lifecycle', self.probe(covered_numbers=[6]))
+        self.write_task('other', self.probe(covered_numbers=[6]))
+        errors = validate_repository(self.root)['errors']
+        self.assertTrue(any('number 6 belongs to domain-order-lifecycle' in error for error in errors))
+        self.assertTrue(any('expected exactly one probe, found 2' in error for error in errors))
+
+    def test_reserved_numbers_reject_probe_coverage(self):
+        self.matrix_root()
+        self.write_task('demo', self.probe(covered_numbers=[1, 13]))
+        errors = validate_repository(self.root)['errors']
+        self.assertTrue(any('reserved for Общий workflow' in error for error in errors))
+        self.assertTrue(any('reserved for Будущая library-проба' in error for error in errors))
+
+    def test_every_shared_harness_keeps_at_least_one_probe(self):
+        self.matrix_root()
+        self.write_task('demo', self.probe(covered_numbers=[6]))
+        errors = validate_repository(self.root)['errors']
+        self.assertTrue(any('python-tooling: no probe covers it' in error for error in errors))
+
+    def test_task_manifest_shape_is_validated(self):
+        self.matrix_root()
+        self.write_task('broken', self.probe(checks=[
+            {'id': 'no-command', 'kind': 'shell'},
+            {'id': 'bad-fixture', 'kind': 'shell', 'command': 'true', 'on_fixture': 'maybe'},
+            'not-a-dict',
+        ]))
+        errors = validate_repository(self.root)['errors']
+        self.assertTrue(any('missing prompt or prompt_file' in error for error in errors))
+        self.assertTrue(any('missing rubric or rubric_file' in error for error in errors))
+        self.assertTrue(any('command must be a nonempty string' in error for error in errors))
+        self.assertTrue(any('on_fixture must be' in error for error in errors))
+        self.assertTrue(any('only shell checks are supported' in error for error in errors))
+
     def test_patch_cannot_escape_run_directory(self):
         a = self.root / 'a'
         data = manifest()
