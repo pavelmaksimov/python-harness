@@ -37,7 +37,7 @@ class ContractTests(unittest.TestCase):
 
     def test_cross_backend_comparison_preserves_cost_and_patch_evidence(self):
         a, b = self.root / 'a', self.root / 'b'
-        left, right = manifest(), manifest('openresearch', 'b')
+        left, right = manifest(), manifest('stub', 'b')
         right['attempts'].append({'action': 'repair_config', 'result': 'success', 'duration_ms': 2, 'incident': 'verified'})
         write_artifacts(a, left, '+old\n', 'score 3\n')
         write_artifacts(b, right, '+new\n', 'score 3\n')
