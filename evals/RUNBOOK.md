@@ -57,7 +57,12 @@ record the profile with `--record` and the required success proof
 (`verification.status: success`, matching run id, provider, model, variant,
 opencode version, `human_selected: true`). Never substitute a model silently.
 The judge is a separate fixed profile; when it is missing, the same selection
-process applies to it.
+process applies to it. A judge profile may also name a `fallback`: another
+verified judge profile in the same directory. That pair is the fixed answer to a
+provider whose quota window is closed — the run judges with the fallback and the
+manifest records which profile produced the scorecard — while without the
+declaration a closed judge provider ends the run and a backend that owns run
+lifecycle refuses the next one until the window reopens.
 
 Completion criterion: `plan` reports a resolved subject and judge profile, and
 each was recorded only after a successful run.
@@ -136,16 +141,20 @@ distinct safe diagnostic attempts, then stop and ask.
 Two failure classes follow their own rule instead of a diagnostic attempt:
 
 - **Provider quota.** A `429` that carries the provider's own quota wording
-  (`usage limit`, `quota`) is a wait, not a defect: the run ends as `error` with
-  the provider's sentence and stated reset, no remedy is retried, and a backend
-  that owns run lifecycle refuses the next run while that window is closed
-  (`custom` documents its hold and how to clear it early). The run that succeeds
-  after the reset stores the wait as a verified incident. Switching the judge
-  profile because of a quota is a human decision, never a substitution.
+  (`usage limit`, `quota`) is a wait, not a defect: no remedy is retried, and the
+  provider's sentence with the reset it states stays in the run's
+  `provider-quota.json`. A fallback declared on the judge profile is used for that
+  scorecard and the manifest names the profile that judged
+  (`judge_profile`, `metrics.judge_fallback`); without one the run ends as `error`
+  and a backend that owns run lifecycle refuses the next run until the window
+  reopens (`custom` documents its hold and how to clear it early). The next
+  successful run stores the remedy it actually proved — the wait or the fallback —
+  as a verified incident, and changing the fixed profiles is a human decision.
 - **A rejected scorecard.** The core asks the judge exactly once more with an
   explicit only-a-JSON-object instruction and keeps every reply in
   `judge-response.txt`; a second rejection is needs-human, diagnosed from those
-  words. A second fixed judge profile is a human choice.
+  words. A second fixed judge profile is a human choice, and it answers a provider
+  quota only once it is verified *and* declared as the judge's `fallback`.
 
 Records are written through the core API only (`record_incident`,
 `record_provider_profile`, `record_backend_health`) so sanitization always runs:

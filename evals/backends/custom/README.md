@@ -89,14 +89,15 @@ API: `python -m evals.core.cli ...` has no repair switch — the loop is part of
    |---|---|---|
    | `timeout` | `supervision_budget` | doubles the whole-attempt wall clock |
    | `command_failed` | `clean_retry` | retries from a clean run directory |
-   | `provider_quota` | `quota_wait` | preflight only, never proposed as a retry: applied when a run is built on a reset that has already been waited out |
+   | `provider_quota` | `quota_wait` | preflight only, never proposed as a retry: credited when a run is built on a reset that has already been waited out |
+   | `provider_quota` | `judge_fallback` | preflight only: credited when the core judged with the fallback profile the fixed judge declares |
 
 4. **Needs human.** `missing_model`, `unsupported_variant`, `malformed_json`,
    `isolation_error`, `invalid_task`, `invalid_scorecard`, `provider_quota`,
-   `output_limit`, `crash` stop immediately with the exact decision being asked
-   for; the runner never picks a model, edits auth or global config, installs or
-   updates OpenCode, or weakens permissions. The same stop happens when the
-   remedies are exhausted (`repair loop stopped after …`).
+   `judge_fallback`, `output_limit`, `crash` stop immediately with the exact
+   decision being asked for; the runner never picks a model, edits auth or global
+   config, installs or updates OpenCode, or weakens permissions. The same stop
+   happens when the remedies are exhausted (`repair loop stopped after …`).
 
 After an attempt succeeded, `record_success` writes one incident through
 `evals.core.knowledge.record_incident`. A replayed incident is credited only when
@@ -121,24 +122,34 @@ backend then owns the rule around it, in three steps:
    `<role> provider_quota`, applicability `{backend, opencode_version, provider}`,
    remedy `quota_wait` — so the successful run can promote it through the shared
    knowledge API instead of a second format existing for the same fact.
-2. **Refuse while it is closed.** A run whose subject or judge uses that provider
-   writes its terminal artifacts and stops before the first attempt, printing the
-   provider's own sentence and the moment it named. No subject run is spent on a
-   window that cannot be open yet: the journal holds one `quota_hold` entry with
-   result `active`, and the error names the file that clears it early. A provider
-   that stated no reset leaves a hold that never expires on the clock — the
-   backend never invents a moment the provider did not state.
-3. **Wait it out.** Once the stated moment has passed, the next run applies
-   `quota_wait` before its first attempt; when that attempt succeeds (worst case:
-   a fresh `429`, which refreshes the hold), `record_success` stores the verified
-   incident and the hold is removed.
+
+2. **Refuse only when nothing can answer.** A closed window on the *subject*
+   provider always refuses, because no profile can stand in for the subject. A
+   closed *judge* provider refuses only when the fixed judge profile declares no
+   usable fallback; with one declared, the run proceeds and the core judges with
+   that profile (below). A refusal writes its terminal artifacts and stops before
+   the first attempt, printing the provider's own sentence and the moment it
+   named — the journal holds one `quota_hold` entry with result `active`, and the
+   error names the file that clears it early. A provider that stated no reset
+   leaves a hold that never expires on the clock — the backend never invents a
+   moment the provider did not state.
+3. **Wait it out, or use the declared fallback.** Once the stated moment has
+   passed, the next run waits the window out; while it is closed and a fallback
+   is declared, the run expects the fallback. Which of the two the run actually
+   proved is read from its own evidence afterwards — `metrics.judge_fallback`
+   says the fallback scored — and only that remedy is stored as the verified
+   incident, after which the hold is removed. An intent is never credited, so a
+   run that succeeded with the primary judge records nothing.
 
 The provider's clock often carries no zone (`reset at 2026-09-18 20:18:27`). Such
 a hint is read on the local clock — the one an operator compares it against — and
 the record says so in `reset_timezone`, together with the verbatim `reset_hint`.
 A wrong reading costs one attempt, never a silent loop, and
-`rm memory/.tmp/evals/quota/<provider>.json` clears the hold by hand. Switching
-the judge profile is a human decision: this backend only ever waits.
+`rm memory/.tmp/evals/quota/<provider>.json` clears the hold by hand. The
+fallback is declared in the judge profile (`fallback: <alias>`) and resolved by
+`evals.core.profiles.resolve_fallback`: a missing, self-referential or unverified
+alias is reported in the refusal instead of being used, so this backend never
+substitutes a model — it waits, or uses the pair a human selected.
 
 ## Weak isolation (temporary, approval-gated)
 

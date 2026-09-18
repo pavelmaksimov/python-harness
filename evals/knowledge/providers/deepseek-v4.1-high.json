@@ -4,9 +4,9 @@
     "input": {
       "audio": false,
       "image": true,
-      "pdf": true,
+      "pdf": false,
       "text": true,
-      "video": true
+      "video": false
     },
     "interleaved": {
       "field": "reasoning_content"
@@ -24,29 +24,28 @@
   },
   "cost": {
     "cache": {
-      "read": 0,
+      "read": 0.003,
       "write": 0
     },
-    "input": 0,
-    "output": 0
+    "input": 0.15,
+    "output": 0.6
   },
-  "fallback": "deepseek-v4.1-high",
-  "friendly_name": "GLM-5.3-Flash",
+  "friendly_name": "DeepSeek V4.1 Flash",
   "human_selected": true,
   "metadata": {
     "api": {
-      "id": "glm-5.3-flash",
+      "id": "deepseek-v4.1-flash",
       "npm": "@ai-sdk/openai-compatible",
-      "url": "https://api.z.ai/api/coding/paas/v4"
+      "url": "https://opencode.ai/zen/go/v1"
     },
     "capabilities": {
       "attachment": true,
       "input": {
         "audio": false,
         "image": true,
-        "pdf": true,
+        "pdf": false,
         "text": true,
-        "video": true
+        "video": false
       },
       "interleaved": {
         "field": "reasoning_content"
@@ -64,23 +63,23 @@
     },
     "cost": {
       "cache": {
-        "read": 0,
+        "read": 0.003,
         "write": 0
       },
-      "input": 0,
-      "output": 0
+      "input": 0.15,
+      "output": 0.6
     },
-    "family": "glm-flash",
+    "family": "deepseek-flash",
     "headers": {},
-    "id": "glm-5.3-flash",
+    "id": "deepseek-v4.1-flash",
     "limit": {
       "context": 1000000,
-      "output": 131072
+      "output": 384000
     },
-    "name": "GLM-5.3-Flash",
+    "name": "DeepSeek V4.1 Flash",
     "options": {},
-    "providerID": "zai-coding-plan",
-    "release_date": "2026-08-26",
+    "providerID": "opencode-go",
+    "release_date": "2026-09-10",
     "status": "active",
     "variants": {
       "high": {
@@ -94,20 +93,20 @@
       }
     }
   },
-  "model": "glm-5.3-flash",
+  "model": "deepseek-v4.1-flash",
   "opencode_version": "1.18.31",
-  "provider": "zai-coding-plan",
+  "provider": "opencode-go",
   "role": "judge",
-  "succeeded_at": "2026-09-17T19:06:40+00:00",
-  "variant": "max",
+  "succeeded_at": "2026-09-18T10:24:48+00:00",
+  "variant": "high",
   "verification": {
-    "model": "glm-5.3-flash",
+    "model": "deepseek-v4.1-flash",
     "opencode_version": "1.18.31",
-    "provider": "zai-coding-plan",
-    "run_id": "ses_f4f3ada55ffeSdkr7l2Erqei1t",
+    "provider": "opencode-go",
+    "run_id": "ses_f4bf40fb3ffeUg9AR2Je6YJ8jA",
     "status": "success",
-    "succeeded_at": "2026-09-17T19:06:40+00:00",
-    "variant": "max"
+    "succeeded_at": "2026-09-18T10:24:48+00:00",
+    "variant": "high"
   },
-  "verification_run_id": "ses_f4f3ada55ffeSdkr7l2Erqei1t"
+  "verification_run_id": "ses_f4bf40fb3ffeUg9AR2Je6YJ8jA"
 }
