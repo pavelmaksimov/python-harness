@@ -484,7 +484,8 @@ class ScorecardTests(unittest.TestCase):
             (self.scorecard(criteria=[dict(self.scorecard()['criteria'][0],
                                            evidence=[{'file': '../outside.py', 'description': 'x'}])]), 'confined'),
             (self.scorecard(criteria=[dict(self.scorecard()['criteria'][0],
-                                           evidence=[{'file': 'missing.py', 'description': 'x'}])]), 'does not exist'),
+                                           evidence=[{'file': 'missing.py', 'description': 'x'}])]),
+             'does not exist: missing.py'),
             (self.scorecard(criteria=[self.scorecard()['criteria'][0]]), 'fixed rubric'),
             (self.scorecard(criteria=[dict(self.scorecard()['criteria'][0], id='extra')]), 'fixed rubric'),
         )
