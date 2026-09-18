@@ -1,0 +1,100 @@
+{
+  "id": "telegram-order-bot",
+  "covered_numbers": [
+    3,
+    5,
+    9,
+    24,
+    32
+  ],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/telegram-order-bot/fixture",
+  "materialize": [
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-telegram/python-telegram.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-telegram/BOT.md",
+      "to": "docs/BOT.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-telegram/TELEGRAM.md",
+      "to": "docs/TELEGRAM.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
+  ],
+  "prompt_file": "evals/tasks/telegram-order-bot/task.md",
+  "rubric_file": "evals/tasks/telegram-order-bot/rubric.json",
+  "checks": [
+    {
+      "id": "handlers-use-timeout-decorator",
+      "kind": "shell",
+      "command": "grep -n '@timeout_with_retry' project/components/*/handlers.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "handlers-use-error-decorator",
+      "kind": "shell",
+      "command": "grep -n '@processing_errors' project/components/*/handlers.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "handlers-do-not-swallow-errors",
+      "kind": "shell",
+      "command": "! grep -RnE 'except .*:' project/components/*/handlers.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "handlers-resolve-collaborators-through-container",
+      "kind": "shell",
+      "command": "grep -n 'Container()' project/components/*/handlers.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "bot-registers-command-handlers",
+      "kind": "shell",
+      "command": "grep -n 'add_handler' project/infrastructure/apps/bot.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "handlers-stay-free-of-persistence-clients",
+      "kind": "shell",
+      "command": "! grep -RnE 'from sqlalchemy|import redis|AsyncSession' project/components/*/handlers.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "project-package-imports",
+      "kind": "shell",
+      "command": "test -f project/__init__.py",
+      "on_fixture": "pass"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "criteria": [
+    {
+      "id": "namespaced-cache-keys-with-ttl",
+      "description": "4 | The cache type subclasses the project's cache repository, declares a key template and a TTL, every key is produced through the shared key builder under the single application prefix, and no component imports the Redis client.\n3 | Keys and TTL are right, but the prefix comes from a literal instead of the settings constants.\n2 | The subclass exists but keys are still concatenated by hand in some methods.\n1 | Raw keys remain, only moved into a different module.\n0 | Unchanged raw client usage.",
+      "evidence": ["project/components/orders/repositories.py", "project/settings.py"]
+    },
+    {
+      "id": "transaction-safe-serialization",
+      "description": "4 | Values are serialized with the project's JSON serializer through a schema, writes and deletes go through the transaction helpers (never a hand-executed pipeline or a bare client call), the client itself lives in the infrastructure adapter, and reads reuse the helper.\n3 | Serialization and transactions are right, but one call still uses the client directly for a read.\n2 | Pipeline handling is manual, or serialization bypasses the project's serializer.\n1 | Only `json.dumps` was renamed.\n0 | Raw JSON strings through a module-level client.",
+      "evidence": ["the cache adapter module", "project/components/orders/repositories.py"]
+    },
+    {
+      "id": "single-limiter-initialization",
+      "description": "4 | The limiter is initialized exactly once with the shared Redis client during app start-up, the hot routes depend on the released limiter API, no hand-rolled middleware or in-memory counters remain, and rejected requests get 429 with a retry hint.\n3 | Limiter wiring is right but registration happens outside the app start-up path or one route kept the old middleware behaviour.\n2 | The dependency is attached to routes but initialization is repeated per request or per module import.\n1 | A new library is imported while the middleware still enforces the limit.\n0 | Middleware unchanged.",
+      "evidence": ["project/infrastructure/apps/api.py", "the order endpoint module"]
+    }
+  ]
+}

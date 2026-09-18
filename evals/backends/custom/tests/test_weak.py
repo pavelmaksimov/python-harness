@@ -1,0 +1,128 @@
+"""Approved degraded isolation: gating, policy pinning, doctor and run wiring."""
+from __future__ import annotations
+
+import contextlib
+import io
+from pathlib import Path
+import tempfile
+import unittest
+from unittest import mock
+
+from evals.backends.custom import doctor as doctor_module
+from evals.backends.custom import weak_isolation
+from evals.backends.custom.backend import BACKEND
+from evals.backends.custom.tests import harness
+from evals.core import checks
+from evals.core.artifacts import read_manifest
+from evals.core.knowledge import record_backend_health
+from evals.core.validate import validate_manifest
+
+
+def approve(root: Path, *, approved_by: str | None = 'vur21 (test)') -> None:
+    record = {'backend': 'custom', 'recorded_at': '2026-09-17T12:00:00+00:00'}
+    if approved_by is not None:
+        record['weak_isolation'] = {'approved_by': approved_by,
+                                    'approved_at': '2026-09-17T12:00:00+00:00',
+                                    'reason': 'test approval'}
+    record_backend_health(root, 'custom', record)
+
+
+class GatingTests(unittest.TestCase):
+    def setUp(self):
+        base = harness.ROOT / 'memory/.tmp/evals'
+        base.mkdir(parents=True, exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=base)
+        self.addCleanup(self.temp.cleanup)
+        self.root = harness.repository(Path(self.temp.name) / 'repo')
+
+    def test_activation_needs_approval_and_a_broken_namespace_host(self):
+        self.assertFalse(weak_isolation.active(self.root))
+        approve(self.root, approved_by=None)
+        self.assertFalse(weak_isolation.active(self.root),
+                         'a backend health record without approval is not consent')
+        approve(self.root)
+        with mock.patch.object(weak_isolation, 'host_namespaces_work', return_value=True):
+            self.assertFalse(weak_isolation.active(self.root), 'healthy namespaces keep the sandbox')
+        with mock.patch.object(weak_isolation, 'host_namespaces_work', return_value=False):
+            self.assertTrue(weak_isolation.active(self.root))
+
+    def test_host_execution_swaps_the_boundary_only_inside_the_block(self):
+        original = checks.run_isolated
+        with weak_isolation.host_execution():
+            self.assertIs(checks.run_isolated, weak_isolation._host_run_isolated)
+        self.assertIs(checks.run_isolated, original)
+
+    def test_commands_pin_the_role_policy_and_end_with_the_prompt_separator(self):
+        request = harness.request(self.root, 'weak-cmd')
+        subject = weak_isolation.command_for(request, 'subject', 'subject')
+        judge = weak_isolation.command_for(request, 'judge', 'judge')
+        for command, role in ((subject, 'subject'), (judge, 'judge')):
+            self.assertEqual(command[0], 'env')
+            settings = dict(item.split('=', 1) for item in command[1:command.index('opencode')])
+            self.assertEqual(settings['OPENCODE_CONFIG_DIR'], str(request.workdir / 'control' / role))
+            self.assertIn('"edit"', settings['OPENCODE_CONFIG_CONTENT'])
+            self.assertEqual(settings['OPENCODE_DISABLE_PROJECT_CONFIG'], 'true')
+            self.assertEqual(settings['OPENCODE_PURE'], '1')
+            self.assertEqual(command[-1], '--')
+        self.assertEqual(subject[subject.index('--model') + 1], 'fake/fake-model')
+        self.assertNotIn('--variant', subject, 'the profile has no variant; none is invented')
+        self.assertIn('"edit": "deny"', ' '.join(judge), 'the judge policy stays read-only')
+
+
+class DoctorWeakTests(unittest.TestCase):
+    def setUp(self):
+        base = harness.ROOT / 'memory/.tmp/evals'
+        base.mkdir(parents=True, exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=base)
+        self.addCleanup(self.temp.cleanup)
+        self.root = harness.repository(Path(self.temp.name) / 'repo')
+
+    def test_doctor_reports_weak_isolation_only_with_approval(self):
+        probe = mock.patch.object(weak_isolation, 'namespace_probe',
+                                  return_value=(False, 'pid namespaces unavailable: forced'))
+        approve(self.root)
+        with probe:
+            report = doctor_module.inspect(self.root, harness.IDENTITY)
+        sandbox = next(check for check in report['checks'] if check['id'] == 'sandbox')
+        self.assertEqual((report['isolation'], sandbox['status']), ('weak', 'ok'))
+        self.assertIn('vur21 (test)', sandbox['detail'])
+        self.assertTrue(any('temporary' in note for note in report['notes']))
+
+        fresh = harness.repository(Path(self.temp.name) / 'repo-no-approval')
+        with probe:
+            report = doctor_module.inspect(fresh, harness.IDENTITY)
+        sandbox = next(check for check in report['checks'] if check['id'] == 'sandbox')
+        self.assertEqual((report['isolation'], sandbox['status'], sandbox['blocking']),
+                         ('sandbox', 'fail', True))
+
+
+class WeakRunTests(unittest.TestCase):
+    def setUp(self):
+        base = harness.ROOT / 'memory/.tmp/evals'
+        base.mkdir(parents=True, exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=base)
+        self.addCleanup(self.temp.cleanup)
+        self.scratch = Path(self.temp.name)
+        self.root = harness.repository(self.scratch / 'repo')
+
+    def test_approved_weak_run_records_degraded_identity(self):
+        approve(self.root)
+        request = harness.request(self.root, 'weak-run',
+                                  subject_command=harness.script(self.scratch, 'subject.py', harness.SUBJECT),
+                                  judge_command=harness.judge(self.scratch))
+        stdout = io.StringIO()
+        with mock.patch.object(weak_isolation, 'host_namespaces_work', return_value=False), \
+                contextlib.redirect_stdout(stdout):
+            result = BACKEND.run(request)
+
+        self.assertEqual(result.status, 'success')
+        manifest = read_manifest(result.artifact_dir)
+        self.assertEqual(validate_manifest(manifest), [])
+        self.assertEqual(manifest['backend']['ids']['isolation'], 'weak-approved')
+        self.assertEqual(manifest['backend']['ids']['supervision'], 'wall-clock-process-group')
+        self.assertEqual([attempt['action'] for attempt in manifest['attempts']],
+                         ['attempt-1', 'materialize', 'subject', 'checks', 'judge'])
+
+
+if __name__ == '__main__':
+    unittest.main()

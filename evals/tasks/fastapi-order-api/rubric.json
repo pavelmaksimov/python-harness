@@ -1,0 +1,19 @@
+{
+  "criteria": [
+    {
+      "id": "thin-versioned-endpoints",
+      "description": "4 | Every endpoint is a success-path adapter (validate → call → return), routes carry a version segment, and no endpoint inspects status codes or builds error payloads.\n3 | Endpoints are thin but a version segment is missing on some routes.\n2 | Some try/except or `HTTPException` handling survives in endpoints, or business logic leaked in.\n1 | Only one endpoint was cleaned up.\n0 | Endpoints still own their error translation.",
+      "evidence": ["project/components/orders/endpoints.py"]
+    },
+    {
+      "id": "centralized-exception-mapping",
+      "description": "4 | The app registers handlers once and maps each application error family to the documented status code, with a generic 500 for unexpected failures that exposes nothing internal; unknown routes and validation failures follow the platform defaults.\n3 | Handlers exist and are correct, but one family is unmapped or a handler echoes the internal message for unexpected errors.\n2 | Some mapping is registered while other branches stay in endpoints.\n1 | A middleware or a wrapper function was added instead of exception handlers, with inconsistent coverage.\n0 | No centralized mapping.",
+      "evidence": ["project/infrastructure/apps/api.py"]
+    },
+    {
+      "id": "safe-response-and-logging-boundaries",
+      "description": "4 | Responses use the project JSON response class, logging is configured once in the app lifespan, and no debug locals or stack traces are enabled in the response path.\n3 | Response and logging are wired, with one detail missing (for example logging configured at import time of a module that the app does not import).\n2 | Response class is right but logging setup is missing or duplicated per module.\n1 | Logging configured in endpoints.\n0 | Neither is present.",
+      "evidence": ["project/infrastructure/apps/api.py", "project/components/orders/endpoints.py"]
+    }
+  ]
+}

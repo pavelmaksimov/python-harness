@@ -1,0 +1,84 @@
+{
+  "id": "fastapi-order-api",
+  "covered_numbers": [
+    3,
+    5,
+    9,
+    14,
+    32
+  ],
+  "base_fixture": "evals/_fixtures/base-project",
+  "fixture": "evals/tasks/fastapi-order-api/fixture",
+  "materialize": [
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-fastapi/python-fastapi.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
+  ],
+  "prompt_file": "evals/tasks/fastapi-order-api/task.md",
+  "rubric_file": "evals/tasks/fastapi-order-api/rubric.json",
+  "checks": [
+    {
+      "id": "app-registers-error-handlers",
+      "kind": "shell",
+      "command": "grep -nE 'exception_handler|add_exception_handler' project/infrastructure/apps/api.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "endpoints-do-not-translate-errors",
+      "kind": "shell",
+      "command": "! grep -RnE 'except |HTTPException' project/components/*/endpoints.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "endpoints-use-orjson-response",
+      "kind": "shell",
+      "command": "grep -Rn 'ORJSONResponse' project/components/*/endpoints.py project/infrastructure/apps/api.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "routes-are-versioned",
+      "kind": "shell",
+      "command": "grep -RnE '\"/[a-z_]+/v[0-9]+/' project/components/*/endpoints.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "lifespan-configures-logging",
+      "kind": "shell",
+      "command": "grep -Rn 'setup_logging' project/infrastructure/apps/api.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "api-app-exists",
+      "kind": "shell",
+      "command": "grep -n 'FastAPI' project/infrastructure/apps/api.py",
+      "on_fixture": "pass"
+    }
+  ]
+}
