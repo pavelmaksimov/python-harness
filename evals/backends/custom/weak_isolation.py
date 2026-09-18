@@ -27,6 +27,7 @@ from contextlib import contextmanager
 import json
 from pathlib import Path
 import shutil
+import sys
 
 from evals.core import checks, sandbox
 from evals.core.checks import run_process
@@ -127,6 +128,38 @@ def shell_path(repo_root) -> Path:
     return path
 
 
+# The core reads a subject's and judge's stdout through pipes and keeps only the
+# parsed result, so a run that ends with an empty patch or an unparseable
+# scorecard cannot be diagnosed after the fact. This shim runs the real command
+# unchanged — same argv, same exit code, same stdout stream for the parser — and
+# appends the raw output to a git-ignored transcript next to the attempt logs.
+_SHIM = '''import subprocess
+import sys
+
+transcript, argv = sys.argv[1], sys.argv[2:]
+done = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+with open(transcript, 'ab') as handle:
+    handle.write(b'\\n=== attempt ===\\n')
+    handle.write(done.stdout)
+sys.stdout.buffer.write(done.stdout)
+sys.exit(done.returncode)
+'''
+
+
+def shim_path(repo_root) -> Path:
+    path = Path(repo_root) / 'memory/.tmp/evals/shells/transcript-shim.py'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists() or path.read_text(encoding='utf-8') != _SHIM:
+        path.write_text(_SHIM, encoding='utf-8')
+    return path
+
+
+def transcript_path(request, role: str) -> Path:
+    directory = Path(request.repo_root) / 'memory/.tmp/evals/transcripts'
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f'{request.run_id}-{role}.jsonl'
+
+
 def configuration_for(workspace, role: str) -> dict:
     """The core's policy with sandbox-only paths rewritten to the real workspace.
 
@@ -182,6 +215,7 @@ def command_for(request, alias: str, role: str) -> tuple[str, ...]:
     provider, model = profile['provider'], profile['model']
     model_id = model if model.startswith(provider + '/') else provider + '/' + model
     command = ['env', *[f'{key}={value}' for key, value in settings.items()],
+               sys.executable, str(shim_path(request.repo_root)), str(transcript_path(request, role)),
                'opencode', 'run', '--pure', '--format', 'json', '--model', model_id]
     if profile.get('variant'):
         command += ['--variant', profile['variant']]
