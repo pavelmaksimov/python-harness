@@ -100,7 +100,11 @@ diagnostic history.
 
 Then read `manifest.json` for selection, profiles, attempts, checks and metrics,
 `result.patch` for the produced diff, and `report.md` for the judge scorecard
-(0–4 with per-file evidence). Run history for real experiments lives in
+(0–4 with per-file evidence). A refused or unscored run keeps its own evidence
+next to those: `judge-response.txt` holds every raw judge reply (that is where a
+rejected scorecard is read), and `provider-quota.json` holds the provider's own
+quota answer with the reset it stated; the manifest's `artifacts` map names
+whichever of them exist. Run history for real experiments lives in
 `evals/history/<task>/<run-id>/`; generated knowledge index:
 `evals/knowledge/INDEX.md`.
 
@@ -128,6 +132,20 @@ After a failure, look up the incident by stage, symptom and OpenCode version in
 skip the recorded dead ends. Record an incident only after a later run
 succeeded, with the confirmation proof. With no record, make at most three
 distinct safe diagnostic attempts, then stop and ask.
+
+Two failure classes follow their own rule instead of a diagnostic attempt:
+
+- **Provider quota.** A `429` that carries the provider's own quota wording
+  (`usage limit`, `quota`) is a wait, not a defect: the run ends as `error` with
+  the provider's sentence and stated reset, no remedy is retried, and a backend
+  that owns run lifecycle refuses the next run while that window is closed
+  (`custom` documents its hold and how to clear it early). The run that succeeds
+  after the reset stores the wait as a verified incident. Switching the judge
+  profile because of a quota is a human decision, never a substitution.
+- **A rejected scorecard.** The core asks the judge exactly once more with an
+  explicit only-a-JSON-object instruction and keeps every reply in
+  `judge-response.txt`; a second rejection is needs-human, diagnosed from those
+  words. A second fixed judge profile is a human choice.
 
 Records are written through the core API only (`record_incident`,
 `record_provider_profile`, `record_backend_health`) so sanitization always runs:

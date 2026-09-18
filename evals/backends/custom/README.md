@@ -83,13 +83,14 @@ API: `python -m evals.core.cli ...` has no repair switch — the loop is part of
    |---|---|---|
    | `timeout` | `supervision_budget` | doubles the whole-attempt wall clock |
    | `command_failed` | `clean_retry` | retries from a clean run directory |
+   | `provider_quota` | `quota_wait` | preflight only, never proposed as a retry: applied when a run is built on a reset that has already been waited out |
 
 4. **Needs human.** `missing_model`, `unsupported_variant`, `malformed_json`,
-   `isolation_error`, `invalid_task`, `invalid_scorecard`, `output_limit`,
-   `crash` stop immediately with the exact decision being asked for; the runner
-   never picks a model, edits auth or global config, installs or updates
-   OpenCode, or weakens permissions. The same stop happens when the remedies are
-   exhausted (`repair loop stopped after …`).
+   `isolation_error`, `invalid_task`, `invalid_scorecard`, `provider_quota`,
+   `output_limit`, `crash` stop immediately with the exact decision being asked
+   for; the runner never picks a model, edits auth or global config, installs or
+   updates OpenCode, or weakens permissions. The same stop happens when the
+   remedies are exhausted (`repair loop stopped after …`).
 
 After an attempt succeeded, `record_success` writes one incident through
 `evals.core.knowledge.record_incident`. A replayed incident is credited only when
@@ -98,6 +99,40 @@ Records are fingerprint-stable: stage, a normalized symptom and applicability
 only — durations and error dumps stay in the run history — so repeating the same
 defect increments `occurrences` and merges `failed_attempts` instead of creating
 parallel records. Nothing is recorded for a failure that was never fixed.
+
+## Provider quota holds
+
+A provider that answers `429` with its own quota wording (`usage limit`, `quota`)
+is not throttling: the shared core classifies it as `provider_quota`, keeps the
+provider's sentence and stated reset in the run's `provider-quota.json`, and ends
+the run as `error` even when the deterministic checks had already failed it. This
+backend then owns the rule around it, in three steps:
+
+1. **Record.** Every attempt is read for that diagnostic, which becomes a hold at
+   `memory/.tmp/evals/quota/<provider>.json` (git-ignored scratch, replaced
+   whenever the provider states a newer window). The hold is shaped like an
+   incident — stage `custom_judge` / `custom_subject`, symptom
+   `<role> provider_quota`, applicability `{backend, opencode_version, provider}`,
+   remedy `quota_wait` — so the successful run can promote it through the shared
+   knowledge API instead of a second format existing for the same fact.
+2. **Refuse while it is closed.** A run whose subject or judge uses that provider
+   writes its terminal artifacts and stops before the first attempt, printing the
+   provider's own sentence and the moment it named. No subject run is spent on a
+   window that cannot be open yet: the journal holds one `quota_hold` entry with
+   result `active`, and the error names the file that clears it early. A provider
+   that stated no reset leaves a hold that never expires on the clock — the
+   backend never invents a moment the provider did not state.
+3. **Wait it out.** Once the stated moment has passed, the next run applies
+   `quota_wait` before its first attempt; when that attempt succeeds (worst case:
+   a fresh `429`, which refreshes the hold), `record_success` stores the verified
+   incident and the hold is removed.
+
+The provider's clock often carries no zone (`reset at 2026-09-18 20:18:27`). Such
+a hint is read on the local clock — the one an operator compares it against — and
+the record says so in `reset_timezone`, together with the verbatim `reset_hint`.
+A wrong reading costs one attempt, never a silent loop, and
+`rm memory/.tmp/evals/quota/<provider>.json` clears the hold by hand. Switching
+the judge profile is a human decision: this backend only ever waits.
 
 ## Weak isolation (temporary, approval-gated)
 
@@ -162,16 +197,18 @@ needs-human:
 - **stage budgets** — per-stage timeouts come from `evals/tasks/<id>/task.json`;
   a backend cannot override them for one attempt. Only the whole-attempt wall
   clock is adjustable here.
-- **JSON format** — OpenCode output is parsed inside `evals/core/checks.py`;
-  reformatting belongs to that parser.
+- **JSON format** — OpenCode output is parsed inside `evals/core/checks.py`. The
+  core keeps every judge reply as `judge-response.txt` and asks exactly once more
+  with an explicit only-a-JSON-object instruction, so a final `malformed_json`
+  reaches this backend with its raw evidence already on disk.
 - **variant and argument order** — `opencode_command` composition lives in
   `evals/core/sandbox.py`, and the profile is a human-verified record; changing
   either silently would be a model change.
 - **local OpenCode configuration** — the core materializes an isolated config per
   role; editing the host's config is a human action.
 
-`malformed_json`, `unsupported_variant` and `missing_model` are therefore
-classified as needs-human rather than retried.
+`malformed_json` (after the core's single retry), `unsupported_variant` and
+`missing_model` are therefore classified as needs-human rather than retried.
 
 ## Tests
 
