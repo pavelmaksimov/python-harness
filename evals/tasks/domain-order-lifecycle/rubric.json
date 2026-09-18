@@ -1,0 +1,24 @@
+{
+  "criteria": [
+    {
+      "id": "identity-by-id",
+      "description": "4 | `Order` is defined once in `project/components/orders/entities.py`, identity is the id, equality and hashing follow identity (not field-by-field comparison), and no universal base class was introduced.\n3 | Identity semantics are right but one detail is off (for example hashing left enabled on a mutable entity).\n2 | The entity exists but equality is still field-based or inherited from a value-object pattern.\n1 | Only the type was renamed; identity is not modelled.\n0 | No entity in the domain module; the record stays a dict.",
+      "evidence": ["project/components/orders/entities.py (class definition, `__eq__`/`__hash__`)"]
+    },
+    {
+      "id": "invariants-on-every-mutation",
+      "description": "4 | Constructing an invalid order and calling any public mutator on a state that forbids it raises the component's own error; the rule is enforced inside the entity, not by callers.\n3 | Invariants are enforced on the main paths, with one mutator left unchecked.\n2 | Invariants exist but live outside the entity (validators called by the use case) or return booleans instead of failing.\n1 | Only construction is validated.\n0 | No invariant enforcement.",
+      "evidence": ["project/components/orders/entities.py", "project/components/orders/exceptions.py"]
+    },
+    {
+      "id": "declared-state-transitions",
+      "description": "4 | The lifecycle is an explicit state set plus declared transitions; an illegal call fails with the project's FSM error, and no if/else pyramid or string comparison decides legality.\n3 | A state enum and a transition table exist, but transitions are still partly decided by hand-written guards.\n2 | States are enumerated, transitions are checked with ad-hoc conditionals only.\n1 | Status stays a bare string but is centralized in one module.\n0 | Transitions remain implicit or scattered.",
+      "evidence": ["the order component's domain modules", "the FSM helper module"]
+    },
+    {
+      "id": "layer-safe-orchestration",
+      "description": "4 | Domain modules import only the standard library, the component's own modules and shared types; the use case resolves collaborators through the composition root, contains no pricing arithmetic and no persistence client, and remains readable at a glance.\n3 | Layering is correct but the use case still carries one piece of mechanics (for example response shaping or an extra branch).\n2 | The pricing rule moved, but the use case still builds collaborators itself or the domain reaches outside its layer.\n1 | Only file names changed; imports still violate the layer boundaries.\n0 | The refactor leaves the domain dependent on infrastructure and the use case fat.",
+      "evidence": ["project/components/orders/entities.py", "project/components/orders/use_cases.py", "the import block of every touched domain module"]
+    }
+  ]
+}

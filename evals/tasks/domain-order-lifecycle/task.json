@@ -1,41 +1,146 @@
 {
-  "schema_version": 1,
   "id": "domain-order-lifecycle",
-  "title": "Domain model, modules, FSM and layer boundaries",
-  "task_md": "evals/tasks/domain-order-lifecycle/task.md",
-  "rubric_md": "evals/tasks/domain-order-lifecycle/rubric.md",
-  "covered_numbers": [6, 7, 28, 29, 31],
-  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-architecture", "python-fsm", "layers-linter", "domain-types-linter", "di-linter", "dddlint"],
+  "covered_numbers": [
+    6,
+    7,
+    28,
+    29,
+    31
+  ],
   "base_fixture": "evals/_fixtures/base-project",
   "fixture": "evals/tasks/domain-order-lifecycle/fixture",
   "materialize": [
-    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
-    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
-    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
-    {"kind": "rule", "from": "harnesses/rules/python-architecture/python-architecture.mdc", "to": ".cursor/rules/python-architecture.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-architecture/python-entity.mdc", "to": ".cursor/rules/python-entity.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-architecture/python-usecase.mdc", "to": ".cursor/rules/python-usecase.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-libs/python-fsm.mdc", "to": ".cursor/rules/python-fsm.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-architecture/python-di.mdc", "to": ".cursor/rules/python-di.mdc"},
-    {"kind": "skill", "from": "harnesses/skills/layers-linter/", "to": ".opencode/skills/layers-linter/"},
-    {"kind": "skill", "from": "harnesses/skills/domain-types-linter/", "to": ".opencode/skills/domain-types-linter/"},
-    {"kind": "skill", "from": "harnesses/skills/di-linter/", "to": ".opencode/skills/di-linter/"},
-    {"kind": "template", "from": "harnesses/rules/python-libs/FSM.md", "to": ".cursor/rules/FSM.md"},
-    {"kind": "template", "from": "harnesses/skills/layers-linter/layers.toml", "to": "layers.toml"},
-    {"kind": "template", "from": "harnesses/skills/di-linter/di.toml", "to": "di.toml"},
-    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-architecture/python-architecture.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-architecture/python-entity.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-architecture/python-usecase.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-fsm.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-architecture/python-di.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/layers-linter/",
+      "to": ".opencode/skills/layers-linter/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/domain-types-linter/",
+      "to": ".opencode/skills/domain-types-linter/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/di-linter/",
+      "to": ".opencode/skills/di-linter/"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-libs/FSM.md",
+      "to": "docs/FSM.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/layers-linter/layers.toml",
+      "to": "layers.toml"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/di-linter/di.toml",
+      "to": "di.toml"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
   ],
+  "prompt_file": "evals/tasks/domain-order-lifecycle/task.md",
+  "rubric_file": "evals/tasks/domain-order-lifecycle/rubric.json",
   "checks": [
-    {"id": "entities-have-stable-identity", "kind": "shell", "cmd": "grep -R 'dataclass(eq=False)' project/components/*/entities.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "entities-disable-generated-hash", "kind": "shell", "cmd": "grep -R '__hash__ = None' project/components/*/entities.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "services-are-removed", "kind": "shell", "cmd": "grep -RnE 'class .*Service|service[.]py' project/components/", "expect": "empty", "expect_on_fixture": "fail"},
-    {"id": "status-transitions-are-declared", "kind": "shell", "cmd": "grep -Rn '@transition(' project/components/", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "pricing-lives-in-the-domain", "kind": "shell", "cmd": "grep -RnE 'def .*(price|total)' project/components/orders/ --exclude=use_cases.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "use-cases-resolve-collaborators-through-container", "kind": "shell", "cmd": "grep -n 'Container()' project/components/orders/use_cases.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "domain-avoids-infrastructure", "kind": "shell", "cmd": "grep -RnE 'from project[.]infrastructure|import project[.]infrastructure|from project[.]container' project/components/orders/entities.py", "expect": "empty", "expect_on_fixture": "fail"},
-    {"id": "domain-annotations-use-domain-types", "kind": "shell", "cmd": "grep -RnE 'order_id: int|user_id: int|customer_id: int' project/components/orders/entities.py", "expect": "empty", "expect_on_fixture": "fail"}
-  ],
-  "judge_criteria": ["identity by id", "invariants on every mutation", "declared state transitions", "layer-safe orchestration"],
-  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+    {
+      "id": "entities-have-stable-identity",
+      "kind": "shell",
+      "command": "grep -R 'dataclass(eq=False)' project/components/*/entities.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "entities-disable-generated-hash",
+      "kind": "shell",
+      "command": "grep -R '__hash__ = None' project/components/*/entities.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "services-are-removed",
+      "kind": "shell",
+      "command": "! grep -RnE 'class .*Service|service[.]py' project/components/",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "status-transitions-are-declared",
+      "kind": "shell",
+      "command": "grep -Rn '@transition(' project/components/",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "pricing-lives-in-the-domain",
+      "kind": "shell",
+      "command": "grep -RnE 'def .*(price|total)' project/components/orders/ --exclude=use_cases.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "use-cases-resolve-collaborators-through-container",
+      "kind": "shell",
+      "command": "grep -n 'Container()' project/components/orders/use_cases.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "domain-avoids-infrastructure",
+      "kind": "shell",
+      "command": "! grep -RnE 'from project[.]infrastructure|import project[.]infrastructure|from project[.]container' project/components/orders/entities.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "domain-annotations-use-domain-types",
+      "kind": "shell",
+      "command": "! grep -RnE 'order_id: int|user_id: int|customer_id: int' project/components/orders/entities.py",
+      "on_fixture": "fail"
+    }
+  ]
 }
