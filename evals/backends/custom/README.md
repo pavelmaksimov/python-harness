@@ -124,6 +124,13 @@ This module is temporary by design: the follow-up task on MY-45 removes it once
 the host runs unprivileged namespaces again. Without the approval record nothing
 changes — the core stays fail-closed.
 
+Diagnosability on this host: the core reads subject and judge output through
+pipes and keeps only the parsed result, so weak mode runs the real command
+through a tee shim that appends the raw stream to
+`memory/.tmp/evals/transcripts/<run-id>-<role>.jsonl` (git-ignored scratch, same
+policy as the attempt logs) while forwarding the unchanged stream and exit code
+to the parser.
+
 ## Doctor
 
 `doctor` (no `--repair`) checks OpenCode, isolation (`bwrap` pid and network
