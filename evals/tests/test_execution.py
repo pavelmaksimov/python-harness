@@ -19,6 +19,7 @@ from evals.core.artifacts import read_manifest
 from evals.core.backend_api import RunRequest
 from evals.core.checks import CommandError, ProcessResult, parse_opencode, run_process
 from evals.core.judge import normalize_scorecard
+from evals.core.profiles import resolve_fallback
 from evals.core.selection import Selection
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -492,6 +493,58 @@ class ScorecardTests(unittest.TestCase):
                 normalize_scorecard(value, self.rubric, self.workspace)
 
 
+class FallbackTests(unittest.TestCase):
+    """The declared judge fallback: resolved from the record, never invented."""
+
+    def setUp(self):
+        base = ROOT / 'memory/.tmp/evals'
+        base.mkdir(parents=True, exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=base)
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.providers = self.root / 'evals/knowledge/providers'
+        self.providers.mkdir(parents=True)
+        self.primary = profile('judge') | {'fallback': 'deepseek-v4.1-high'}
+        self.write('glm-5.3-flash-max', self.primary)
+        self.write('deepseek-v4.1-high', profile('judge'))
+
+    def write(self, alias: str, data: dict) -> None:
+        (self.providers / f'{alias}.json').write_text(json.dumps(data), encoding='utf-8')
+
+    def test_a_declared_fallback_resolves_to_its_verified_judge_profile(self):
+        alias, resolved, problem = resolve_fallback(self.root, self.primary, 'glm-5.3-flash-max')
+
+        self.assertEqual((alias, problem), ('deepseek-v4.1-high', None))
+        self.assertEqual(resolved, profile('judge'))
+
+    def test_a_profile_without_a_declaration_has_no_fallback(self):
+        self.assertEqual(resolve_fallback(self.root, profile('judge'), 'judge'), (None, None, None))
+
+    def test_a_self_referential_declaration_is_reported(self):
+        alias, resolved, problem = resolve_fallback(self.root, {'fallback': 'judge'}, 'judge')
+
+        self.assertEqual((alias, resolved), ('judge', None))
+        self.assertIn('declares itself', problem)
+
+    def test_a_missing_or_unverified_fallback_is_reported(self):
+        alias, resolved, problem = resolve_fallback(self.root, {'fallback': 'ghost'}, 'primary')
+
+        self.assertEqual((alias, resolved), ('ghost', None))
+        self.assertIn("the declared judge fallback 'ghost' is unusable", problem)
+
+        self.write('unverified', profile('judge') | {'human_selected': False})
+        _, resolved, problem = resolve_fallback(self.root, {'fallback': 'unverified'}, 'primary')
+        self.assertIsNone(resolved)
+        self.assertIn('human model selection', problem)
+
+    def test_a_fallback_that_is_not_a_judge_profile_is_reported(self):
+        self.write('subject-only', profile('subject'))
+        alias, resolved, problem = resolve_fallback(self.root, {'fallback': 'subject-only'}, 'primary')
+
+        self.assertEqual((alias, resolved), ('subject-only', None))
+        self.assertIn('does not match the requested role', problem)
+
+
 class ExecuteTests(unittest.TestCase):
     def setUp(self):
         base = ROOT / 'memory/.tmp/evals'
@@ -714,10 +767,14 @@ class ExecuteTests(unittest.TestCase):
                 self.assertIn('judge invalid_scorecard', report)
                 self.assertIn('smoke: pass', report)
 
-    def sequence_judge(self, replies: list[str], name: str = 'sequence-judge') -> tuple[str, ...]:
-        """A judge that replies with the next scripted text and records each prompt."""
+    def sequence_judge(self, lines: list[str], name: str = 'sequence-judge') -> tuple[str, ...]:
+        """A judge that prints the next scripted stdout line verbatim and records each prompt.
+
+        Lines are the OpenCode event stream, so a scripted answer can be a text
+        event, an error event, or anything else the CLI really emits.
+        """
         scripted = Path(self.temp.name) / f'{name}-replies.json'
-        scripted.write_text(json.dumps(replies), encoding='utf-8')
+        scripted.write_text(json.dumps(lines), encoding='utf-8')
         calls = Path(self.temp.name) / f'{name}-calls.txt'
         prompts = Path(self.temp.name) / f'{name}-prompts.txt'
         return self.script(f'{name}.py', f'''
@@ -728,8 +785,7 @@ class ExecuteTests(unittest.TestCase):
             counter.write_text(str(index + 1), encoding="utf-8")
             with open({str(prompts)!r}, "a", encoding="utf-8") as handle:
                 handle.write("=== call ===\\n" + sys.argv[-1] + "\\n")
-            reply = scripted[min(index, len(scripted) - 1)]
-            print(json.dumps({{"type": "text", "part": {{"text": reply}}}}))
+            print(scripted[min(index, len(scripted) - 1)])
         ''')
 
     def judge_history(self, name: str = 'sequence-judge') -> tuple[int, list[str]]:
@@ -747,13 +803,27 @@ class ExecuteTests(unittest.TestCase):
             print(open({str(payload)!r}, encoding="utf-8").read().strip())
         ''')
 
+    def text_event(self, text: str) -> str:
+        """One assistant text event, as the CLI streams it."""
+        return json.dumps({'type': 'text', 'part': {'text': text}})
+
+    def declare_judge_fallback(self, alias: str = 'judge-fallback', *, record: bool = True) -> None:
+        """Name a second verified judge profile as the fallback of the judge profile."""
+        providers = self.root / 'evals/knowledge/providers'
+        if record:
+            fallback = profile('judge') | {'model': 'fallback-model'}
+            fallback['verification'] = {**fallback['verification'], 'model': 'fallback-model'}
+            (providers / f'{alias}.json').write_text(json.dumps(fallback), encoding='utf-8')
+        primary = json.loads((providers / 'judge.json').read_text(encoding='utf-8'))
+        (providers / 'judge.json').write_text(json.dumps(primary | {'fallback': alias}), encoding='utf-8')
+
     def test_one_rejected_scorecard_is_asked_again_with_an_explicit_instruction(self):
         subject = self.script('subject.py', '''
             import json
             print(json.dumps({"type": "text", "part": {"text": "ok"}}))
         ''')
-        judge = self.sequence_judge(['The code looks solid to me, honestly.',
-                                     json.dumps(self.valid_scorecard())])
+        judge = self.sequence_judge([self.text_event('The code looks solid to me, honestly.'),
+                                     self.text_event(json.dumps(self.valid_scorecard()))])
         manifest, _, directory = self.run_experiment(self.request(
             subject_command=subject, judge_command=judge))
 
@@ -774,7 +844,7 @@ class ExecuteTests(unittest.TestCase):
             import json
             print(json.dumps({"type": "text", "part": {"text": "ok"}}))
         ''')
-        judge = self.sequence_judge(['the code is fine', 'still prose, sorry'])
+        judge = self.sequence_judge([self.text_event('the code is fine'), self.text_event('still prose, sorry')])
         manifest, _, directory = self.run_experiment(self.request(
             run='judge-prose', subject_command=subject, judge_command=judge))
 
@@ -808,6 +878,50 @@ class ExecuteTests(unittest.TestCase):
         self.assertEqual((payload['provider_said'], payload['reset_hint']), (QUOTA_SENTENCE, '2026-09-18 20:18:27'))
         from evals.core.validate import validate_manifest
         self.assertEqual(validate_manifest(read_manifest(directory)), [])
+
+    def test_a_provider_quota_is_judged_by_the_declared_fallback_profile(self):
+        self.declare_judge_fallback()
+        subject = self.script('subject.py', '''
+            import json
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        judge = self.sequence_judge([json.dumps(QUOTA_EVENT),
+                                     json.dumps({'type': 'text',
+                                                 'part': {'text': json.dumps(self.valid_scorecard())}})])
+        manifest, _, directory = self.run_experiment(self.request(
+            run='judge-quota-fallback', subject_command=subject, judge_command=judge))
+
+        self.assertEqual(manifest['status'], 'success')
+        self.assertEqual(manifest['judge_score'], 3)
+        self.assertEqual(manifest['judge_profile']['model'], 'fallback-model')
+        self.assertEqual(manifest['metrics']['judge_fallback'],
+                         {'profile': 'judge-fallback', 'reason': 'provider_quota', 'primary': 'judge'})
+        self.assertEqual([(attempt['action'], attempt['result']) for attempt in manifest['attempts']],
+                         [('materialize', 'ok'), ('subject', 'ok'), ('checks', 'ok'),
+                          ('judge', 'provider_quota'), ('judge_fallback', 'ok')])
+        report = (directory / 'report.md').read_text(encoding='utf-8')
+        self.assertIn('Judged by the fallback profile `judge-fallback`', report)
+        self.assertIn(QUOTA_SENTENCE, report)
+        payload = json.loads((directory / 'provider-quota.json').read_text(encoding='utf-8'))
+        self.assertEqual(payload['provider'], 'fake', 'the profile that actually hit the quota is recorded')
+        from evals.core.validate import validate_manifest
+        self.assertEqual(validate_manifest(read_manifest(directory)), [])
+
+    def test_a_declared_fallback_that_cannot_be_loaded_keeps_the_quota_outcome(self):
+        self.declare_judge_fallback('ghost-judge', record=False)
+        subject = self.script('subject.py', '''
+            import json
+            print(json.dumps({"type": "text", "part": {"text": "ok"}}))
+        ''')
+        judge = self.sequence_judge([json.dumps(QUOTA_EVENT)])
+        manifest, _, directory = self.run_experiment(self.request(
+            run='judge-quota-ghost', subject_command=subject, judge_command=judge))
+
+        self.assertEqual(manifest['status'], 'error')
+        self.assertEqual(manifest['attempts'][3]['result'], 'provider_quota')
+        self.assertEqual(self.judge_history()[0], 1, 'an unusable fallback is never used silently')
+        report = (directory / 'report.md').read_text(encoding='utf-8')
+        self.assertIn("the declared judge fallback 'ghost-judge' is unusable", report)
 
     def test_missing_task_or_unverified_profile_still_writes_terminal_artifacts(self):
         empty = Path(self.root)

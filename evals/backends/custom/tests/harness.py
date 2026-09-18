@@ -14,7 +14,8 @@ import textwrap
 
 from evals.core.backend_api import RunRequest
 from evals.core.checks import run_process
-from evals.core.knowledge import record_incident
+from evals.core.knowledge import record_incident, record_provider_profile
+from evals.core.profiles import load_profile
 from evals.core.selection import Selection
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -122,6 +123,48 @@ def judge(directory: Path, payload: dict | None = None) -> tuple[str, ...]:
         payload = open({str(target)!r}, encoding="utf-8").read()
         print(json.dumps({{"type": "text", "part": {{"text": payload}}}}))
     ''')
+
+
+def text_event(text: str) -> str:
+    """One assistant text event, as the CLI streams it."""
+    return json.dumps({'type': 'text', 'part': {'text': text}})
+
+
+def judge_lines(directory: Path, lines: list[str], name: str = 'judge-sequence.py') -> tuple[str, ...]:
+    """A judge that prints the next scripted stdout line, verbatim, per call."""
+    target = Path(directory) / f'{Path(name).stem}-lines.json'
+    target.write_text(json.dumps(lines), encoding='utf-8')
+    counter = Path(directory) / f'{Path(name).stem}-calls.txt'
+    return script(directory, name, f'''
+        import json, pathlib
+        lines = json.loads(pathlib.Path({str(target)!r}).read_text(encoding="utf-8"))
+        state = pathlib.Path({str(counter)!r})
+        index = int(state.read_text(encoding="utf-8")) if state.exists() else 0
+        state.write_text(str(index + 1), encoding="utf-8")
+        print(lines[min(index, len(lines) - 1)])
+    ''')
+
+
+def fallback_profile() -> dict:
+    """A second verified judge profile, distinct from the primary one."""
+    record = profile('judge')
+    return {**record, 'model': 'fake-fallback', 'friendly_name': 'Fake fallback judge',
+            'verification': {**record['verification'], 'model': 'fake-fallback'}}
+
+
+def declare_fallback(root: Path, alias: str = 'judge-fallback', provider: str | None = None) -> dict:
+    """Record the verified fallback profile and name it in the judge profile.
+
+    ``provider`` moves the judge onto its own provider, the way a real pair of
+    fixed profiles spans two providers.
+    """
+    stored = record_provider_profile(Path(root), alias, fallback_profile())
+    judge = load_profile(Path(root), 'judge', role='judge')
+    if provider is not None:
+        judge = {**judge, 'provider': provider,
+                 'verification': {**judge['verification'], 'provider': provider}}
+    record_provider_profile(Path(root), 'judge', {**judge, 'fallback': alias})
+    return stored
 
 
 def counting_subject(directory: Path, *, name: str = 'subject.py', fail_while_modulo: int | None = None,

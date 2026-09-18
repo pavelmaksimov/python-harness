@@ -84,7 +84,7 @@ class HoldTests(unittest.TestCase):
     def test_a_refusal_names_the_provider_its_words_and_the_file_that_clears_it(self):
         diagnostic(self.run, run_id='quota-1', reset_at=None, reset_hint=None)
         hold = quota.observe(self.root, self.run, context=self.context)
-        message = quota.refusal(hold)
+        message = quota.refusal({'hold': hold, 'role': 'judge', 'provider': 'fake'})
 
         self.assertIn('provider fake', message)
         self.assertIn(QUOTA_SENTENCE, message)
@@ -92,6 +92,14 @@ class HoldTests(unittest.TestCase):
         self.assertIn('rm memory/.tmp/evals/quota/fake.json', message)
         self.assertIn('human decision', message, 'a profile switch is never a substitution')
         self.assertIn('no reset moment stated', message)
+
+    def test_a_refusal_reports_why_a_declared_fallback_could_not_answer(self):
+        hold = {'provider': 'fake', 'message': QUOTA_SENTENCE, 'reset_at': moment(timedelta(hours=1))}
+        message = quota.refusal({'hold': hold, 'role': 'judge', 'provider': 'fake',
+                                 'problem': "the declared judge fallback 'ghost' is unusable"})
+
+        self.assertIn("the declared judge fallback 'ghost' is unusable", message)
+        self.assertNotIn('human decision', message, 'the reason replaces the generic remark')
 
 
 class QuotaRunTests(unittest.TestCase):
@@ -114,10 +122,12 @@ class QuotaRunTests(unittest.TestCase):
             result = BACKEND.run(request)
         return result, stdout.getvalue()
 
-    def seed_hold(self, reset_at: str | None, *, reset_hint: str | None = '2026-09-18 20:18:27') -> dict:
+    def seed_hold(self, reset_at: str | None, *, reset_hint: str | None = '2026-09-18 20:18:27',
+                  provider: str = 'fake') -> dict:
         """The hold a previous run left behind when the provider refused it."""
         previous = self.root / 'evals/history/demo/previous'
-        diagnostic(previous, run_id='previous', reset_at=reset_at, reset_hint=reset_hint)
+        diagnostic(previous, run_id='previous', reset_at=reset_at, reset_hint=reset_hint,
+                   provider=provider)
         return quota.observe(self.root, previous, context={'backend': 'custom',
                                                            'opencode_version': harness.PROFILE_VERSION})
 
@@ -181,6 +191,37 @@ class QuotaRunTests(unittest.TestCase):
         self.assertEqual(record['verification']['status'], 'success')
         self.assertEqual(record['verification']['run_id'], 'quota-open')
         self.assertIsNone(quota.read(self.root, 'fake'), 'the run that succeeded clears the hold')
+
+    def test_a_closed_judge_window_uses_the_declared_fallback_instead_of_refusing(self):
+        harness.declare_fallback(self.root, provider='fake-judge')
+        self.seed_hold(moment(timedelta(hours=2)), provider='fake-judge')
+        judge = harness.judge_lines(self.scratch, [json.dumps(QUOTA_EVENT),
+                                                  harness.text_event(json.dumps(harness.scorecard()))])
+
+        result, _ = self.run_backend(harness.request(
+            self.root, 'quota-fallback', subject_command=self.subject(), judge_command=judge))
+
+        self.assertEqual(result.status, 'success')
+        actions = [attempt['action'] for attempt in result.attempts]
+        self.assertEqual(actions[:2], ['quota_fallback', 'attempt-1'])
+        pairs = [(attempt['action'], attempt['result']) for attempt in result.attempts]
+        self.assertNotIn(('quota_hold', 'active'), pairs,
+                         'a declared fallback answers a closed judge window instead of refusing')
+        self.assertIn(('quota_hold', 'recorded'), pairs, 'the closed window stays recorded')
+        self.assertIn(('judge', 'provider_quota'), pairs)
+        self.assertIn(('remedy-judge_fallback', 'credited'), pairs)
+        manifest = read_manifest(result.artifact_dir)
+        self.assertEqual(manifest['judge_profile']['model'], 'fake-fallback')
+        self.assertEqual(manifest['metrics']['judge_fallback'],
+                         {'profile': 'judge-fallback', 'reason': 'provider_quota', 'primary': 'judge'})
+        self.assertEqual((manifest['judge_score'], manifest['artifacts']['provider_quota']),
+                         (3, 'provider-quota.json'))
+        stored = harness.incidents(self.root)
+        self.assertEqual(len(stored), 1)
+        self.assertEqual((stored[0]['stage'], stored[0]['symptom']), ('custom_judge', 'judge provider_quota'))
+        self.assertEqual(stored[0]['remedy']['kind'], 'judge_fallback')
+        self.assertEqual(stored[0]['applicability']['provider'], 'fake-judge')
+        self.assertIsNone(quota.read(self.root, 'fake-judge'), 'the run that succeeded clears the hold')
 
     def test_a_fresh_quota_answer_is_recorded_and_never_retried(self):
         payload = self.scratch / 'quota-event.json'
