@@ -3,8 +3,9 @@
 Status mapping is fixed: ``success`` (all stages completed, every check passed),
 ``failed`` (stages completed, a check failed), ``timeout`` (a command exceeded
 its timeout), ``error`` (malformed JSON, missing model, unsupported variant,
-isolation refusal or an invalid judge scorecard). Terminal artifacts are written
-for every outcome, including failures that happen before the sandbox exists.
+provider quota, isolation refusal or an invalid judge scorecard). Terminal
+artifacts are written for every outcome, including failures that happen before
+the sandbox exists.
 """
 from __future__ import annotations
 
@@ -17,12 +18,14 @@ from pathlib import Path
 
 from . import artifacts as artifacts_api
 from .backend_api import RunRequest
-from .checks import CommandError, parse_opencode, run_checks, run_isolated, run_process, timeout_seconds
+from .checks import (CommandError, parse_opencode, quota_hold, run_checks, run_isolated, run_process,
+                     timeout_seconds)
 from .judge import judge_workspace
+from .knowledge import sanitize
 from .profiles import load_profile
 from .sandbox import IsolationError, materialize, opencode_command, safe_path
 
-ARTIFACTS = {'patch': 'result.patch', 'report': 'report.md', 'status': 'status.json'}
+ARTIFACTS = artifacts_api.ARTIFACTS
 _TIMEOUTS = {'subject': 900.0, 'check': 300.0, 'judge': 600.0}
 # Identity recorded when the caller is the shared core rather than a repository
 # backend; a backend passes its own name/version/ids to execute_experiment.
@@ -166,6 +169,31 @@ def _harness_hashes(repo_root: Path, harness_ids: tuple[str, ...]) -> dict:
     return hashes
 
 
+def _quota_diagnostic(artifact_dir: Path, manifest: dict, stage: str, alias: str,
+                      failure: Exception) -> str:
+    """Record an exhausted provider as its own artifact and return the plain reason.
+
+    The provider sentence and the moment it states are what a reader needs: the
+    raw payload is the artifact, and the run's report carries one readable line.
+    """
+    details = quota_hold(str(failure))
+    profile = manifest.get(f'{alias}_profile') or {}
+    artifacts_api.write_diagnostic(
+        artifact_dir, artifacts_api.DIAGNOSTICS['provider_quota'],
+        json.dumps(sanitize({'run_id': manifest.get('run_id', ''), 'stage': stage, 'role': alias,
+                             'observed_at': _now(), 'provider': profile.get('provider', ''),
+                             'model': profile.get('model', ''), 'provider_said': details['message']}),
+                   ensure_ascii=False, indent=2) + '\n')
+    reason = details['message']
+    if details['reset_at']:
+        reason += f" (resets at {details['reset_at']}, {details['reset_timezone']} timezone)"
+    elif details['hint']:
+        reason += f" (reset stated as {details['hint']})"
+    else:
+        reason += ' (no reset time stated)'
+    return reason
+
+
 def _subject(request: RunRequest, task: dict, profile: dict, prompt: str, workspace: Path) -> tuple[str, dict]:
     timeout = _timeout(task, 'subject')
     if request.subject_command:
@@ -177,9 +205,9 @@ def _subject(request: RunRequest, task: dict, profile: dict, prompt: str, worksp
 
 
 def _judge(request: RunRequest, task: dict, profile: dict, workspace: Path, rubric: dict | list,
-           checks: list[dict]) -> tuple[dict, str, dict]:
-    return judge_workspace(workspace, profile, rubric, checks,
-                           command=request.judge_command, timeout=_timeout(task, 'judge'))
+           checks: list[dict], artifact_dir: Path) -> tuple[dict, str, dict]:
+    return judge_workspace(workspace, profile, rubric, checks, command=request.judge_command,
+                           timeout=_timeout(task, 'judge'), diagnostics=artifact_dir)
 
 
 def _capture_patch(request: RunRequest, workspace: Path) -> str:
@@ -262,23 +290,32 @@ def execute_experiment(request: RunRequest, artifact_dir: Path, *, backend: dict
         stage, stage_started = 'judge', time.monotonic()
         if status in {'success', 'failed'}:
             try:
-                scorecard, report, metrics['judge'] = _judge(request, task, judge_profile, workspace, rubric, checks)
+                scorecard, report, metrics['judge'] = _judge(request, task, judge_profile, workspace,
+                                                             rubric, checks, artifact_dir)
                 manifest['judge_score'] = scorecard['score']
                 manifest['metrics'] = metrics
                 _record(attempts, 'judge', 'ok', _elapsed(stage_started))
             except (CommandError, IsolationError, OSError, ValueError) as failure:
                 kind = failure.kind if isinstance(failure, CommandError) else 'isolation_error'
+                detail = str(failure)
+                if kind == 'provider_quota':
+                    detail = _quota_diagnostic(artifact_dir, manifest, 'judge', 'judge', failure)
                 _record(attempts, 'judge', kind, _elapsed(stage_started))
-                report = _fallback_report('judge ' + kind, str(failure), checks)
-                if status == 'success':
+                report = _fallback_report('judge ' + kind, detail, checks)
+                if status == 'success' or kind == 'provider_quota':
+                    # An unscored grade is not the experiment's answer, and an
+                    # exhausted provider ends the run instead of retrying it.
                     status, error = 'error', f'judge {kind}'
     except (CommandError, IsolationError, OSError, ValueError, KeyError, TypeError) as failure:
         kind = failure.kind if isinstance(failure, CommandError) else ('isolation_error'
                                                                        if isinstance(failure, IsolationError) else 'invalid_task')
+        detail = str(failure)
+        if kind == 'provider_quota':
+            detail = _quota_diagnostic(artifact_dir, manifest, stage, stage, failure)
         _record(attempts, stage, kind, _elapsed(stage_started))
         if status != 'error' or error is None:
             status = 'timeout' if kind == 'timeout' else 'error'
-            error = f'{stage} {kind}: {failure}'
+            error = f'{stage} {kind}: {detail}'
     finally:
         if workspace is not None and not captured:
             patch = _capture_patch(request, workspace)

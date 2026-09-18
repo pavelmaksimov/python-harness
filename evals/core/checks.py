@@ -1,5 +1,6 @@
 """Timeout-controlled processes and network-isolated deterministic checks."""
 from dataclasses import dataclass
+from datetime import datetime
 import json
 import math
 import os
@@ -12,6 +13,14 @@ import time
 
 from .knowledge import sanitize
 from .sandbox import IsolationError, isolated_command
+
+# A quota window only the clock or the provider can restore, unlike a transient
+# throttling answer to the same 429: retrying one wastes a whole run, retrying
+# the other is exactly right. The wording decides, never the status code alone.
+_QUOTA_WORDING = re.compile(r'(usage limit|quota|credit balance|out of credits)', re.I)
+_QUOTA_RESET = re.compile(
+    r'reset(?:s)?\s+(?:at|after)\s+'
+    r'(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)', re.I)
 
 
 @dataclass(frozen=True)
@@ -87,7 +96,64 @@ def classify_error(text: str) -> str:
     if re.search(r'(model.{0,80}(not found|missing|unknown|does not exist|not available)|'
                  r'(unknown|missing|invalid).{0,40}model|providermodelnotfound)', normalized):
         return 'missing_model'
+    if _QUOTA_WORDING.search(text):
+        return 'provider_quota'
     return 'command_failed'
+
+
+def _strings(value, depth: int = 0) -> list[str]:
+    """Every string inside one JSON-shaped value, outermost first."""
+    if isinstance(value, str):
+        return [value]
+    if depth >= 4:
+        return []
+    if isinstance(value, dict):
+        return [item for child in value.values() for item in _strings(child, depth + 1)]
+    if isinstance(value, list):
+        return [item for child in value for item in _strings(child, depth + 1)]
+    return []
+
+
+def _quota_sentence(text: str) -> str:
+    """The provider's own sentence about the quota, not the whole error payload."""
+    try:
+        payload = json.loads(text)
+    except ValueError:
+        payload = text
+    for value in _strings(payload):
+        if _QUOTA_WORDING.search(value):
+            return ' '.join(value.split())[:300]
+    return ' '.join(text.split())[:300]
+
+
+def _reset_instant(hint: str) -> tuple[str | None, str]:
+    """``(aware ISO instant, how the zone was read)`` from one stated reset time."""
+    normalized = hint.strip().replace(' ', 'T')
+    offset = re.search(r'([+-]\d{2})(\d{2})$', normalized)
+    if offset:
+        normalized = normalized[:offset.start()] + offset.group(1) + ':' + offset.group(2)
+    try:
+        parsed = datetime.fromisoformat(normalized.replace('Z', '+00:00'))
+    except ValueError:
+        return None, 'unparsed'
+    if parsed.tzinfo is None:
+        # Zone-less provider clock: read it on the local clock, the one the
+        # operator compares it against, and say so instead of assuming a zone.
+        return parsed.astimezone().isoformat(timespec='seconds'), 'local'
+    return parsed.isoformat(timespec='seconds'), 'stated'
+
+
+def quota_hold(text: str) -> dict:
+    """What an exhausted provider said: the sentence and the stated reset moment.
+
+    ``reset_timezone`` records how the zone-less hint was read, and ``reset_at``
+    stays ``None`` when the provider stated no parseable reset, so a caller never
+    invents a moment the provider did not state.
+    """
+    hint = _QUOTA_RESET.search(text)
+    reset_at, zone = _reset_instant(hint.group(1)) if hint else (None, None)
+    return {'message': _quota_sentence(text), 'hint': hint.group(1) if hint else None,
+            'reset_at': reset_at, 'reset_timezone': zone}
 
 
 def parse_opencode(result: ProcessResult) -> tuple[str, dict]:

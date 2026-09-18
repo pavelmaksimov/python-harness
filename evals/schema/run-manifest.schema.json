@@ -207,6 +207,12 @@
         },
         "status": {
           "type": "string"
+        },
+        "judge_response": {
+          "type": "string"
+        },
+        "provider_quota": {
+          "type": "string"
         }
       }
     },
