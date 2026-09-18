@@ -43,7 +43,7 @@ class ContractTests(unittest.TestCase):
         write_artifacts(b, right, '+new\n', 'score 3\n')
         result = compare_runs(a, b)
         self.assertEqual(result['a']['backend']['name'], 'custom')
-        self.assertEqual(result['b']['backend']['name'], 'openresearch')
+        self.assertEqual(result['b']['backend']['name'], 'stub')
         self.assertEqual(result['b']['repair_steps'], 1)
         self.assertEqual(result['b']['attempt_count'], 2)
         self.assertEqual(result['a']['wall_time_seconds'], 2)
@@ -55,7 +55,7 @@ class ContractTests(unittest.TestCase):
         for field in ('id', 'hash', 'rubric_hash'):
             with self.subTest(field=field):
                 a, b = self.root / 'a', self.root / 'b'
-                left, right = manifest(), manifest('openresearch', 'b')
+                left, right = manifest(), manifest('stub', 'b')
                 right['task'][field] = 'other'
                 write_artifacts(a, left, '', '')
                 write_artifacts(b, right, '', '')
