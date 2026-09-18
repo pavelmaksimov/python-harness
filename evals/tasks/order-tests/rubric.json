@@ -1,0 +1,19 @@
+{
+  "criteria": [
+    {
+      "id": "observable-behavior-coverage",
+      "description": "4 | Each requested behavior has its own test with an assertion on the outcome a caller can observe; error cases assert the raised error, and the expiry cases assert state at both sides of the boundary.\n3 | Coverage is complete but one test asserts internals (a private helper's return value) instead of the observable result.\n2 | Only the happy path and one extra case are covered.\n1 | A single test file exercises one path.\n0 | No meaningful coverage of the flow.",
+      "evidence": ["the test modules under `tests/`, one test per behavior"]
+    },
+    {
+      "id": "deterministic-isolation",
+      "description": "4 | No test touches the network: outbound calls are mocked at the transport level by URL, no patching of application functions appears anywhere, no live smoke test remains, and the suite passes offline.\n3 | Transport mocking is correct but one leftover test still depends on external state (a live endpoint, a fixed clock).\n2 | Mocking exists but is done by patching application internals, or a live call survives.\n1 | Only the live call was deleted; nothing is mocked.\n0 | Tests still hit the network or patch internals.",
+      "evidence": ["the test modules", "the conftest fixtures", "tests/"]
+    },
+    {
+      "id": "readable-typed-test-data",
+      "description": "4 | Wide payloads are produced by declared factories with per-test overrides where the case needs them; scenario data for the checked behavior lives in the test body, and time control is explicit for the expiry cases.\n3 | Factories and time control are present, but a helper fixture still hides scenario data.\n2 | Either factories or time control are missing.\n1 | Payloads are still hand-written dicts passed through a shared fixture.\n0 | No factories, no time control, fixed payloads in fixtures.",
+      "evidence": ["tests/factories.py", "the test modules", "any conftest fixture definitions"]
+    }
+  ]
+}

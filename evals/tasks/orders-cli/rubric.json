@@ -1,0 +1,19 @@
+{
+  "criteria": [
+    {
+      "id": "predictable-command-tree",
+      "description": "4 | The root program lives in the app module and registers the component app explicitly; commands and parameters are declared with the CLI framework's typed metadata, help text is present, closed value sets are typed, and no unknown framework or hand-rolled argument parsing remains.\n3 | The tree is right but one parameter is declared without help text or without typing a closed set.\n2 | The framework is used while the previous parser survives alongside it, or parameters lost their typing.\n1 | Only the entry point was renamed.\n0 | The argparse script remains.",
+      "evidence": ["project/infrastructure/apps/cli.py", "the orders CLI module"]
+    },
+    {
+      "id": "stdout-and-stderr-contract",
+      "description": "4 | Data goes to stdout and nothing else does; prompts, confirmations and errors go to stderr; the list command's stdout can be piped and counted exactly.\n3 | Contract is right except one stray message on stdout.\n2 | Some messages still use plain printing to stdout.\n1 | Logging and data are mixed on stdout.\n0 | Everything is printed to stdout.",
+      "evidence": ["the orders CLI module's output calls"]
+    },
+    {
+      "id": "safe-destructive-command-flow",
+      "description": "4 | The destructive command prompts once with a flag equivalent that skips the prompt, application errors are mapped to exit code 1 through the shared error boundary, and unexpected exceptions propagate.\n3 | Prompt and flag are fine, but the error boundary is applied inconsistently (one command lacks it).\n2 | A confirmation exists without a non-interactive equivalent, or errors are caught and swallowed.\n1 | Confirmation happens after the mutation.\n0 | Destructive command runs unconditionally.",
+      "evidence": ["the orders CLI module"]
+    }
+  ]
+}

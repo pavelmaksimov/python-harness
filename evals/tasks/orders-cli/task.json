@@ -1,33 +1,106 @@
 {
-  "schema_version": 1,
   "id": "orders-cli",
-  "title": "Order CLI commands and stream-safe interface",
-  "task_md": "evals/tasks/orders-cli/task.md",
-  "rubric_md": "evals/tasks/orders-cli/rubric.md",
-  "covered_numbers": [3, 5, 9, 25, 26, 32],
-  "harness_ids": ["python-tooling", "python-libs", "python-stdlib-first-review", "python-typer", "cli-design", "dddlint"],
+  "covered_numbers": [
+    3,
+    5,
+    9,
+    25,
+    26,
+    32
+  ],
   "base_fixture": "evals/_fixtures/base-project",
   "fixture": "evals/tasks/orders-cli/fixture",
   "materialize": [
-    {"kind": "rule", "from": "harnesses/rules/python-tooling/python-tooling.mdc", "to": ".cursor/rules/python-tooling.mdc"},
-    {"kind": "rule", "from": "harnesses/rules/python-libs/python-libs.mdc", "to": ".cursor/rules/python-libs.mdc"},
-    {"kind": "skill", "from": "harnesses/skills/python-stdlib-first-review/", "to": ".opencode/skills/python-stdlib-first-review/"},
-    {"kind": "skill", "from": "harnesses/skills/dddlint/", "to": ".opencode/skills/dddlint/"},
-    {"kind": "rule", "from": "harnesses/rules/python-typer/python-typer.mdc", "to": ".cursor/rules/python-typer.mdc"},
-    {"kind": "skill", "from": "harnesses/skills/cli-design/", "to": ".opencode/skills/cli-design/"},
-    {"kind": "template", "from": "harnesses/rules/python-typer/CLI_HELPERS.md", "to": ".cursor/rules/CLI_HELPERS.md"},
-    {"kind": "template", "from": "harnesses/rules/python-typer/CLI_APP.md", "to": ".cursor/rules/CLI_APP.md"},
-    {"kind": "template", "from": "harnesses/skills/dddlint/dddlint.yaml", "to": "dddlint.yaml"}
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-tooling/python-tooling.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-libs/python-libs.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/python-stdlib-first-review/",
+      "to": ".opencode/skills/python-stdlib-first-review/"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/dddlint/",
+      "to": ".opencode/skills/dddlint/"
+    },
+    {
+      "kind": "rule",
+      "from": "harnesses/rules/python-typer/python-typer.mdc",
+      "to": "AGENTS.md"
+    },
+    {
+      "kind": "skill",
+      "from": "harnesses/skills/cli-design/",
+      "to": ".opencode/skills/cli-design/"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-typer/CLI_HELPERS.md",
+      "to": "docs/CLI_HELPERS.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/rules/python-typer/CLI_APP.md",
+      "to": "docs/CLI_APP.md"
+    },
+    {
+      "kind": "template",
+      "from": "harnesses/skills/dddlint/dddlint.yaml",
+      "to": "dddlint.yaml"
+    }
   ],
+  "prompt_file": "evals/tasks/orders-cli/task.md",
+  "rubric_file": "evals/tasks/orders-cli/rubric.json",
   "checks": [
-    {"id": "commands-use-annotated-options", "kind": "shell", "cmd": "grep -n 'Annotated' project/components/orders/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "options-declare-typer-metadata", "kind": "shell", "cmd": "grep -n 'typer.Option(' project/components/orders/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "commands-use-error-boundary", "kind": "shell", "cmd": "grep -n 'cli_errors' project/components/orders/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "commands-bridge-async-work", "kind": "shell", "cmd": "grep -n 'run_async' project/components/orders/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "destructive-actions-have-bypass", "kind": "shell", "cmd": "grep -n -- '--yes' project/components/orders/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "root-registers-component-app", "kind": "shell", "cmd": "grep -n 'add_typer' project/infrastructure/apps/cli.py", "expect": "nonempty", "expect_on_fixture": "fail"},
-    {"id": "parameters-do-not-use-envvar", "kind": "shell", "cmd": "grep -Rn 'envvar=' project/components/orders/cli.py", "expect": "empty", "expect_on_fixture": "pass"}
-  ],
-  "judge_criteria": ["predictable command tree", "stdout and stderr contract", "safe destructive command flow"],
-  "expected_artifacts": ["manifest.json", "result.patch", "report.md", "status.json"]
+    {
+      "id": "commands-use-annotated-options",
+      "kind": "shell",
+      "command": "grep -n 'Annotated' project/components/orders/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "options-declare-typer-metadata",
+      "kind": "shell",
+      "command": "grep -n 'typer.Option(' project/components/orders/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "commands-use-error-boundary",
+      "kind": "shell",
+      "command": "grep -n 'cli_errors' project/components/orders/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "commands-bridge-async-work",
+      "kind": "shell",
+      "command": "grep -n 'run_async' project/components/orders/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "destructive-actions-have-bypass",
+      "kind": "shell",
+      "command": "grep -n -- '--yes' project/components/orders/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "root-registers-component-app",
+      "kind": "shell",
+      "command": "grep -n 'add_typer' project/infrastructure/apps/cli.py",
+      "on_fixture": "fail"
+    },
+    {
+      "id": "parameters-do-not-use-envvar",
+      "kind": "shell",
+      "command": "! grep -Rn 'envvar=' project/components/orders/cli.py",
+      "on_fixture": "pass"
+    }
+  ]
 }
