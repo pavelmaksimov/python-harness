@@ -182,7 +182,9 @@ def _quota_diagnostic(artifact_dir: Path, manifest: dict, stage: str, alias: str
         artifact_dir, artifacts_api.DIAGNOSTICS['provider_quota'],
         json.dumps(sanitize({'run_id': manifest.get('run_id', ''), 'stage': stage, 'role': alias,
                              'observed_at': _now(), 'provider': profile.get('provider', ''),
-                             'model': profile.get('model', ''), 'provider_said': details['message']}),
+                             'model': profile.get('model', ''), 'provider_said': details['message'],
+                             'reset_hint': details['hint'], 'reset_at': details['reset_at'],
+                             'reset_timezone': details['reset_timezone']}),
                    ensure_ascii=False, indent=2) + '\n')
     reason = details['message']
     if details['reset_at']:
@@ -329,5 +331,7 @@ def execute_experiment(request: RunRequest, artifact_dir: Path, *, backend: dict
     manifest['metrics'] = metrics
     manifest['status'] = status
     manifest['finished_at'] = _now()
+    # The returned manifest names the artifacts it leaves behind, diagnostics included.
+    manifest['artifacts'] = artifacts_api.declared(artifact_dir)
     artifacts_api.write_artifacts(artifact_dir, manifest, patch, report)
     return manifest
