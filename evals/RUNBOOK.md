@@ -160,10 +160,10 @@ is unaffected.
 | `covered_numbers` | Matrix numbers this probe actually exercises. |
 | `base_fixture` | Fixture copied first; defaults to `evals/_fixtures/base-project`. |
 | `fixture` | Probe fixture copied over the base. |
-| `materialize` | `{kind: rule\|skill\|template, from, to, harness_id?}` — repository source → workspace destination; `from` must exist in the repository. |
-| `prompt` / `prompt_file` | Subject instruction. |
-| `rubric` / `rubric_file` | Criteria the judge scores 0–4. |
-| `checks` | `{id, kind: 'shell', command, timeout_seconds?}` run in the workspace root with no network. |
+| `materialize` | `{kind: rule\|skill\|template, from, to, harness_id?}` — repository source → workspace destination; `from` must exist in the repository. Rule bodies aggregate into the workspace `AGENTS.md`; skills must land under `.opencode/skills`; destinations cannot overlap protected configuration (`.cursor`, `.git`, `.opencode` config, agent instruction files). |
+| `prompt` / `prompt_file` | Subject instruction: inline text or a repository file path. |
+| `rubric` / `rubric_file` | Judge criteria as JSON — `{"criteria": [{"id", "description", "evidence"?}]}` or a plain list; criterion IDs are fixed and the judge scorecard must match them exactly. |
+| `checks` | `{id, kind: 'shell', command, timeout_seconds?, on_fixture?}` run in the workspace root with no network; a check passes when the command exits 0. `on_fixture: 'fail'\|'pass'` declares the outcome required on the pristine fixture; the core runs these self-checks before the subject and refuses the run when a probe is broken. |
 | `subject_timeout_seconds`, `check_timeout_seconds`, `judge_timeout_seconds` | Per-stage overrides. |
 
 Numbers come only from `evals/HARNESS_MATRIX.md`; a probe declares which of them
